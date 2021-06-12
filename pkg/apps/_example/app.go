@@ -20,26 +20,26 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package yamyam
+package myproject
 
-import "testing"
+import "k8s.io/client-go/kubernetes"
 
-func TestYamYam_Validate(t *testing.T) {
-	y := New()
-	y.deployment = nil
-	err := y.Validate()
-	if err == nil {
-		t.Errorf("Expecting error for nil deployment")
-	}
+type MyProject struct {
+	resources []interface{}
 }
 
-func TestYamYam_InstallKubernetes(t *testing.T) {
-	y := New()
-	y.client = nil
-	err := y.InstallKubernetes()
-	if err == nil {
-		t.Errorf("Expecting error for nil client")
-	}
+func New() *MyProject {
+	return &MyProject{}
 }
 
-//TODO Add tests to check for name contains "yam"
+func (v *MyProject) Install(client *kubernetes.Clientset) error {
+	return nil
+}
+
+func (v *MyProject) Uninstall(client *kubernetes.Clientset) error {
+	return nil
+}
+
+func (v *MyProject) Resources() []interface{} {
+	return v.resources
+}

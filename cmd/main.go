@@ -26,7 +26,7 @@ import (
 	"fmt"
 	"os"
 
-	yamyam "github.com/kris-nova/yam-yams/pkg"
+	yamyam "github.com/kris-nova/yamyams/pkg"
 
 	"github.com/kris-nova/logger"
 	"k8s.io/client-go/util/homedir"

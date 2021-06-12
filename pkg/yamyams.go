@@ -20,15 +20,13 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package yamyam
+package yamyams
 
 import (
 	"context"
 	"fmt"
 	"strings"
 
-	appsv1 "k8s.io/api/apps/v1"
-	apiv1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	v1 "k8s.io/api/apps/v1"
@@ -88,50 +86,12 @@ func (y *YamYam) InstallKubernetes() error {
 	//
 	// Please stop writing YAML and just do this.
 	//
-	deployment := &v1.Deployment{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "yam-yams",
-		},
-		Spec: appsv1.DeploymentSpec{
-			Replicas: int32Ptr(2),
-			Selector: &metav1.LabelSelector{
-				MatchLabels: map[string]string{
-					"beeps": "boops",
-				},
-			},
-			Template: apiv1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{
-					Labels: map[string]string{
-						"beeps": "boops",
-					},
-				},
-				Spec: apiv1.PodSpec{
-					Containers: []apiv1.Container{
-						{
-							Name: "yam-yams",
 
-							// ------------------------\
-							Image: y.ContainerImage, // <-- THIS IS HOW YOU INTERPOLATE AT RUNTIME
-							// ------------------------/
-
-							Ports: []apiv1.ContainerPort{
-								{
-									Name:          "http",
-									Protocol:      apiv1.ProtocolTCP,
-									ContainerPort: y.ContainerPort,
-								},
-							},
-						},
-					},
-				},
-			},
-		},
-	}
 	// -----------------------------------------------------------------------------
 
 	// Go to town.
 	// Have fun.
-	// Over engineer all kinds of crazy little systems and functions, methods, and types.
+	// Over engineer all kinds of crazy little systems and functions, methods, and literal.
 	// Build entire packages -- or -- Keep it simple.
 	// Whatever you want to do.
 	// We now have a turing complete programming language and the world is your oyster.
@@ -242,8 +202,4 @@ func (y *YamYam) UninstallKubernetes() error {
 	// TODO @kris-nova introduce dynamic namespaces and names
 	return y.client.AppsV1().Deployments("default").Delete(context.TODO(), "yam-yams", metav1.DeleteOptions{})
 
-}
-
-func int32Ptr(i int32) *int32 {
-	return &i
 }
