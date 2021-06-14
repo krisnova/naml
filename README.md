@@ -12,3 +12,6 @@ We hope to offer an interface that "applications" can implement that we can then
 
 Hopefully we can offer Go as an alternative to YAML and templating so we can take advantage of the vast Go ecosystem.
 
+# Check out cdk8s!
+
+Seriously check [this project out - it's great](https://github.com/cdk8s-team/cdk8s).
