@@ -7,7 +7,7 @@
 //
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, softwar
+// Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
@@ -20,26 +20,27 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package yamyam
+package main
 
-import "testing"
+import (
+	"fmt"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
+	"path"
+)
 
-func TestYamYam_Validate(t *testing.T) {
-	y := New()
-	y.deployment = nil
-	err := y.Validate()
-	if err == nil {
-		t.Errorf("Expecting error for nil deployment")
+// Client is used to authenticate with Kubernetes and build the Kube client
+// for the rest of the program.
+func Client() (*kubernetes.Clientset, error) {
+	kubeConfigPath := path.Join(homedir.HomeDir(), ".kube", "config")
+	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
+	if err != nil {
+		return nil, fmt.Errorf("unable to find local kube config [%s]: %v", kubeConfigPath, err)
 	}
-}
-
-func TestYamYam_InstallKubernetes(t *testing.T) {
-	y := New()
-	y.client = nil
-	err := y.InstallKubernetes()
-	if err == nil {
-		t.Errorf("Expecting error for nil client")
+	client, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("unable to build kube config: %v", err)
 	}
+	return client, nil
 }
-
-//TODO Add tests to check for name contains "yam"
