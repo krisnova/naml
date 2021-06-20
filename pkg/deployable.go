@@ -25,9 +25,9 @@ package yamyams
 import "k8s.io/client-go/kubernetes"
 
 type DeployableMeta struct {
-	Version string
-	Name string
-	Command string
+	Version     string
+	Name        string
+	Command     string
 	Description string
 }
 
@@ -47,5 +47,4 @@ type Deployable interface {
 
 	// About returns the meta information for the package.
 	About() *DeployableMeta
-
 }
