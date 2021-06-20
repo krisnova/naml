@@ -25,6 +25,7 @@ package sampleapp
 import (
 	"context"
 	"fmt"
+	"github.com/kris-nova/logger"
 	yamyams "github.com/kris-nova/yamyams/pkg"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -103,6 +104,12 @@ func (v *MySampleApp) Install(client *kubernetes.Clientset) error {
 	}
 	_, err := client.AppsV1().Deployments(v.Namespace).Create(context.TODO(), deployment, metav1.CreateOptions{})
 	if err != nil {
+		defer func() {
+			err := v.Uninstall(client)
+			if err != nil {
+				logger.Critical("%v", err)
+			}
+		}()
 		return fmt.Errorf("unable to install deployment in Kubernetes: %v", err)
 	}
 	return nil

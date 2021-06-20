@@ -35,17 +35,6 @@ func Install(app yamyams.Deployable) error {
 	}
 	err = app.Install(client)
 	if err != nil {
-		// We try to be idempotent and "Uninstall"
-		// if something goes wrong.
-		//
-		// Even if the uninstall fails, we at least
-		// tried.
-		defer func() {
-			err := app.Uninstall(client)
-			if err != nil {
-				logger.Warning("%v", err)
-			}
-		}()
 		return err
 	}
 	logger.Success("Successfully installed [%s]", app.Meta().Name)
