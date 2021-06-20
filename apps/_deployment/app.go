@@ -57,6 +57,7 @@ func New(namespace string, name string, exampleString string, exampleInt int) *M
 				"k8s-app":       "mysampleapp",
 				"app":           "mysampleapp",
 				"example-label": exampleString,
+				"description":   "the 'description' label is special to YamYams and if this is set it will be used in <yamyams list>.",
 			},
 			Annotations: map[string]string{
 				"beeps": "boops",

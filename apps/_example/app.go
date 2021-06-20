@@ -35,7 +35,7 @@ type MyApplication struct {
 func New() *MyApplication {
 	return &MyApplication{
 		ObjectMeta: metav1.ObjectMeta{
-			Name:            "MyApplication",
+			Name:            "my-application",
 			ResourceVersion: "v1.0.0",
 			Namespace:       "default",
 			Labels: map[string]string{

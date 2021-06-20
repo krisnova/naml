@@ -33,8 +33,11 @@ func List() {
 	fmt.Println("")
 	for _, app := range yamyams.Registry() {
 		fmt.Printf("[%s]\n", app.Meta().Name)
-		fmt.Printf("\tnamespace: %s\n", app.Meta().Namespace)
-		fmt.Printf("\tversion  : %s\n", app.Meta().ResourceVersion)
+		fmt.Printf("\tnamespace  : %s\n", app.Meta().Namespace)
+		fmt.Printf("\tversion    : %s\n", app.Meta().ResourceVersion)
+		if description, ok := app.Meta().Labels["description"]; ok {
+			fmt.Printf("\tdescription : %s\n", description)
+		}
 		fmt.Printf("\n")
 	}
 	fmt.Println("")
