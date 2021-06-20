@@ -25,7 +25,6 @@ package sampleapp
 import (
 	"context"
 	"fmt"
-	"github.com/kris-nova/logger"
 	yamyams "github.com/kris-nova/yamyams/pkg"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -38,16 +37,12 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 )
 
-// MySampleApp is yet another sample application to start with.
 type MySampleApp struct {
 	metav1.ObjectMeta
 	exampleString string
 	exampleInt    int
 }
 
-// New will return a new application.
-//
-// We can pass in custom arguments here and use them when we Install().
 func New(namespace string, name string, exampleString string, exampleInt int) *MySampleApp {
 	return &MySampleApp{
 		ObjectMeta: metav1.ObjectMeta{
@@ -69,7 +64,6 @@ func New(namespace string, name string, exampleString string, exampleInt int) *M
 	}
 }
 
-// Install will try to install in Kubernetes.
 func (v *MySampleApp) Install(client *kubernetes.Clientset) error {
 	deployment := &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
@@ -104,12 +98,6 @@ func (v *MySampleApp) Install(client *kubernetes.Clientset) error {
 	}
 	_, err := client.AppsV1().Deployments(v.Namespace).Create(context.TODO(), deployment, metav1.CreateOptions{})
 	if err != nil {
-		defer func() {
-			err := v.Uninstall(client)
-			if err != nil {
-				logger.Critical("%v", err)
-			}
-		}()
 		return fmt.Errorf("unable to install deployment in Kubernetes: %v", err)
 	}
 	return nil

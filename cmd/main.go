@@ -32,17 +32,15 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-var Version string = "---"
-
 func main() {
 	var verbose bool = true
 
 	// cli assumes "-v" for version.
 	// override that here
 	cli.VersionFlag = &cli.BoolFlag{
-		Name:    "print-version",
+		Name:    "version",
 		Aliases: []string{"V"},
-		Usage:   "print only the version",
+		Usage:   "Print the version",
 	}
 
 	app := &cli.App{
@@ -56,7 +54,7 @@ This is a command line tool that gives teams a starting point to start iterating
 Define applications in the /apps directory and register them in /registery.go.
 
 Is there really that much of a difference with hard coding in Go versus writing YAML after all?`,
-		Version: Version,
+		Version: registry.Version,
 		Authors: []*cli.Author{
 			{
 				Name:  "Kris Nóva",
