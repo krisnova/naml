@@ -29,7 +29,7 @@ import (
 
 // Install is used to install an application in Kubernetes
 func Install(app yamyams.Deployable) error {
-	client, err := Client()
+	client, err := yamyams.Client()
 	if err != nil {
 		return err
 	}

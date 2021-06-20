@@ -23,25 +23,32 @@
 package yamyams
 
 import (
-	myapplication "github.com/kris-nova/yamyams/apps/_example"
-	mydeployment "github.com/kris-nova/yamyams/apps/sampleapp"
-	yamyams "github.com/kris-nova/yamyams/pkg"
+	"fmt"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
+	"path"
 )
 
-// Version is set at compile time and used for this specific version of YamYams
-var Version string
+// Client is used to authenticate with Kubernetes and build the Kube client
+// for the rest of the program.
+func Client() (*kubernetes.Clientset, error) {
+	kubeConfigPath := path.Join(homedir.HomeDir(), ".kube", "config")
+	return ClientFromPath(kubeConfigPath)
+}
 
-// Load is where we can set up applications.
+// ClientFromPath is used to authenticate with Kubernetes and build the Kube client
+// for the rest of the program given a specific kube config path.
 //
-// This is called whenever the yamyams program starts.
-func Load() {
-
-	// We can keep them very simple, and hard code all the logic like this one.
-	yamyams.Register(myapplication.New())
-
-	// We can also have several instances of the same application like this.
-	yamyams.Register(mydeployment.New("default", "example-1", "beeps", 3))
-	yamyams.Register(mydeployment.New("default", "example-2", "boops", 1))
-	yamyams.Register(mydeployment.New("default", "example-3", "cyber boops", 7))
-
+// Useful for testing.
+func ClientFromPath(kubeConfigPath string) (*kubernetes.Clientset, error) {
+	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
+	if err != nil {
+		return nil, fmt.Errorf("unable to find local kube config [%s]: %v", kubeConfigPath, err)
+	}
+	client, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("unable to build kube config: %v", err)
+	}
+	return client, nil
 }

@@ -20,28 +20,25 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package yamyams
+package apps
 
 import (
-	myapplication "github.com/kris-nova/yamyams/apps/_example"
-	mydeployment "github.com/kris-nova/yamyams/apps/sampleapp"
+	"github.com/kris-nova/logger"
 	yamyams "github.com/kris-nova/yamyams/pkg"
+	"os"
+	"testing"
 )
 
-// Version is set at compile time and used for this specific version of YamYams
-var Version string
-
-// Load is where we can set up applications.
-//
-// This is called whenever the yamyams program starts.
-func Load() {
-
-	// We can keep them very simple, and hard code all the logic like this one.
-	yamyams.Register(myapplication.New())
-
-	// We can also have several instances of the same application like this.
-	yamyams.Register(mydeployment.New("default", "example-1", "beeps", 3))
-	yamyams.Register(mydeployment.New("default", "example-2", "boops", 1))
-	yamyams.Register(mydeployment.New("default", "example-3", "cyber boops", 7))
-
+func TestMain(m *testing.M) {
+	err := yamyams.TestClusterStart()
+	if err != nil {
+		logger.Critical(err.Error())
+		os.Exit(1)
+	}
+	os.Exit(m.Run())
+	err = yamyams.TestClusterStop()
+	if err != nil {
+		logger.Critical(err.Error())
+		os.Exit(2)
+	}
 }

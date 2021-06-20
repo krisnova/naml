@@ -48,12 +48,11 @@ func main() {
 		HelpName:  "yamyams",
 		Usage:     "YAML alternative for managing Kubernetes packages directly with Go.",
 		UsageText: " $ yamyams [options] <arguments>",
-		Description: `YamYams gives infrastructure teams a framework to manage their applications directly with the Go programming language.
-Instead of using YAML and templating we decided to just write Go. 
-This is a command line tool that gives teams a starting point to start iterating.
-Define applications in the /apps directory and register them in /registery.go.
+		Description: `
+Use YamYams to start encapsulating your applications with Go.
+Take advantage of all the lovely features of the Go programming language.
 
-Is there really that much of a difference with hard coding in Go versus writing YAML after all?`,
+Is there really THAT much of a difference with defining an application in Go compared to defining an application in YAML after all?`,
 		Version: registry.Version,
 		Authors: []*cli.Author{
 			{

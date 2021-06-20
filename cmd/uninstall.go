@@ -26,7 +26,7 @@ import yamyams "github.com/kris-nova/yamyams/pkg"
 
 // Uninstall is used to uninstall an application in Kubernetes
 func Uninstall(app yamyams.Deployable) error {
-	client, err := Client()
+	client, err := yamyams.Client()
 	if err != nil {
 		return err
 	}
