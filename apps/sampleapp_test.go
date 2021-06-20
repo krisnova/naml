@@ -20,27 +20,36 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package main
+package apps
 
 import (
-	"fmt"
-	"k8s.io/client-go/kubernetes"
-	"k8s.io/client-go/tools/clientcmd"
-	"k8s.io/client-go/util/homedir"
-	"path"
+	"github.com/kris-nova/yamyams/apps/sampleapp"
+	yamyams "github.com/kris-nova/yamyams/pkg"
+	"testing"
 )
 
-// Client is used to authenticate with Kubernetes and build the Kube client
-// for the rest of the program.
-func Client() (*kubernetes.Clientset, error) {
-	kubeConfigPath := path.Join(homedir.HomeDir(), ".kube", "config")
-	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
+// TestSampleApp is an example integration test that can be used to
+// install and uninstall a sample application in Kubernetes.
+func TestSampleApp(t *testing.T) {
+	client, err := yamyams.ClientFromPath(yamyams.TestClusterKubeConfigPath())
 	if err != nil {
-		return nil, fmt.Errorf("unable to find local kube config [%s]: %v", kubeConfigPath, err)
+		t.Errorf("unable to create client: %v", err)
 	}
-	client, err := kubernetes.NewForConfig(config)
+	app := sampleapp.New("default", "sample-app", "beeps-boops", 2)
+	err = app.Install(client)
 	if err != nil {
-		return nil, fmt.Errorf("unable to build kube config: %v", err)
+		t.Errorf("unable to install sample-app: %v", err)
 	}
-	return client, nil
+	err = app.Uninstall(client)
+	if err != nil {
+		t.Errorf("unable to uninstall sample-app: %v", err)
+	}
+}
+
+// TestSampleAppName shows how you can test arbitrary parts of your application.
+func TestSampleAppName(t *testing.T) {
+	app := sampleapp.New("default", "sample-app", "beeps-boops", 2)
+	if app.Name != "sample-app" {
+		t.Errorf(".Name is not plumbed through from New()")
+	}
 }

@@ -1,103 +1,93 @@
 # YamYams
 
-A Go framework for managing Kubernetes applications.
+Replace Kubernetes YAML with raw Go!
 
 Say so long 👋 to YAML and start using the Go 🎉 programming language.
+
+Take advantage of all the lovely features of Go.
+
+Test your code directly in local Kubernetes using [kind](https://github.com/kubernetes-sigs/kind).
 
 ## About
 
 This is a framework for infrastructure teams who need more than just conditional manifests.
 
-Feel free to fork this repository and begin using it for your team. There isn't anything special here. 
+Feel free to fork this repository and begin using it for your team. There isn't anything special here. 🤷‍♀ We use the same client the rest of Kubernetes does.
 
-## Adding a new application 
+ ❎ No new tools.
 
-Copy the `_example` application and fill in the blanks. 
+ ❎ No learning curve.
+
+ ❎ No barrier to entry.
+
+ ❎ No templating.
+
+ ❎ No vague error messages.
+
+ ✅ Just plain Go.
+
+## Features
+
+✨ There is not a single `.yaml` file in this entire repository. ✨
+
+ - Express applications in 🎉 Go instead of YAML.
+ - Use the Go compiler to check your syntax.
+ - Write **real tests** 🤓 using Go to check and validate your deployments.
+ - Actually test your applications in Kubernetes using [kind](https://github.com/kubernetes-sigs/kind).
+ - Define custom installation logic. What happens if it fails?
+ - Define custom application registries. Multiple apps of the same flavor? No problem.
+ - Use the latest client (the same client the rest of Kubernetes uses).
+
+## Creating a new app 
+
+Copy `sampleapp` to a new folder in `/apps` to get started.
 
 ```bash 
-cp -rv apps/_example apps/hello-world
+cp -rv apps/sampleapp apps/hello
 ```
 
-Now edit the `apps/hello-world/app.go`.
+Edit your new application `/apps/hello/app.go`.
 
-```go
-package helloworld
+Use the same [client](https://github.com/kubernetes/client-go) the rest of Kubernetes uses to express your application.
 
-import (
-	"fmt"
-	yamyams "github.com/kris-nova/yamyams/pkg"
-	"k8s.io/client-go/kubernetes"
-)
+## Testing your application 
 
-type HelloWorld struct {
-	meta      *yamyams.DeployableMeta
-	resources []interface{}
-}
+Create a new test for `hello` and edit the tests.
 
-func New() *HelloWorld {
-	return &HelloWorld{
-		meta: &yamyams.DeployableMeta{
-			Name:        "Hello World Application!",
-			Command:     "hello",
-			Version:     "v0.0.1",
-			Description: "This is a great hello world example!",
-		},
-	}
-}
-
-func (v *HelloWorld) Install(client *kubernetes.Clientset) error {
-	pod := &apiv1.Pod{
-		ObjectMeta: metav1.ObjectMeta{
-			Name: "hello-world",
-		},
-		Spec: apiv1.PodSpec{
-			Containers: []apiv1.Container{
-				{
-					Name:  "hello-world-container",
-					Image: "busybox",
-				},
-			},
-		},
-	}
-	newPod, err := client.CoreV1().Pods(v.namespace).Create(context.TODO(), pod, metav1.CreateOptions{})
-	if err != nil {
-		return err
-	}
-	v.resources = append(v.resources, newPod)
-	return nil
-}
-
-func (v *HelloWorld) Uninstall(client *kubernetes.Clientset) error {
-	return client.CoreV1().Pods(v.namespace).Delete(context.TODO(), "hello-world", metav1.DeleteOptions{})
-}
-
-func (v *HelloWorld) Resources() []interface{} {
-	return v.resources
-}
-
-func (v *HelloWorld) About() *yamyams.DeployableMeta {
-	return v.meta
-}
+```bash 
+cp apps/sampleapp_test.go apps/hello_test.go
 ```
 
-Now register your new app in `registry.go`
+Then bootstrap a local kind cluster and actually deploy your application to a real Kubernetes cluster.
+
+```bash 
+sudo -E make test
+```
+
+You can add custom integration tests to check whatever you want.
 
 ```go 
-func Load() {
-    // Register the new helloworld application
-	yamyams.Register(helloworld.New())
+func TestHelloAppName(t *testing.T) {
+	app := hello.New("default", "hello-app")
+	if app.Name != "hello-app" {
+		t.Errorf("app Name is not plumbed through from New()")
+	}
 }
 ```
 
-Now compile the application to see if there are any errors. 
+## Deploy your application 
+
+You can now deploy your application directly to Kubernetes from the provided CLI tool.
 
 ```bash 
-go build -o yamyams cmd/*.go
+make
+sudo -E make install
+yamyams install hello-app
 ```
 
-Now you can install and uninstall in Kubernetes! 
+You can also `list` and `uninstall`
 
 ```bash 
-./yamyams install helloworld
-./yamyams uninstall helloworld
+yamyams list
+yamyams uninstall
 ```

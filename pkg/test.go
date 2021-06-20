@@ -23,25 +23,48 @@
 package yamyams
 
 import (
-	myapplication "github.com/kris-nova/yamyams/apps/_example"
-	mydeployment "github.com/kris-nova/yamyams/apps/sampleapp"
-	yamyams "github.com/kris-nova/yamyams/pkg"
+	"fmt"
+	"k8s.io/client-go/util/homedir"
+	"path"
+	"sigs.k8s.io/kind/pkg/cluster"
+	"sigs.k8s.io/kind/pkg/cmd"
 )
 
-// Version is set at compile time and used for this specific version of YamYams
-var Version string
+const (
+	TestClusterName string = "yamyamstestcluster"
+)
 
-// Load is where we can set up applications.
-//
-// This is called whenever the yamyams program starts.
-func Load() {
+var (
+	isStarted      bool   = false
+	kubeConfigPath string = path.Join(homedir.HomeDir(), ".kube", "yamyams.conf")
+)
 
-	// We can keep them very simple, and hard code all the logic like this one.
-	yamyams.Register(myapplication.New())
+func TestClusterStart() error {
+	if isStarted {
+		return nil
+	}
+	provider := cluster.NewProvider(cluster.ProviderWithDocker(), cluster.ProviderWithLogger(cmd.NewLogger()))
+	err := provider.Create(TestClusterName)
+	if err != nil {
+		return fmt.Errorf("unable to create kind test cluster: %v", err)
+	}
+	err = provider.ExportKubeConfig(TestClusterName, kubeConfigPath)
+	if err != nil {
+		return fmt.Errorf("unable to export test kube config: %v", err)
+	}
+	isStarted = true
+	return nil
+}
 
-	// We can also have several instances of the same application like this.
-	yamyams.Register(mydeployment.New("default", "example-1", "beeps", 3))
-	yamyams.Register(mydeployment.New("default", "example-2", "boops", 1))
-	yamyams.Register(mydeployment.New("default", "example-3", "cyber boops", 7))
+func TestClusterKubeConfigPath() string {
+	return kubeConfigPath
+}
 
+func TestClusterStop() error {
+	provider := cluster.NewProvider(cluster.ProviderWithDocker())
+	err := provider.Delete(TestClusterName, kubeConfigPath)
+	if err != nil {
+		return fmt.Errorf("unable to delete kind test cluster: %v", err)
+	}
+	return nil
 }
