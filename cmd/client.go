@@ -7,7 +7,7 @@
 //
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, softwar
+// Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
@@ -20,26 +20,27 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package myproject
+package main
 
-import "k8s.io/client-go/kubernetes"
+import (
+	"fmt"
+	"k8s.io/client-go/kubernetes"
+	"k8s.io/client-go/tools/clientcmd"
+	"k8s.io/client-go/util/homedir"
+	"path"
+)
 
-type MyProject struct {
-	resources []interface{}
-}
-
-func New() *MyProject {
-	return &MyProject{}
-}
-
-func (v *MyProject) Install(client *kubernetes.Clientset) error {
-	return nil
-}
-
-func (v *MyProject) Uninstall(client *kubernetes.Clientset) error {
-	return nil
-}
-
-func (v *MyProject) Resources() []interface{} {
-	return v.resources
+// Client is used to authenticate with Kubernetes and build the Kube client
+// for the rest of the program.
+func Client() (*kubernetes.Clientset, error) {
+	kubeConfigPath := path.Join(homedir.HomeDir(), ".kube", "config")
+	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigPath)
+	if err != nil {
+		return nil, fmt.Errorf("unable to find local kube config [%s]: %v", kubeConfigPath, err)
+	}
+	client, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		return nil, fmt.Errorf("unable to build kube config: %v", err)
+	}
+	return client, nil
 }

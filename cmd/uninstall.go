@@ -7,7 +7,7 @@
 //
 //     http://www.apache.org/licenses/LICENSE-2.0
 //
-// Unless required by applicable law or agreed to in writing, softwar
+// Unless required by applicable law or agreed to in writing, software
 // distributed under the License is distributed on an "AS IS" BASIS,
 // WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 // See the License for the specific language governing permissions and
@@ -20,8 +20,15 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package literal
+package main
 
-func I32p(i int32) *int32 {
-	return &i
+import yamyams "github.com/kris-nova/yamyams/pkg"
+
+// Uninstall is used to uninstall an application in Kubernetes
+func Uninstall(app yamyams.Deployable) error {
+	client, err := Client()
+	if err != nil {
+		return err
+	}
+	return app.Uninstall(client)
 }

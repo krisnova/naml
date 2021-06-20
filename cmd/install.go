@@ -20,32 +20,34 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package yamyams
+package main
 
-import "k8s.io/client-go/kubernetes"
+import (
+	"github.com/kris-nova/logger"
+	yamyams "github.com/kris-nova/yamyams/pkg"
+)
 
-type DeployableMeta struct {
-	Version string
-	Name string
-	Command string
-	Description string
-}
-
-// Deployable is an interface that can be implemented
-// for deployable applications.
-type Deployable interface {
-
-	// Install will attempt to install in Kubernetes
-	Install(client *kubernetes.Clientset) error
-
-	// Uninstall will attempt to uninstall in Kubernetes
-	Uninstall(client *kubernetes.Clientset) error
-
-	// Resources returns untyped struct{}s which represent your application.
-	// This is the first concrete point in which we realize that what we are doing, has no business being "generic".
-	Resources() []interface{}
-
-	// About returns the meta information for the package.
-	About() *DeployableMeta
-
+// Install is used to install an application in Kubernetes
+func Install(app yamyams.Deployable) error {
+	client, err := Client()
+	if err != nil {
+		return err
+	}
+	err = app.Install(client)
+	if err != nil {
+		// We try to be idempotent and "Uninstall"
+		// if something goes wrong.
+		//
+		// Even if the uninstall fails, we at least
+		// tried.
+		defer func() {
+			err := app.Uninstall(client)
+			if err != nil {
+				logger.Warning("%v", err)
+			}
+		}()
+		return err
+	}
+	logger.Success("Successfully installed [%s]", app.About().Command)
+	return nil
 }

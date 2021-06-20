@@ -1,6 +1,0 @@
-#!/bin/bash
-REPO="krisnova"
-NAME="yamyams-static-site"
-TAG="latest"
-SHA="$(git rev-parse HEAD)"
-

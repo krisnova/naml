@@ -25,8 +25,8 @@ package staticsite
 import (
 	"context"
 	"fmt"
+	yamyams "github.com/kris-nova/yamyams/pkg"
 
-	"github.com/kris-nova/yamyams/pkg/literal"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 
@@ -44,20 +44,23 @@ const (
 // StaticSite represents a static site.
 type StaticSite struct {
 	resources []interface{}
+	meta      *yamyams.DeployableMeta
 	namespace string
 }
 
 func New(namespace string) *StaticSite {
 	return &StaticSite{
 		namespace: namespace,
+		meta: &yamyams.DeployableMeta{
+			Name:        "Example Static Website",
+			Version:     "0.0.1",
+			Command:     "staticsite",
+			Description: "A simple static website application",
+		},
 	}
 }
 
 func (v *StaticSite) Install(client *kubernetes.Clientset) error {
-
-	// --------------------------------------------
-	// Static Site Variables
-	// This could be const() or var() or passed in.
 
 	containerImage := "krisnova/yamyams-static-site"
 	//containerPort := 80
@@ -65,14 +68,13 @@ func (v *StaticSite) Install(client *kubernetes.Clientset) error {
 		"yamyams": "yamyams",             // Add this to every app so you can kubectl get po -l yamyams=yamyams
 		"app":     "yamyams-static-site", // Add this to this application so you can kubectl get po -l name=yamyams-static-site
 	}
-	// -------------------------------------------
 
 	deployment := &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: literal.I32p(2),
+			Replicas: yamyams.I32p(2),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labels,
 			},
@@ -101,13 +103,9 @@ func (v *StaticSite) Install(client *kubernetes.Clientset) error {
 
 	updatedDeployment, err := client.AppsV1().Deployments(v.namespace).Create(context.TODO(), deployment, metav1.CreateOptions{})
 	if err != nil {
-		// In this case use the original deployment and add that resources
 		v.resources = append(v.resources, deployment)
 		return fmt.Errorf("unable to install in Kubernetes: %v", err)
 	}
-	// In this case add the new deployment to resources
-	// The idea is to always have 1 resource that is as accurate as possible
-	// Register this for later
 	v.resources = append(v.resources, updatedDeployment)
 	return nil
 }
@@ -118,4 +116,8 @@ func (v *StaticSite) Uninstall(client *kubernetes.Clientset) error {
 
 func (v *StaticSite) Resources() []interface{} {
 	return v.resources
+}
+
+func (v *StaticSite) About() *yamyams.DeployableMeta {
+	return v.meta
 }

@@ -22,30 +22,51 @@
 
 package yamyams
 
-import "k8s.io/client-go/kubernetes"
+import (
+	"github.com/kris-nova/logger"
+	"os"
+)
 
-type DeployableMeta struct {
-	Version string
-	Name string
-	Command string
-	Description string
+var registry = make(map[string]Deployable)
+
+func Register(app Deployable) {
+
+	// Validate the application
+	if app == nil {
+		logger.Critical("Unable to register NIL application.")
+		os.Exit(1)
+	}
+
+	if app.About().Name == "" {
+		logger.Critical("Empty name for application.")
+		os.Exit(1)
+	}
+
+	if app.About().Command == "" {
+		logger.Critical("Empty command line name for application %s.", app.About().Name)
+		os.Exit(1)
+	}
+
+	if app.About().Version == "" {
+		logger.Critical("Empty version for application %s.", app.About().Name)
+		os.Exit(1)
+	}
+
+	if app.About().Description == "" {
+		logger.Critical("Empty description for application %s.", app.About().Name)
+		os.Exit(1)
+	}
+
+	registry[app.About().Command] = app
 }
 
-// Deployable is an interface that can be implemented
-// for deployable applications.
-type Deployable interface {
+func Registry() map[string]Deployable {
+	return registry
+}
 
-	// Install will attempt to install in Kubernetes
-	Install(client *kubernetes.Clientset) error
-
-	// Uninstall will attempt to uninstall in Kubernetes
-	Uninstall(client *kubernetes.Clientset) error
-
-	// Resources returns untyped struct{}s which represent your application.
-	// This is the first concrete point in which we realize that what we are doing, has no business being "generic".
-	Resources() []interface{}
-
-	// About returns the meta information for the package.
-	About() *DeployableMeta
-
+func Find(name string) Deployable {
+	if app, ok := registry[name]; ok {
+		return app
+	}
+	return nil
 }

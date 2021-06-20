@@ -20,26 +20,44 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package yamyams
+package myapplication
 
-import "testing"
+import (
+	"fmt"
+	yamyams "github.com/kris-nova/yamyams/pkg"
+	"k8s.io/client-go/kubernetes"
+)
 
-func TestYamYam_Validate(t *testing.T) {
-	y := New()
-	y.deployment = nil
-	err := y.Validate()
-	if err == nil {
-		t.Errorf("Expecting error for nil deployment")
+type MyApplication struct {
+	meta      *yamyams.DeployableMeta
+	resources []interface{}
+}
+
+func New() *MyApplication {
+	return &MyApplication{
+		meta: &yamyams.DeployableMeta{
+			Name:        "Example Application",
+			Command:     "example-app",
+			Version:     "0.0.1",
+			Description: "A simple example application",
+		},
 	}
 }
 
-func TestYamYam_InstallKubernetes(t *testing.T) {
-	y := New()
-	y.client = nil
-	err := y.InstallKubernetes()
-	if err == nil {
-		t.Errorf("Expecting error for nil client")
-	}
+func (v *MyApplication) Install(client *kubernetes.Clientset) error {
+	return fmt.Errorf("[install] for %s not yet implemented", v.meta.Name)
+	return nil
 }
 
-//TODO Add tests to check for name contains "yam"
+func (v *MyApplication) Uninstall(client *kubernetes.Clientset) error {
+	return fmt.Errorf("[uninstall] for %s not yet implemented", v.meta.Name)
+	return nil
+}
+
+func (v *MyApplication) Resources() []interface{} {
+	return v.resources
+}
+
+func (v *MyApplication) About() *yamyams.DeployableMeta {
+	return v.meta
+}
