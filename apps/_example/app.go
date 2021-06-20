@@ -24,40 +24,39 @@ package myapplication
 
 import (
 	"fmt"
-	yamyams "github.com/kris-nova/yamyams/pkg"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
 type MyApplication struct {
-	meta      *yamyams.DeployableMeta
-	resources []interface{}
+	metav1.ObjectMeta
 }
 
 func New() *MyApplication {
 	return &MyApplication{
-		meta: &yamyams.DeployableMeta{
-			Name:        "Example Application",
-			Command:     "example-app",
-			Version:     "0.0.1",
-			Description: "A simple example application",
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            "my-application",
+			ResourceVersion: "v1.0.0",
+			Namespace:       "default",
+			Labels: map[string]string{
+				"k8s-app": "myapp",
+				"app":     "myapp",
+			},
+			Annotations: map[string]string{
+				"beeps": "boops",
+			},
 		},
 	}
 }
 
 func (v *MyApplication) Install(client *kubernetes.Clientset) error {
-	return fmt.Errorf("[install] for %s not yet implemented", v.meta.Name)
-	return nil
+	return fmt.Errorf("[install] for %s not yet implemented", v.Name)
 }
 
 func (v *MyApplication) Uninstall(client *kubernetes.Clientset) error {
-	return fmt.Errorf("[uninstall] for %s not yet implemented", v.meta.Name)
-	return nil
+	return fmt.Errorf("[uninstall] for %s not yet implemented", v.Name)
 }
 
-func (v *MyApplication) Resources() []interface{} {
-	return v.resources
-}
-
-func (v *MyApplication) About() *yamyams.DeployableMeta {
-	return v.meta
+func (v *MyApplication) Meta() *metav1.ObjectMeta {
+	return &v.ObjectMeta
 }

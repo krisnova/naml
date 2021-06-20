@@ -20,7 +20,7 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package mydeployment
+package sampleapp
 
 import (
 	"context"
@@ -37,61 +37,56 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 )
 
-// MyDeployment represents a Kubernetes deployment.
-type MyDeployment struct {
-	resources     []interface{}
-	meta          *yamyams.DeployableMeta
-	namespace     string
-	name          string
+// MySampleApp is yet another sample application to start with.
+type MySampleApp struct {
+	metav1.ObjectMeta
 	exampleString string
 	exampleInt    int
 }
 
-// New will return a new MyDeployment.
+// New will return a new application.
 //
 // We can pass in custom arguments here and use them when we Install().
-// In this example we use exmpleString as a label, and exampleInt as our replica count.
-func New(namespace string, name string, exampleString string, exampleInt int) *MyDeployment {
-	return &MyDeployment{
-		namespace:     namespace,
+func New(namespace string, name string, exampleString string, exampleInt int) *MySampleApp {
+	return &MySampleApp{
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            name,
+			Namespace:       namespace,
+			ResourceVersion: "v1.0.0",
+			Labels: map[string]string{
+				"k8s-app":       "mysampleapp",
+				"app":           "mysampleapp",
+				"example-label": exampleString,
+				"description":   "the 'description' label is special to YamYams and if this is set it will be used in <yamyams list>.",
+			},
+			Annotations: map[string]string{
+				"beeps": "boops",
+			},
+		},
 		exampleInt:    exampleInt,
 		exampleString: exampleString,
-		name:          name,
-		meta: &yamyams.DeployableMeta{
-			Name:        "Example Deployment",
-			Version:     fmt.Sprintf("%s-0.0.1", name),
-			Command:     name,
-			Description: "A simple example Kubernetes deployment",
-		},
 	}
 }
 
-// Install will try to install in Kubernetes
-func (v *MyDeployment) Install(client *kubernetes.Clientset) error {
-
-	labels := map[string]string{
-		"k8s-app":       "mydeployment",
-		"app":           "mydeployment",
-		"example-label": v.exampleString,
-	}
-
+// Install will try to install in Kubernetes.
+func (v *MySampleApp) Install(client *kubernetes.Clientset) error {
 	deployment := &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: v.name,
+			Name: v.Name,
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: yamyams.I32p(int32(v.exampleInt)),
 			Selector: &metav1.LabelSelector{
-				MatchLabels: labels,
+				MatchLabels: v.Labels,
 			},
 			Template: apiv1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Labels: labels,
+					Labels: v.Labels,
 				},
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
 						{
-							Name:  v.name,
+							Name:  v.Name,
 							Image: "busybox",
 							Ports: []apiv1.ContainerPort{
 								{
@@ -106,23 +101,17 @@ func (v *MyDeployment) Install(client *kubernetes.Clientset) error {
 			},
 		},
 	}
-
-	updatedDeployment, err := client.AppsV1().Deployments(v.namespace).Create(context.TODO(), deployment, metav1.CreateOptions{})
+	_, err := client.AppsV1().Deployments(v.Namespace).Create(context.TODO(), deployment, metav1.CreateOptions{})
 	if err != nil {
 		return fmt.Errorf("unable to install deployment in Kubernetes: %v", err)
 	}
-	v.resources = append(v.resources, updatedDeployment)
 	return nil
 }
 
-func (v *MyDeployment) Uninstall(client *kubernetes.Clientset) error {
-	return client.AppsV1().Deployments(v.namespace).Delete(context.TODO(), v.name, metav1.DeleteOptions{})
+func (v *MySampleApp) Uninstall(client *kubernetes.Clientset) error {
+	return client.AppsV1().Deployments(v.Namespace).Delete(context.TODO(), v.Name, metav1.DeleteOptions{})
 }
 
-func (v *MyDeployment) Resources() []interface{} {
-	return v.resources
-}
-
-func (v *MyDeployment) About() *yamyams.DeployableMeta {
-	return v.meta
+func (v *MySampleApp) Meta() *metav1.ObjectMeta {
+	return &v.ObjectMeta
 }

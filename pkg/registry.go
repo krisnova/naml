@@ -37,27 +37,17 @@ func Register(app Deployable) {
 		os.Exit(1)
 	}
 
-	if app.About().Name == "" {
-		logger.Critical("Empty name for application.")
+	if app.Meta() == nil {
+		logger.Critical("Unable to register NIL ObjectMeta for application")
 		os.Exit(1)
 	}
 
-	if app.About().Command == "" {
-		logger.Critical("Empty command line name for application %s.", app.About().Name)
+	if app.Meta().Name == "" {
+		logger.Critical("Unable to register NIL ObjectMeta.Name for application")
 		os.Exit(1)
 	}
 
-	if app.About().Version == "" {
-		logger.Critical("Empty version for application %s.", app.About().Name)
-		os.Exit(1)
-	}
-
-	if app.About().Description == "" {
-		logger.Critical("Empty description for application %s.", app.About().Name)
-		os.Exit(1)
-	}
-
-	registry[app.About().Command] = app
+	registry[app.Meta().Name] = app
 }
 
 func Registry() map[string]Deployable {

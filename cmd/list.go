@@ -32,10 +32,12 @@ func List() {
 	fmt.Println("$ yamyams uninstall  [app]")
 	fmt.Println("")
 	for _, app := range yamyams.Registry() {
-		fmt.Printf("[%s]\n", app.About().Command)
-		fmt.Printf("\t%s\n", app.About().Name)
-		fmt.Printf("\t%s\n", app.About().Description)
-		fmt.Printf("\tVersion: %s\n", app.About().Version)
+		fmt.Printf("[%s]\n", app.Meta().Name)
+		fmt.Printf("\tnamespace  : %s\n", app.Meta().Namespace)
+		fmt.Printf("\tversion    : %s\n", app.Meta().ResourceVersion)
+		if description, ok := app.Meta().Labels["description"]; ok {
+			fmt.Printf("\tdescription : %s\n", description)
+		}
 		fmt.Printf("\n")
 	}
 	fmt.Println("")

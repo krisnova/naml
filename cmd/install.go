@@ -48,6 +48,6 @@ func Install(app yamyams.Deployable) error {
 		}()
 		return err
 	}
-	logger.Success("Successfully installed [%s]", app.About().Command)
+	logger.Success("Successfully installed [%s]", app.Meta().Name)
 	return nil
 }

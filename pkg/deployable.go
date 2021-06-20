@@ -22,14 +22,10 @@
 
 package yamyams
 
-import "k8s.io/client-go/kubernetes"
-
-type DeployableMeta struct {
-	Version     string
-	Name        string
-	Command     string
-	Description string
-}
+import (
+	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
+)
 
 // Deployable is an interface that can be implemented
 // for deployable applications.
@@ -41,10 +37,6 @@ type Deployable interface {
 	// Uninstall will attempt to uninstall in Kubernetes
 	Uninstall(client *kubernetes.Clientset) error
 
-	// Resources returns untyped struct{}s which represent your application.
-	// This is the first concrete point in which we realize that what we are doing, has no business being "generic".
-	Resources() []interface{}
-
-	// About returns the meta information for the package.
-	About() *DeployableMeta
+	// Meta returns the Kubernetes native ObjectMeta which is used to manage applications with YamYams.
+	Meta() *v1.ObjectMeta
 }
