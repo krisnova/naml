@@ -16,6 +16,12 @@ This allows teams to start encapsulating, managing, and testing their applicatio
 
 Teams can now buid controllers, operators, and custom toolchains using reliable, testable, and scalable Go.
 
+## The philosophy
+
+The bet here is that any person confident in managing `YAML` for Kubernetes can also be equally as confident managing Go for Kubernetes.
+
+The feature add is that no matter how good our YAML management tools get, they will never be as good as just plain Go when it comes to things like syntax checking, testing, shipping, and flexibility. 
+
 ## Nothing fancy
 
 Feel free to fork this repository and begin using it for your team. There isn't anything special here. 🤷‍♀ We use the same client the rest of Kubernetes does.
@@ -24,13 +30,13 @@ Feel free to fork this repository and begin using it for your team. There isn't 
 
  ❎ No charts.
 
- ❎ No barrier to entry from a new tool.
-
  ❎ No templating at runtime.
 
- ❎ No vague error messages and counting YAML indentation.
+ ❎ No vague error messages.
+ 
+ ❎ No more YAML guessing/checking.
 
- ✅ Just plain Go.
+ ✅ Just Go. 🎉
 
 ## Features
 
