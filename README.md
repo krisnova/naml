@@ -10,19 +10,25 @@ Test your code directly in local Kubernetes using [kind](https://github.com/kube
 
 ## About
 
-This is a framework for infrastructure teams who need more than just conditional manifests.
+This is a framework for infrastructure teams who need more than just conditional manifests. 
+
+This allows teams to start encapsulating, managing, and testing their applications in raw Go.
+
+Teams can now buid controllers, operators, and custom toolchains using reliable, testable, and scalable Go.
+
+## Nothing fancy
 
 Feel free to fork this repository and begin using it for your team. There isn't anything special here. 🤷‍♀ We use the same client the rest of Kubernetes does.
 
  ❎ No new tools.
 
- ❎ No learning curve.
+ ❎ No charts.
 
- ❎ No barrier to entry.
+ ❎ No barrier to entry from a new tool.
 
- ❎ No templating.
+ ❎ No templating at runtime.
 
- ❎ No vague error messages.
+ ❎ No vague error messages and counting YAML indentation.
 
  ✅ Just plain Go.
 
@@ -33,7 +39,7 @@ Feel free to fork this repository and begin using it for your team. There isn't 
  - Express applications in 🎉 Go instead of YAML.
  - Use the Go compiler to check your syntax.
  - Write **real tests** 🤓 using Go to check and validate your deployments.
- - Actually test your applications in Kubernetes using [kind](https://github.com/kubernetes-sigs/kind).
+ - Test your applications in Kubernetes using [kind](https://github.com/kubernetes-sigs/kind).
  - Define custom installation logic. What happens if it fails?
  - Define custom application registries. Multiple apps of the same flavor? No problem.
  - Use the latest client (the same client the rest of Kubernetes uses).
@@ -49,6 +55,17 @@ cp -rv apps/sampleapp apps/hello
 Edit your new application `/apps/hello/app.go`.
 
 Use the same [client](https://github.com/kubernetes/client-go) the rest of Kubernetes uses to express your application.
+
+Register your application in `/registry.go`.
+
+
+```go
+func Load(){
+    yamyams.Register(hello.New("default", "hello-app"))
+}
+```
+
+
 
 ## Testing your application 
 
@@ -91,3 +108,11 @@ You can also `list` and `uninstall`
 yamyams list
 yamyams uninstall
 ```
+
+## Use your application in many ways.
+
+Now that your application is expressed in Go you can easily use tools like Kubernetes controllers and CRDs to manage and reconcile your application.
+
+ - [KubeBuilder](https://github.com/kubernetes-sigs/kubebuilder) can help you build CRDs and operators.
+ - [Operator Framework](https://github.com/operator-framework/operator-sdk) can help you build CRDs and operators.
+ - [cdk8s](https://github.com/cdk8s-team/cdk8s) can be used to generate YAML in a similar way this project represents applications.

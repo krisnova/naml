@@ -31,6 +31,7 @@ import (
 )
 
 const (
+	// TestClusterName is used to identify the test cluster with Kind.
 	TestClusterName string = "yamyamstestcluster"
 )
 
@@ -39,6 +40,7 @@ var (
 	kubeConfigPath string = path.Join(homedir.HomeDir(), ".kube", "yamyams.conf")
 )
 
+// TestClusterStart can be used to start the test cluster in the TestMain() function.
 func TestClusterStart() error {
 	if isStarted {
 		return nil
@@ -56,10 +58,13 @@ func TestClusterStart() error {
 	return nil
 }
 
+// TestClusterKubeConfigPath will export the kubeconfig path to this directory to use
+// for the client in the tests.
 func TestClusterKubeConfigPath() string {
 	return kubeConfigPath
 }
 
+// TestClusterStop can be used to stop the test cluster in the TestMain() function.
 func TestClusterStop() error {
 	provider := cluster.NewProvider(cluster.ProviderWithDocker())
 	err := provider.Delete(TestClusterName, kubeConfigPath)
