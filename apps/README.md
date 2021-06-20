@@ -2,6 +2,10 @@
 
 Define your applications here.
 
+Every application should implement the `Deployable` interface.
+
+An application can also be defined in any repository as long as the `Deployable` interface is implemented it can be used with the rest of YamYams.
+
 ### Using Go instead of YAML templating for a Pod
 
 Traditionally we would template YAML doing something like this.
