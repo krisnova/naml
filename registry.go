@@ -28,6 +28,9 @@ import (
 	yamyams "github.com/kris-nova/yamyams/pkg"
 )
 
+// Version is set at compile time and used for this specific version of YamYams
+var Version string
+
 // Load is where we can set up applications.
 //
 // This is called whenever the yamyams program starts.

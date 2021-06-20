@@ -11,17 +11,21 @@
 # WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 # See the License for the specific language governing permissions and
 # limitations under the License.
-all: help
+all: compile
+version=$(shell git rev-parse HEAD)
 
-build: ## Build target does build things.
-	@echo "Building..."
+compile: ## Compile for the local architecture ⚙
+	@echo "Compiling..."
+	go build -ldflags "-X 'github.com/kris-nova/yamyams.Version=$(version)'" -o yamyams cmd/*.go
 
-example: ## Example target does example things.
-	@echo "Example..."
+install: ## Install your YamYams 🎉
+	@echo "Installing..."
+	cp yamyams /usr/local/bin/yamyams
 
-sample: ## Sample target does sample things.
-	@echo "Sample..."
+test: ## 🤓 Test is used to test your YamYams
+	@echo "Testing..."
+	go test -v ./...
 
 .PHONY: help
-help:  ## Show help messages for make targets
+help:  ## 🤔 Show help messages for make targets
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) | sort | awk 'BEGIN {FS = ":.*?## "}; {printf "\033[32m%-30s\033[0m %s\n", $$1, $$2}'
