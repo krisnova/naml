@@ -59,19 +59,19 @@ Now we can implement logic specifically to replace the features we had with temp
 
 ```go 
 func (v *MyPod) Install(client *kubernetes.Clientset) error {
-    
-    // Check if the name contains a substring
-    if !strings.Contains(v.name, "example") {
+
+	// Check if the name contains a substring
+	if !strings.Contains(v.name, "example") {
 		return fmt.Errorf("invalid name %s, must contain substring 'example'", v.name)
 	}
-    
-    // Check if exampleInt is greater than 1
-    if v.exampleInt < 2 {
-        return fmt.Errorf("invalid exampleInt %d, must be greater than 1", exampleInt)
-    }
-    
-    // Now we can "plumb" values through to our pod
-    pod := &apiv1.Pod{
+
+	// Check if exampleInt is greater than 1
+	if v.exampleInt < 2 {
+	return fmt.Errorf("invalid exampleInt %d, must be greater than 1", exampleInt)
+	}
+
+	// Now we can "plumb" values through to our pod
+	pod := &apiv1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: v.name,
 		},
@@ -84,7 +84,7 @@ func (v *MyPod) Install(client *kubernetes.Clientset) error {
 			},
 		},
 	}
-	
+
 	newPod, err := client.CoreV1().Pods(v.namespace).Create(context.TODO(), pod, metav1.CreateOptions{})
 	if err != nil {
 		return err
