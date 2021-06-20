@@ -20,7 +20,7 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package staticsite
+package mydeployment
 
 import (
 	"context"
@@ -37,44 +37,50 @@ import (
 	apiv1 "k8s.io/api/core/v1"
 )
 
-const (
-	name string = "yamyams-static-site"
-)
-
-// StaticSite represents a static site.
-type StaticSite struct {
-	resources []interface{}
-	meta      *yamyams.DeployableMeta
-	namespace string
+// MyDeployment represents a Kubernetes deployment.
+type MyDeployment struct {
+	resources     []interface{}
+	meta          *yamyams.DeployableMeta
+	namespace     string
+	name          string
+	exampleString string
+	exampleInt    int
 }
 
-func New(namespace string) *StaticSite {
-	return &StaticSite{
-		namespace: namespace,
+// New will return a new MyDeployment.
+//
+// We can pass in custom arguments here and use them when we Install().
+// In this example we use exmpleString as a label, and exampleInt as our replica count.
+func New(namespace string, name string, exampleString string, exampleInt int) *MyDeployment {
+	return &MyDeployment{
+		namespace:     namespace,
+		exampleInt:    exampleInt,
+		exampleString: exampleString,
+		name:          name,
 		meta: &yamyams.DeployableMeta{
-			Name:        "Example Static Website",
+			Name:        "Example Deployment",
 			Version:     "0.0.1",
-			Command:     "staticsite",
-			Description: "A simple static website application",
+			Command:     "mydeployment",
+			Description: "A simple example Kubernetes deployment",
 		},
 	}
 }
 
-func (v *StaticSite) Install(client *kubernetes.Clientset) error {
+// Install will try to install in Kubernetes
+func (v *MyDeployment) Install(client *kubernetes.Clientset) error {
 
-	containerImage := "krisnova/yamyams-static-site"
-	//containerPort := 80
 	labels := map[string]string{
-		"yamyams": "yamyams",             // Add this to every app so you can kubectl get po -l yamyams=yamyams
-		"app":     "yamyams-static-site", // Add this to this application so you can kubectl get po -l name=yamyams-static-site
+		"k8s-app":       "mydeployment",
+		"app":           "mydeployment",
+		"example-label": v.exampleString,
 	}
 
 	deployment := &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name: v.name,
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: yamyams.I32p(2),
+			Replicas: yamyams.I32p(int32(v.exampleInt)),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labels,
 			},
@@ -85,13 +91,13 @@ func (v *StaticSite) Install(client *kubernetes.Clientset) error {
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
 						{
-							Name:  name,
-							Image: containerImage,
+							Name:  v.name,
+							Image: "busybox",
 							Ports: []apiv1.ContainerPort{
 								{
 									Name:          "http",
 									Protocol:      apiv1.ProtocolTCP,
-									ContainerPort: 80, // It's fine to hard code this because you would have done that shit anyway in YAML
+									ContainerPort: 80,
 								},
 							},
 						},
@@ -103,21 +109,20 @@ func (v *StaticSite) Install(client *kubernetes.Clientset) error {
 
 	updatedDeployment, err := client.AppsV1().Deployments(v.namespace).Create(context.TODO(), deployment, metav1.CreateOptions{})
 	if err != nil {
-		v.resources = append(v.resources, deployment)
-		return fmt.Errorf("unable to install in Kubernetes: %v", err)
+		return fmt.Errorf("unable to install deployment in Kubernetes: %v", err)
 	}
 	v.resources = append(v.resources, updatedDeployment)
 	return nil
 }
 
-func (v *StaticSite) Uninstall(client *kubernetes.Clientset) error {
-	return client.AppsV1().Deployments(v.namespace).Delete(context.TODO(), name, metav1.DeleteOptions{})
+func (v *MyDeployment) Uninstall(client *kubernetes.Clientset) error {
+	return client.AppsV1().Deployments(v.namespace).Delete(context.TODO(), v.name, metav1.DeleteOptions{})
 }
 
-func (v *StaticSite) Resources() []interface{} {
+func (v *MyDeployment) Resources() []interface{} {
 	return v.resources
 }
 
-func (v *StaticSite) About() *yamyams.DeployableMeta {
+func (v *MyDeployment) About() *yamyams.DeployableMeta {
 	return v.meta
 }
