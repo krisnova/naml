@@ -25,6 +25,7 @@ package sampleapp
 import (
 	"context"
 	"fmt"
+
 	yamyams "github.com/kris-nova/yamyams/pkg"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -53,7 +54,7 @@ func New(namespace string, name string, exampleString string, exampleInt int) *M
 				"k8s-app":       "mysampleapp",
 				"app":           "mysampleapp",
 				"example-label": exampleString,
-				"description":   "the 'description' label is special to YamYams and if this is set it will be used in <yamyams list>.",
+				"description":   "short-description-of-your-app",
 			},
 			Annotations: map[string]string{
 				"beeps": "boops",
