@@ -2,11 +2,13 @@
 
 Replace Kubernetes YAML with raw Go!
 
-Say so long 👋 to YAML and start using the Go 🎉 programming language.
+Say so long 👋 to YAML and start using the Go 🎉 programming language to represent and deploy applications.
 
 Take advantage of all the lovely features of Go.
 
 Test your code directly in local Kubernetes using [kind](https://github.com/kubernetes-sigs/kind).
+
+Get your application directly into Go instead of YAML and use it in controllers, operators, CRs/CRDs easily. Use the Go compiler to your advantage.
 
 ## About
 
