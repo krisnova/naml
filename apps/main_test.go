@@ -23,10 +23,11 @@
 package apps
 
 import (
-	"github.com/kris-nova/logger"
-	yamyams "github.com/kris-nova/yamyams/pkg"
 	"os"
 	"testing"
+
+	"github.com/kris-nova/logger"
+	yamyams "github.com/kris-nova/yamyams/pkg"
 )
 
 func TestMain(m *testing.M) {
@@ -35,10 +36,7 @@ func TestMain(m *testing.M) {
 		logger.Critical(err.Error())
 		os.Exit(1)
 	}
-	os.Exit(m.Run())
-	err = yamyams.TestClusterStop()
-	if err != nil {
-		logger.Critical(err.Error())
-		os.Exit(2)
-	}
+	q := m.Run()
+	yamyams.TestClusterStop()
+	os.Exit(q)
 }

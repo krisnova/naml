@@ -24,8 +24,9 @@ package yamyams
 
 import (
 	"fmt"
-	"k8s.io/client-go/util/homedir"
 	"path"
+
+	"k8s.io/client-go/util/homedir"
 	"sigs.k8s.io/kind/pkg/cluster"
 	"sigs.k8s.io/kind/pkg/cmd"
 )
@@ -48,6 +49,7 @@ func TestClusterStart() error {
 	provider := cluster.NewProvider(cluster.ProviderWithDocker(), cluster.ProviderWithLogger(cmd.NewLogger()))
 	err := provider.Create(TestClusterName)
 	if err != nil {
+		defer TestClusterStop()
 		return fmt.Errorf("unable to create kind test cluster: %v", err)
 	}
 	err = provider.ExportKubeConfig(TestClusterName, kubeConfigPath)
