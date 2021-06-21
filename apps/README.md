@@ -67,7 +67,7 @@ func (v *MyPod) Install(client *kubernetes.Clientset) error {
 
 	// Check if exampleInt is greater than 1
 	if v.exampleInt < 2 {
-	return fmt.Errorf("invalid exampleInt %d, must be greater than 1", exampleInt)
+		return fmt.Errorf("invalid exampleInt %d, must be greater than 1", exampleInt)
 	}
 
 	// Now we can "plumb" values through to our pod
