@@ -1,3 +1,5 @@
+[![Go Reference](https://pkg.go.dev/badge/github.com/kris-nova/naml.svg)](https://pkg.go.dev/github.com/kris-nova/naml)
+
 # Not another markup langauge. 
 
 Replace Kubernetes YAML with raw Go!
