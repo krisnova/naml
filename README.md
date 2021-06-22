@@ -1,4 +1,6 @@
-# YamYams
+# naml
+
+> Say "nah" to YAML.
 
 Replace Kubernetes YAML with raw Go!
 
@@ -69,7 +71,7 @@ Register your application in `/registry.go`.
 
 ```go
 func Load(){
-    yamyams.Register(hello.New("default", "hello-app"))
+    naml.Register(hello.New("default", "hello-app"))
 }
 ```
 
@@ -107,14 +109,14 @@ You can now deploy your application directly to Kubernetes from the provided CLI
 ```bash 
 make
 sudo -E make install
-yamyams install hello-app
+naml install hello-app
 ```
 
 You can also `list` and `uninstall`
 
 ```bash 
-yamyams list
-yamyams uninstall
+naml list
+naml uninstall
 ```
 
 ## Use your application in many ways.

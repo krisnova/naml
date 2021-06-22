@@ -20,7 +20,7 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package yamyams
+package naml
 
 import (
 	"github.com/kris-nova/logger"

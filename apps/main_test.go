@@ -27,16 +27,16 @@ import (
 	"testing"
 
 	"github.com/kris-nova/logger"
-	yamyams "github.com/kris-nova/yamyams/pkg"
+	naml "github.com/kris-nova/naml/pkg"
 )
 
 func TestMain(m *testing.M) {
-	err := yamyams.TestClusterStart()
+	err := naml.TestClusterStart()
 	if err != nil {
 		logger.Critical(err.Error())
 		os.Exit(1)
 	}
 	q := m.Run()
-	yamyams.TestClusterStop()
+	naml.TestClusterStop()
 	os.Exit(q)
 }

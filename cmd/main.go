@@ -24,8 +24,8 @@ package main
 
 import (
 	"fmt"
-	registry "github.com/kris-nova/yamyams"
-	"github.com/kris-nova/yamyams/pkg"
+	registry "github.com/kris-nova/naml"
+	"github.com/kris-nova/naml/pkg"
 	"os"
 
 	"github.com/kris-nova/logger"
@@ -44,12 +44,12 @@ func main() {
 	}
 
 	app := &cli.App{
-		Name:      "YamYams",
-		HelpName:  "yamyams",
+		Name:      "naml",
+		HelpName:  "naml",
 		Usage:     "YAML alternative for managing Kubernetes packages directly with Go.",
-		UsageText: " $ yamyams [options] <arguments>",
+		UsageText: " $ naml [options] <arguments>",
 		Description: `
-Use YamYams to start encapsulating your applications with Go.
+Use naml to start encapsulating your applications with Go.
 Take advantage of all the lovely features of the Go programming language.
 
 Is there really THAT much of a difference with defining an application in Go compared to defining an application in YAML after all?`,
@@ -75,18 +75,18 @@ Is there really THAT much of a difference with defining an application in Go com
 				Aliases:     []string{"i"},
 				Description: "Will execute the Install method for a specific app.",
 				Usage:       "Install a package in Kubernetes.",
-				UsageText:   "yamyams install [app]",
+				UsageText:   "naml install [app]",
 				Action: func(c *cli.Context) error {
 					arguments := c.Args()
 					if arguments.Len() != 1 {
-						// Feature: We might want to have "yamyams install" just iterate through every application.
+						// Feature: We might want to have "naml install" just iterate through every application.
 						cli.ShowCommandHelp(c, "install")
 						List()
 						os.Exit(1)
 						return nil
 					}
 					appName := arguments.First()
-					app := yamyams.Find(appName)
+					app := naml.Find(appName)
 					if app == nil {
 						return fmt.Errorf("Invalid application name (Application not registered): %s", appName)
 					}
@@ -99,18 +99,18 @@ Is there really THAT much of a difference with defining an application in Go com
 				Aliases:     []string{"u"},
 				Description: "Will execute the Uninstall method for a specific app.",
 				Usage:       "Uninstall a package in Kubernetes",
-				UsageText:   "yamyams uninstall [app]",
+				UsageText:   "naml uninstall [app]",
 				Action: func(c *cli.Context) error {
 					arguments := c.Args()
 					if arguments.Len() != 1 {
-						// Feature: We might want to have "yamyams install" just iterate through every application.
+						// Feature: We might want to have "naml install" just iterate through every application.
 						cli.ShowCommandHelp(c, "uninstall")
 						List()
 						os.Exit(1)
 						return nil
 					}
 					appName := arguments.First()
-					app := yamyams.Find(appName)
+					app := naml.Find(appName)
 					if app == nil {
 						return fmt.Errorf("Invalid application name (Application not registered): %s", appName)
 					}

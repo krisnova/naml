@@ -20,7 +20,7 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package yamyams
+package naml
 
 func I32p(i int32) *int32 {
 	return &i

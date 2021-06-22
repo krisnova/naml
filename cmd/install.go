@@ -24,12 +24,12 @@ package main
 
 import (
 	"github.com/kris-nova/logger"
-	yamyams "github.com/kris-nova/yamyams/pkg"
+	naml "github.com/kris-nova/naml/pkg"
 )
 
 // Install is used to install an application in Kubernetes
-func Install(app yamyams.Deployable) error {
-	client, err := yamyams.Client()
+func Install(app naml.Deployable) error {
+	client, err := naml.Client()
 	if err != nil {
 		return err
 	}
