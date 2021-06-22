@@ -1,6 +1,4 @@
-# naml
-
-> Say "nah" to YAML.
+# Not another markup langauge. 
 
 Replace Kubernetes YAML with raw Go!
 
