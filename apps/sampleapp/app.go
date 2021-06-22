@@ -26,7 +26,7 @@ import (
 	"context"
 	"fmt"
 
-	yamyams "github.com/kris-nova/yamyams/pkg"
+	naml "github.com/kris-nova/naml/pkg"
 
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
@@ -71,7 +71,7 @@ func (v *MySampleApp) Install(client *kubernetes.Clientset) error {
 			Name: v.Name,
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: yamyams.I32p(int32(v.exampleInt)),
+			Replicas: naml.I32p(int32(v.exampleInt)),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: v.Labels,
 			},

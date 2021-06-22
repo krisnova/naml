@@ -4,7 +4,7 @@ Define your applications here.
 
 Every application should implement the `Deployable` interface.
 
-An application can also be defined in any repository as long as the `Deployable` interface is implemented it can be used with the rest of YamYams.
+An application can also be defined in any repository as long as the `Deployable` interface is implemented it can be used with the rest of naml.
 
 ### Using Go instead of YAML templating for a Pod
 
@@ -32,7 +32,7 @@ In this example we "plumb" values (and their types) through to our code.
 ```go 
 type MyPod struct {
 	resources     []interface{}
-	meta          *yamyams.DeployableMeta
+	meta          *naml.DeployableMeta
 	namespace     string
 	name          string
 	image         string
@@ -45,7 +45,7 @@ func New(namespace string, name string, image string, exampleInt int) *MyPod {
 		exampleInt:    exampleInt,
 		image:         image,
 		name:          name,
-		meta: &yamyams.DeployableMeta{
+		meta: &naml.DeployableMeta{
 			Name:        "Example Pod",
 			Version:     "0.0.1",
 			Command:     "mypod",

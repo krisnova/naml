@@ -24,14 +24,14 @@ package main
 
 import (
 	"fmt"
-	yamyams "github.com/kris-nova/yamyams/pkg"
+	naml "github.com/kris-nova/naml/pkg"
 )
 
 func List() {
-	fmt.Println("$ yamyams install    [app]")
-	fmt.Println("$ yamyams uninstall  [app]")
+	fmt.Println("$ naml install    [app]")
+	fmt.Println("$ naml uninstall  [app]")
 	fmt.Println("")
-	for _, app := range yamyams.Registry() {
+	for _, app := range naml.Registry() {
 		fmt.Printf("[%s]\n", app.Meta().Name)
 		fmt.Printf("\tnamespace  : %s\n", app.Meta().Namespace)
 		fmt.Printf("\tversion    : %s\n", app.Meta().ResourceVersion)

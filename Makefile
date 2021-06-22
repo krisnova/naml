@@ -24,13 +24,13 @@ version=$(shell git rev-parse HEAD)
 
 compile: ## Compile for the local architecture ⚙
 	@echo "Compiling..."
-	go build -ldflags "-X 'github.com/kris-nova/yamyams.Version=$(version)'" -o yamyams cmd/*.go
+	go build -ldflags "-X 'github.com/kris-nova/naml.Version=$(version)'" -o naml cmd/*.go
 
-install: ## Install your YamYams 🎉
+install: ## Install your naml 🎉
 	@echo "Installing..."
-	cp yamyams /usr/local/bin/yamyams
+	cp naml /usr/local/bin/naml
 
-test: ## 🤓 Test is used to test your YamYams
+test: ## 🤓 Test is used to test your naml
 	@echo "Testing..."
 	go test -v ./...
 

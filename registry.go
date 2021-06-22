@@ -20,28 +20,28 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package yamyams
+package naml
 
 import (
-	myapplication "github.com/kris-nova/yamyams/apps/_example"
-	mydeployment "github.com/kris-nova/yamyams/apps/sampleapp"
-	yamyams "github.com/kris-nova/yamyams/pkg"
+	myapplication "github.com/kris-nova/naml/apps/_example"
+	mydeployment "github.com/kris-nova/naml/apps/sampleapp"
+	naml "github.com/kris-nova/naml/pkg"
 )
 
-// Version is set at compile time and used for this specific version of YamYams
+// Version is set at compile time and used for this specific version of naml
 var Version string
 
 // Load is where we can set up applications.
 //
-// This is called whenever the yamyams program starts.
+// This is called whenever the naml program starts.
 func Load() {
 
 	// We can keep them very simple, and hard code all the logic like this one.
-	yamyams.Register(myapplication.New())
+	naml.Register(myapplication.New())
 
 	// We can also have several instances of the same application like this.
-	yamyams.Register(mydeployment.New("default", "example-1", "beeps", 3))
-	yamyams.Register(mydeployment.New("default", "example-2", "boops", 1))
-	yamyams.Register(mydeployment.New("default", "example-3", "cyber boops", 7))
+	naml.Register(mydeployment.New("default", "example-1", "beeps", 3))
+	naml.Register(mydeployment.New("default", "example-2", "boops", 1))
+	naml.Register(mydeployment.New("default", "example-3", "cyber boops", 7))
 
 }

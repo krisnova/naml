@@ -22,11 +22,11 @@
 
 package main
 
-import yamyams "github.com/kris-nova/yamyams/pkg"
+import naml "github.com/kris-nova/naml/pkg"
 
 // Uninstall is used to uninstall an application in Kubernetes
-func Uninstall(app yamyams.Deployable) error {
-	client, err := yamyams.Client()
+func Uninstall(app naml.Deployable) error {
+	client, err := naml.Client()
 	if err != nil {
 		return err
 	}

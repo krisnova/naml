@@ -20,7 +20,7 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package yamyams
+package naml
 
 import (
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -37,6 +37,6 @@ type Deployable interface {
 	// Uninstall will attempt to uninstall in Kubernetes
 	Uninstall(client *kubernetes.Clientset) error
 
-	// Meta returns the Kubernetes native ObjectMeta which is used to manage applications with YamYams.
+	// Meta returns the Kubernetes native ObjectMeta which is used to manage applications with naml.
 	Meta() *v1.ObjectMeta
 }

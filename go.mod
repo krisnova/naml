@@ -1,4 +1,4 @@
-module github.com/kris-nova/yamyams
+module github.com/kris-nova/naml
 
 go 1.16
 

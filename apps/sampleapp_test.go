@@ -23,15 +23,15 @@
 package apps
 
 import (
-	"github.com/kris-nova/yamyams/apps/sampleapp"
-	yamyams "github.com/kris-nova/yamyams/pkg"
+	"github.com/kris-nova/naml/apps/sampleapp"
+	naml "github.com/kris-nova/naml/pkg"
 	"testing"
 )
 
 // TestSampleApp is an example integration test that can be used to
 // install and uninstall a sample application in Kubernetes.
 func TestSampleApp(t *testing.T) {
-	client, err := yamyams.ClientFromPath(yamyams.TestClusterKubeConfigPath())
+	client, err := naml.ClientFromPath(naml.TestClusterKubeConfigPath())
 	if err != nil {
 		t.Errorf("unable to create client: %v", err)
 	}

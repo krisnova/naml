@@ -20,7 +20,7 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package yamyams
+package naml
 
 import (
 	"fmt"
@@ -33,12 +33,12 @@ import (
 
 const (
 	// TestClusterName is used to identify the test cluster with Kind.
-	TestClusterName string = "yamyamstestcluster"
+	TestClusterName string = "namltestcluster"
 )
 
 var (
 	isStarted      bool   = false
-	kubeConfigPath string = path.Join(homedir.HomeDir(), ".kube", "yamyams.conf")
+	kubeConfigPath string = path.Join(homedir.HomeDir(), ".kube", "naml.conf")
 )
 
 // TestClusterStart can be used to start the test cluster in the TestMain() function.
