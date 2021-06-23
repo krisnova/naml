@@ -12,6 +12,25 @@ Test your code directly in local Kubernetes using [kind](https://github.com/kube
 
 Get your application directly into Go instead of YAML and use it in controllers, operators, CRs/CRDs easily. Use the Go compiler to your advantage.
 
+#### Implement Deployable
+
+As long as there is a Go system that implements this interface it can be used with `naml`. See examples for how to include an implementation in your project.
+
+```go
+// Deployable is used to deploy applications.
+type Deployable interface {
+
+	// Install will attempt to install in Kubernetes
+	Install(client *kubernetes.Clientset) error
+
+	// Uninstall will attempt to uninstall in Kubernetes
+	Uninstall(client *kubernetes.Clientset) error
+
+	// Meta returns the Kubernetes native ObjectMeta which is used to manage applications with naml.
+	Meta() *v1.ObjectMeta
+}
+```
+
 ## About
 
 This is a framework for infrastructure teams who need more than just conditional manifests. 
