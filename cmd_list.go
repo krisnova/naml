@@ -20,18 +20,17 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package main
+package naml
 
 import (
 	"fmt"
-	naml "github.com/kris-nova/naml/pkg"
 )
 
 func List() {
 	fmt.Println("$ naml install    [app]")
 	fmt.Println("$ naml uninstall  [app]")
 	fmt.Println("")
-	for _, app := range naml.Registry() {
+	for _, app := range Registry() {
 		fmt.Printf("[%s]\n", app.Meta().Name)
 		fmt.Printf("\tnamespace  : %s\n", app.Meta().Namespace)
 		fmt.Printf("\tversion    : %s\n", app.Meta().ResourceVersion)

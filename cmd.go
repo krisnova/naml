@@ -20,19 +20,17 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package main
+package naml
 
 import (
 	"fmt"
-	registry "github.com/kris-nova/naml"
-	"github.com/kris-nova/naml/pkg"
 	"os"
 
 	"github.com/kris-nova/logger"
 	"github.com/urfave/cli/v2"
 )
 
-func main() {
+func RunCLI(version string) error {
 	var verbose bool = true
 
 	// cli assumes "-v" for version.
@@ -53,7 +51,7 @@ Use naml to start encapsulating your applications with Go.
 Take advantage of all the lovely features of the Go programming language.
 
 Is there really THAT much of a difference with defining an application in Go compared to defining an application in YAML after all?`,
-		Version: registry.Version,
+		Version: version,
 		Authors: []*cli.Author{
 			{
 				Name:  "Kris Nóva",
@@ -86,7 +84,7 @@ Is there really THAT much of a difference with defining an application in Go com
 						return nil
 					}
 					appName := arguments.First()
-					app := naml.Find(appName)
+					app := Find(appName)
 					if app == nil {
 						return fmt.Errorf("Invalid application name (Application not registered): %s", appName)
 					}
@@ -110,7 +108,7 @@ Is there really THAT much of a difference with defining an application in Go com
 						return nil
 					}
 					appName := arguments.First()
-					app := naml.Find(appName)
+					app := Find(appName)
 					if app == nil {
 						return fmt.Errorf("Invalid application name (Application not registered): %s", appName)
 					}
@@ -136,13 +134,5 @@ Is there really THAT much of a difference with defining an application in Go com
 	} else {
 		logger.BitwiseLevel = logger.LogAlways | logger.LogCritical | logger.LogWarning | logger.LogDeprecated
 	}
-
-	// Load whatever apps are defined in registry.go
-	registry.Load()
-
-	err := app.Run(os.Args)
-	if err != nil {
-		logger.Critical("%v", err)
-	}
-	os.Exit(0)
+	return app.Run(os.Args)
 }

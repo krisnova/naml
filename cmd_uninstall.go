@@ -22,41 +22,11 @@
 
 package naml
 
-import (
-	"github.com/kris-nova/logger"
-	"os"
-)
-
-var registry = make(map[string]Deployable)
-
-func Register(app Deployable) {
-
-	// Validate the application
-	if app == nil {
-		logger.Critical("Unable to register NIL application.")
-		os.Exit(1)
+// Uninstall is used to uninstall an application in Kubernetes
+func Uninstall(app Deployable) error {
+	client, err := Client()
+	if err != nil {
+		return err
 	}
-
-	if app.Meta() == nil {
-		logger.Critical("Unable to register NIL ObjectMeta for application")
-		os.Exit(1)
-	}
-
-	if app.Meta().Name == "" {
-		logger.Critical("Unable to register NIL ObjectMeta.Name for application")
-		os.Exit(1)
-	}
-
-	registry[app.Meta().Name] = app
-}
-
-func Registry() map[string]Deployable {
-	return registry
-}
-
-func Find(name string) Deployable {
-	if app, ok := registry[name]; ok {
-		return app
-	}
-	return nil
+	return app.Uninstall(client)
 }

@@ -23,25 +23,40 @@
 package naml
 
 import (
-	myapplication "github.com/kris-nova/naml/apps/_example"
-	mydeployment "github.com/kris-nova/naml/apps/sampleapp"
-	naml "github.com/kris-nova/naml/pkg"
+	"github.com/kris-nova/logger"
+	"os"
 )
 
-// Version is set at compile time and used for this specific version of naml
-var Version string
+var registry = make(map[string]Deployable)
 
-// Load is where we can set up applications.
-//
-// This is called whenever the naml program starts.
-func Load() {
+func Register(app Deployable) {
 
-	// We can keep them very simple, and hard code all the logic like this one.
-	naml.Register(myapplication.New())
+	// Validate the application
+	if app == nil {
+		logger.Critical("Unable to register NIL application.")
+		os.Exit(1)
+	}
 
-	// We can also have several instances of the same application like this.
-	naml.Register(mydeployment.New("default", "example-1", "beeps", 3))
-	naml.Register(mydeployment.New("default", "example-2", "boops", 1))
-	naml.Register(mydeployment.New("default", "example-3", "cyber boops", 7))
+	if app.Meta() == nil {
+		logger.Critical("Unable to register NIL ObjectMeta for application")
+		os.Exit(1)
+	}
 
+	if app.Meta().Name == "" {
+		logger.Critical("Unable to register NIL ObjectMeta.Name for application")
+		os.Exit(1)
+	}
+
+	registry[app.Meta().Name] = app
+}
+
+func Registry() map[string]Deployable {
+	return registry
+}
+
+func Find(name string) Deployable {
+	if app, ok := registry[name]; ok {
+		return app
+	}
+	return nil
 }
