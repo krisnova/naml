@@ -24,10 +24,11 @@ package naml
 
 import (
 	"fmt"
+	"path"
+
 	"k8s.io/client-go/kubernetes"
 	"k8s.io/client-go/tools/clientcmd"
 	"k8s.io/client-go/util/homedir"
-	"path"
 )
 
 // Client is used to authenticate with Kubernetes and build the Kube client

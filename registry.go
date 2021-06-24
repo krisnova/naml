@@ -23,12 +23,14 @@
 package naml
 
 import (
-	"github.com/kris-nova/logger"
 	"os"
+
+	"github.com/kris-nova/logger"
 )
 
 var registry = make(map[string]Deployable)
 
+// Register an application with naml
 func Register(app Deployable) {
 
 	// Validate the application
@@ -50,10 +52,12 @@ func Register(app Deployable) {
 	registry[app.Meta().Name] = app
 }
 
+// Registry will return the registry
 func Registry() map[string]Deployable {
 	return registry
 }
 
+// Find an application by name
 func Find(name string) Deployable {
 	if app, ok := registry[name]; ok {
 		return app
