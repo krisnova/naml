@@ -35,7 +35,7 @@ test: ## 🤓 Test is used to test your naml
 	go test -v ./...
 
 clean: ## Clean your artifacts 🧼
-	@echo "Cleaing..."
+	@echo "Cleaning..."
 	rm -rf release
 	rm -rf naml
 
