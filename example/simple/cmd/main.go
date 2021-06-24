@@ -23,20 +23,25 @@
 package main
 
 import (
+	"os"
+
 	"github.com/kris-nova/logger"
-	naml "github.com/kris-nova/naml/pkg"
+	"github.com/kris-nova/naml"
+	app "github.com/kris-nova/naml/example/simple"
 )
 
-// Install is used to install an application in Kubernetes
-func Install(app naml.Deployable) error {
-	client, err := naml.Client()
+// main is the main entry point for your CLI application
+func main() {
+	// Define your application
+	a := app.New("default", "simple-app", "beeps-boops", 17)
+
+	// Register your application with naml
+	naml.Register(a)
+
+	// Run the default CLI tooling
+	err := naml.RunCLI(app.Version)
 	if err != nil {
-		return err
+		logger.Critical("%v", err)
+		os.Exit(1)
 	}
-	err = app.Install(client)
-	if err != nil {
-		return err
-	}
-	logger.Success("Successfully installed [%s]", app.Meta().Name)
-	return nil
 }

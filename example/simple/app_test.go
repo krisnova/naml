@@ -20,22 +20,37 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package apps
+package app
 
 import (
-	"github.com/kris-nova/naml/apps/sampleapp"
-	naml "github.com/kris-nova/naml/pkg"
+	"os"
 	"testing"
+
+	naml2 "github.com/kris-nova/naml"
+
+	"github.com/kris-nova/logger"
 )
 
-// TestSampleApp is an example integration test that can be used to
+// TestMain will bootstrap and tear down our testing cluster.
+func TestMain(m *testing.M) {
+	err := naml2.TestClusterStart()
+	if err != nil {
+		logger.Critical(err.Error())
+		os.Exit(1)
+	}
+	q := m.Run()
+	naml2.TestClusterStop()
+	os.Exit(q)
+}
+
+// TestApp is an example integration test that can be used to
 // install and uninstall a sample application in Kubernetes.
-func TestSampleApp(t *testing.T) {
-	client, err := naml.ClientFromPath(naml.TestClusterKubeConfigPath())
+func TestApp(t *testing.T) {
+	client, err := naml2.ClientFromPath(naml2.TestClusterKubeConfigPath())
 	if err != nil {
 		t.Errorf("unable to create client: %v", err)
 	}
-	app := sampleapp.New("default", "sample-app", "beeps-boops", 2)
+	app := New("default", "sample-app", "beeps-boops", 2)
 	err = app.Install(client)
 	if err != nil {
 		t.Errorf("unable to install sample-app: %v", err)
@@ -46,9 +61,9 @@ func TestSampleApp(t *testing.T) {
 	}
 }
 
-// TestSampleAppName shows how you can test arbitrary parts of your application.
-func TestSampleAppName(t *testing.T) {
-	app := sampleapp.New("default", "sample-app", "beeps-boops", 2)
+// TestAppName shows how you can test arbitrary parts of your application.
+func TestAppName(t *testing.T) {
+	app := New("default", "sample-app", "beeps-boops", 2)
 	if app.Name != "sample-app" {
 		t.Errorf(".Name is not plumbed through from New()")
 	}

@@ -20,23 +20,22 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package sampleapp
+package app
 
 import (
 	"context"
 	"fmt"
 
-	naml "github.com/kris-nova/naml/pkg"
-
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
+	naml2 "github.com/kris-nova/naml"
 
 	appsv1 "k8s.io/api/apps/v1"
-
 	v1 "k8s.io/api/apps/v1"
-
 	apiv1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/client-go/kubernetes"
 )
+
+var Version string
 
 type MySampleApp struct {
 	metav1.ObjectMeta
@@ -71,7 +70,7 @@ func (v *MySampleApp) Install(client *kubernetes.Clientset) error {
 			Name: v.Name,
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: naml.I32p(int32(v.exampleInt)),
+			Replicas: naml2.I32p(int32(v.exampleInt)),
 			Selector: &metav1.LabelSelector{
 				MatchLabels: v.Labels,
 			},

@@ -20,23 +20,22 @@
 //    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
 //    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
 
-package apps
+package naml
 
 import (
-	"os"
-	"testing"
-
 	"github.com/kris-nova/logger"
-	naml "github.com/kris-nova/naml/pkg"
 )
 
-func TestMain(m *testing.M) {
-	err := naml.TestClusterStart()
+// Install is used to install an application in Kubernetes
+func Install(app Deployable) error {
+	client, err := Client()
 	if err != nil {
-		logger.Critical(err.Error())
-		os.Exit(1)
+		return err
 	}
-	q := m.Run()
-	naml.TestClusterStop()
-	os.Exit(q)
+	err = app.Install(client)
+	if err != nil {
+		return err
+	}
+	logger.Success("Successfully installed [%s]", app.Meta().Name)
+	return nil
 }
