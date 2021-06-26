@@ -23,6 +23,7 @@
 package naml
 
 import (
+	"fmt"
 	"os"
 
 	"github.com/kris-nova/logger"
@@ -30,26 +31,41 @@ import (
 
 var registry = make(map[string]Deployable)
 
+// RegisterAndExit will register the app or exit with an error message in stdout
+func RegisterAndExit(app Deployable) {
+	err := RegisterAndError(app)
+	if err != nil {
+		logger.Critical("%v", err)
+		os.Exit(1)
+	}
+
+}
+
 // Register an application with naml
 func Register(app Deployable) {
+	RegisterAndExit(app)
+}
+
+func RegisterAndError(app Deployable) error {
 
 	// Validate the application
 	if app == nil {
-		logger.Critical("Unable to register NIL application.")
-		os.Exit(1)
+		return fmt.Errorf("Unable to register NIL application.")
+
 	}
 
 	if app.Meta() == nil {
-		logger.Critical("Unable to register NIL ObjectMeta for application")
-		os.Exit(1)
+		return fmt.Errorf("Unable to register NIL ObjectMeta for application")
+
 	}
 
 	if app.Meta().Name == "" {
-		logger.Critical("Unable to register NIL ObjectMeta.Name for application")
-		os.Exit(1)
+		return fmt.Errorf("Unable to register NIL ObjectMeta.Name for application")
+
 	}
 
 	registry[app.Meta().Name] = app
+	return nil
 }
 
 // Registry will return the registry
