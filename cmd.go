@@ -30,8 +30,24 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func RunCLI(version string) error {
-	var verbose bool = true
+// RunCommandLine is the global NAML command line program.
+//
+// Use this if you would like to use the built in NAML command line interface.
+func RunCommandLine() error {
+	// Default options
+	RunCommandLineWithOptions()
+	return nil
+}
+
+// RunCommandLineWithOptions is here so we can default values in RunCommandLine() that
+// we would want to pass in here later (tests, etc)
+func RunCommandLineWithOptions() error {
+	// with is a set of paths that the user has specificed for naml
+	// to run with
+	var with cli.StringSlice
+
+	// verbose is the logger verbosity
+	var verbose bool = false
 
 	// cli assumes "-v" for version.
 	// override that here
@@ -41,17 +57,19 @@ func RunCLI(version string) error {
 		Usage:   "Print the version",
 	}
 
+	// ********************************************************
+	// [ NAML APPLICATION ]
+	// ********************************************************
+
 	app := &cli.App{
 		Name:      "naml",
 		HelpName:  "naml",
 		Usage:     "YAML alternative for managing Kubernetes packages directly with Go.",
 		UsageText: " $ naml [options] <arguments>",
 		Description: `
-Use naml to start encapsulating your applications with Go.
-Take advantage of all the lovely features of the Go programming language.
-
-Is there really THAT much of a difference with defining an application in Go compared to defining an application in YAML after all?`,
-		Version: version,
+NAML Ain't Markup Langauge. Use NAML to encapsulate Kubernetes applications in Go.
+`,
+		Version: Version,
 		Authors: []*cli.Author{
 			{
 				Name:  "Kris Nóva",
@@ -62,12 +80,23 @@ Is there really THAT much of a difference with defining an application in Go com
 			&cli.BoolFlag{
 				Name:        "verbose",
 				Aliases:     []string{"v"},
-				Value:       true,
+				Value:       false,
 				Usage:       "toggle verbose mode for logger.",
 				Destination: &verbose,
 			},
+			&cli.StringSliceFlag{
+				Name:        "with",
+				Aliases:     []string{"w"},
+				Usage:       "include other naml binaries.",
+				Destination: &with,
+			},
 		},
 		Commands: []*cli.Command{
+
+			// ********************************************************
+			// [ INSTALL ]
+			// ********************************************************
+
 			{
 				Name:        "install",
 				Aliases:     []string{"i"},
@@ -75,12 +104,13 @@ Is there really THAT much of a difference with defining an application in Go com
 				Usage:       "Install a package in Kubernetes.",
 				UsageText:   "naml install [app]",
 				Action: func(c *cli.Context) error {
+					AllInit(verbose, with.Value())
+
 					arguments := c.Args()
 					if arguments.Len() != 1 {
 						// Feature: We might want to have "naml install" just iterate through every application.
 						cli.ShowCommandHelp(c, "install")
 						List()
-						os.Exit(1)
 						return nil
 					}
 					appName := arguments.First()
@@ -92,6 +122,11 @@ Is there really THAT much of a difference with defining an application in Go com
 					return Install(app)
 				},
 			},
+
+			// ********************************************************
+			// [ UNINSTALL ]
+			// ********************************************************
+
 			{
 				Name:        "uninstall",
 				Aliases:     []string{"u"},
@@ -99,12 +134,12 @@ Is there really THAT much of a difference with defining an application in Go com
 				Usage:       "Uninstall a package in Kubernetes",
 				UsageText:   "naml uninstall [app]",
 				Action: func(c *cli.Context) error {
+					AllInit(verbose, with.Value())
 					arguments := c.Args()
 					if arguments.Len() != 1 {
 						// Feature: We might want to have "naml install" just iterate through every application.
 						cli.ShowCommandHelp(c, "uninstall")
 						List()
-						os.Exit(1)
 						return nil
 					}
 					appName := arguments.First()
@@ -116,25 +151,69 @@ Is there really THAT much of a difference with defining an application in Go com
 					return Uninstall(app)
 				},
 			},
+
+			// ********************************************************
+			// [ LIST ]
+			// ********************************************************
+
 			{
 				Name:    "list",
 				Aliases: []string{"l"},
 				Usage:   "[local] List applications.",
 				Action: func(c *cli.Context) error {
+					AllInit(verbose, with.Value())
 					List()
+					return nil
+				},
+			},
+
+			// ********************************************************
+			// [ CHILD ]
+			// ********************************************************
+
+			{
+				Name:    "child",
+				Aliases: []string{"c"},
+				Usage:   "[Local] Run the program in child runtime mode to be used with another NAML.",
+				Action: func(c *cli.Context) error {
+					err := RuntimeChild()
+					if err != nil {
+						return fmt.Errorf("unable to run in runtime mode: %v", err)
+					}
 					return nil
 				},
 			},
 		},
 	}
 
+	return app.Run(os.Args)
+}
+
+// AllInit is the "constructor" for every command line flag.
+// This is how we use naml -w to include sub-namls
+func AllInit(verbose bool, with []string) {
+
+	// [ Verbosity System ]
 	if verbose {
+		fmt.Println("boops")
+
 		logger.BitwiseLevel = logger.LogEverything
 		logger.Always("[Verbose Mode]")
 	} else {
 		logger.BitwiseLevel = logger.LogAlways | logger.LogCritical | logger.LogWarning | logger.LogDeprecated
 	}
-	return app.Run(os.Args)
+
+	// [ Child Runtime System ]
+	if len(with) > 0 {
+		for _, childPath := range with {
+			err := AddRuntimeChild(childPath)
+			if err != nil {
+				logger.Warning("unable to add child naml %s: %v", childPath, err)
+			} else {
+				logger.Success("added child naml: %s", childPath)
+			}
+		}
+	}
 }
 
 // Install is used to install an application in Kubernetes
