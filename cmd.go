@@ -136,3 +136,41 @@ Is there really THAT much of a difference with defining an application in Go com
 	}
 	return app.Run(os.Args)
 }
+
+// Install is used to install an application in Kubernetes
+func Install(app Deployable) error {
+	client, err := Client()
+	if err != nil {
+		return err
+	}
+	err = app.Install(client)
+	if err != nil {
+		return err
+	}
+	logger.Success("Successfully installed [%s]", app.Meta().Name)
+	return nil
+}
+
+// List the naml package information in stdout
+func List() {
+	fmt.Println("")
+	for _, app := range Registry() {
+		fmt.Printf("[%s]\n", app.Meta().Name)
+		fmt.Printf("\tnamespace  : %s\n", app.Meta().Namespace)
+		fmt.Printf("\tversion    : %s\n", app.Meta().ResourceVersion)
+		if description, ok := app.Meta().Labels["description"]; ok {
+			fmt.Printf("\tdescription : %s\n", description)
+		}
+		fmt.Printf("\n")
+	}
+	fmt.Println("")
+}
+
+// Uninstall is used to uninstall an application in Kubernetes
+func Uninstall(app Deployable) error {
+	client, err := Client()
+	if err != nil {
+		return err
+	}
+	return app.Uninstall(client)
+}

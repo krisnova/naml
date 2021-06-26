@@ -25,3 +25,11 @@ package naml
 func I32p(i int32) *int32 {
 	return &i
 }
+
+func Stringp(i string) *string {
+	return &i
+}
+
+func I64p(i int64) *int64 {
+	return &i
+}
