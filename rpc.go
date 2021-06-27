@@ -66,6 +66,9 @@ const (
 	// In this example we use 127.0.0.1 in favor of localhost as we aren't sure DNS
 	// is set to localhost on this machine.
 	localServerAddr = "127.0.0.1"
+
+	// contentType is the naml rpc contentType according to the HTTP spec.
+	contentType = "application/json"
 )
 
 // remotes is a package level cache of known healthy remote naml RPC servers.
@@ -155,7 +158,54 @@ func handshake(w http.ResponseWriter, r *http.Request) {
 
 // install will install an application with the child binary
 func install(w http.ResponseWriter, r *http.Request) {
+	remotejson, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		writeError(w, fmt.Sprintf("unable to read body: %v", err))
+		return
+	}
+	remoteApp := RPCApplication{}
+	err = json.Unmarshal(remotejson, &remoteApp)
+	if err != nil {
+		writeError(w, fmt.Sprintf("unable to json unmarshal body: %v", err))
+		return
+	}
 
+	app := Find(remoteApp.AppName)
+	if app == nil {
+		writeError(w, fmt.Sprintf("unable to find app: %s", remoteApp.AppName))
+		return
+	}
+
+	// Now we handle auth
+	client, err := Client()
+	if err != nil {
+		writeError(w, fmt.Sprintf("unable to generate client: %v", err))
+		return
+	}
+
+	// Try to install the remote application
+	err = app.Install(client)
+	if err != nil {
+		writeError(w, fmt.Sprintf("unable to install on remote: %v", err))
+		return
+	}
+
+	// Success!
+	w.WriteHeader(http.StatusOK)
+}
+
+// writeError will attempt to write a JSON error over the RPC
+func writeError(w http.ResponseWriter, message string) {
+	w.WriteHeader(http.StatusInternalServerError)
+	logger.Warning("unable to install remote application: %s", message)
+	j := &RPCError{
+		Message: message,
+	}
+	jjson, err := json.Marshal(&j)
+	if err != nil {
+		return // silently return!
+	}
+	w.Write(jjson)
 }
 
 // uninstall will install an application with the child binary

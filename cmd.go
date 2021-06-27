@@ -250,10 +250,20 @@ func AllInit(verbose bool, with []string) error {
 
 // Install is used to install an application in Kubernetes
 func Install(app Deployable) error {
+
+	// Check if app is a remote app
+	if remoteApp, ok := app.(*RPCApplication); ok {
+		// Do NOT pass in this local kubernetes client!
+		return remoteApp.Install(nil)
+	}
+
+	// Only grab a client if we are running in this instance!
 	client, err := Client()
 	if err != nil {
 		return err
 	}
+
+	// Install
 	err = app.Install(client)
 	if err != nil {
 		return err

@@ -23,6 +23,7 @@
 package naml
 
 import (
+	"bytes"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
@@ -51,11 +52,46 @@ type RPCApplication struct {
 	AppVersion string
 }
 
+// RPCError is when something goes wrong over the RPC
+type RPCError struct {
+	Message string
+}
+
+// Install is the remote application install wrapper.
 func (c *RPCApplication) Install(clientset *kubernetes.Clientset) error {
+	if clientset != nil {
+		return fmt.Errorf("*** security concern: clientset != nil ***")
+	}
+	logger.Info("Starting remote install() %s", c.AppName)
+	ajson, err := json.Marshal(c)
+	if err != nil {
+		return fmt.Errorf("unable to json marshal remote application: %v", err)
+	}
+	appBuffer := bytes.NewBuffer(ajson)
+	response, err := http.Post(fmt.Sprintf("%s/install", c.Remote.Addr), contentType, appBuffer)
+	if err != nil {
+		return fmt.Errorf("unable to remote install(): %v", err)
+	}
+	if response.StatusCode != http.StatusOK {
+		respjson, err := ioutil.ReadAll(response.Body)
+		if err != nil {
+			return fmt.Errorf("unable to remote install() status code: %d: %v", response.StatusCode, err)
+		}
+		rpcerr := RPCError{}
+		err = json.Unmarshal(respjson, &rpcerr)
+		if err != nil {
+			return fmt.Errorf("unable to remote install() json error status code: %d: %v", response.StatusCode, err)
+		}
+		return fmt.Errorf("unable to remote install() status code: %d: %s", response.StatusCode, rpcerr.Message)
+	}
+	logger.Info("Success!")
 	return nil
 }
 
 func (c *RPCApplication) Uninstall(clientset *kubernetes.Clientset) error {
+	if clientset != nil {
+		return fmt.Errorf("*** security concern: clientset != nil ***")
+	}
 	return nil
 }
 
@@ -89,6 +125,7 @@ func RegisterRemoteApplications() error {
 			return fmt.Errorf("unable to list() remote [3] %s: %v", path, err)
 		}
 		for _, app := range remoteApps {
+			app.Remote = remote // Don't forget to set the remote!
 			logger.Info("Registering remote app %s", app.AppName)
 
 			//
