@@ -30,8 +30,31 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
-func RunCLI(version string) error {
-	var verbose bool = true
+func RunCommandLineAndExit() {
+	err := RunCommandLine()
+	if err != nil {
+		logger.Critical(err.Error())
+		os.Exit(1)
+	}
+}
+
+// RunCommandLine is the global NAML command line program.
+//
+// Use this if you would like to use the built in NAML command line interface.
+func RunCommandLine() error {
+	// Default options
+	return RunCommandLineWithOptions()
+}
+
+// RunCommandLineWithOptions is here so we can default values in RunCommandLine() that
+// we would want to pass in here later (tests, etc)
+func RunCommandLineWithOptions() error {
+	// with is a set of paths that the user has specificed for naml
+	// to run with
+	var with cli.StringSlice
+
+	// verbose is the logger verbosity
+	var verbose bool = false
 
 	// cli assumes "-v" for version.
 	// override that here
@@ -41,17 +64,19 @@ func RunCLI(version string) error {
 		Usage:   "Print the version",
 	}
 
+	// ********************************************************
+	// [ NAML APPLICATION ]
+	// ********************************************************
+
 	app := &cli.App{
 		Name:      "naml",
 		HelpName:  "naml",
 		Usage:     "YAML alternative for managing Kubernetes packages directly with Go.",
 		UsageText: " $ naml [options] <arguments>",
 		Description: `
-Use naml to start encapsulating your applications with Go.
-Take advantage of all the lovely features of the Go programming language.
-
-Is there really THAT much of a difference with defining an application in Go compared to defining an application in YAML after all?`,
-		Version: version,
+NAML Ain't Markup Langauge. Use NAML to encapsulate Kubernetes applications in Go.
+`,
+		Version: Version,
 		Authors: []*cli.Author{
 			{
 				Name:  "Kris Nóva",
@@ -62,12 +87,23 @@ Is there really THAT much of a difference with defining an application in Go com
 			&cli.BoolFlag{
 				Name:        "verbose",
 				Aliases:     []string{"v"},
-				Value:       true,
+				Value:       false,
 				Usage:       "toggle verbose mode for logger.",
 				Destination: &verbose,
 			},
+			&cli.StringSliceFlag{
+				Name:        "with",
+				Aliases:     []string{"f", "w"}, // use -f to follow kubectl -f syntax trolol
+				Usage:       "include other naml binaries.",
+				Destination: &with,
+			},
 		},
 		Commands: []*cli.Command{
+
+			// ********************************************************
+			// [ INSTALL ]
+			// ********************************************************
+
 			{
 				Name:        "install",
 				Aliases:     []string{"i"},
@@ -75,12 +111,18 @@ Is there really THAT much of a difference with defining an application in Go com
 				Usage:       "Install a package in Kubernetes.",
 				UsageText:   "naml install [app]",
 				Action: func(c *cli.Context) error {
+					// ----------------------------------
+					err := AllInit(verbose, with.Value())
+					if err != nil {
+						return err
+					}
+					// ----------------------------------
+
 					arguments := c.Args()
 					if arguments.Len() != 1 {
 						// Feature: We might want to have "naml install" just iterate through every application.
 						cli.ShowCommandHelp(c, "install")
 						List()
-						os.Exit(1)
 						return nil
 					}
 					appName := arguments.First()
@@ -92,6 +134,11 @@ Is there really THAT much of a difference with defining an application in Go com
 					return Install(app)
 				},
 			},
+
+			// ********************************************************
+			// [ UNINSTALL ]
+			// ********************************************************
+
 			{
 				Name:        "uninstall",
 				Aliases:     []string{"u"},
@@ -99,12 +146,18 @@ Is there really THAT much of a difference with defining an application in Go com
 				Usage:       "Uninstall a package in Kubernetes",
 				UsageText:   "naml uninstall [app]",
 				Action: func(c *cli.Context) error {
+					// ----------------------------------
+					err := AllInit(verbose, with.Value())
+					if err != nil {
+						return err
+					}
+					// ----------------------------------
+
 					arguments := c.Args()
 					if arguments.Len() != 1 {
 						// Feature: We might want to have "naml install" just iterate through every application.
 						cli.ShowCommandHelp(c, "uninstall")
 						List()
-						os.Exit(1)
 						return nil
 					}
 					appName := arguments.First()
@@ -116,33 +169,99 @@ Is there really THAT much of a difference with defining an application in Go com
 					return Uninstall(app)
 				},
 			},
+
+			// ********************************************************
+			// [ LIST ]
+			// ********************************************************
+
 			{
 				Name:    "list",
 				Aliases: []string{"l"},
-				Usage:   "[local] List applications.",
+				Usage:   "List applications.",
 				Action: func(c *cli.Context) error {
+					// ----------------------------------
+					err := AllInit(verbose, with.Value())
+					if err != nil {
+						return err
+					}
+					// ----------------------------------
+
 					List()
+					return nil
+				},
+			},
+
+			// ********************************************************
+			// [ rpc ]
+			// ********************************************************
+
+			{
+				Name:        "rpc",
+				Aliases:     []string{"r"},
+				Usage:       "Run the program in child (json rpc) mode to be used with another naml.",
+				Description: "Run naml as an insecure RPC server. The program will advertise it's applications, and can execute Install(), List(), and Uninstall() via inter process RPC.",
+				Action: func(c *cli.Context) error {
+					err := RunRPC()
+					if err != nil {
+						return fmt.Errorf("unable to run in runtime mode: %v", err)
+					}
 					return nil
 				},
 			},
 		},
 	}
 
+	return app.Run(os.Args)
+}
+
+// AllInit is the "constructor" for every command line flag.
+// This is how we use naml -w to include sub-namls
+func AllInit(verbose bool, with []string) error {
+
+	// [ Verbosity System ]
 	if verbose {
 		logger.BitwiseLevel = logger.LogEverything
-		logger.Always("[Verbose Mode]")
+		logger.Always("*** [ Verbose Mode ] ***")
 	} else {
 		logger.BitwiseLevel = logger.LogAlways | logger.LogCritical | logger.LogWarning | logger.LogDeprecated
 	}
-	return app.Run(os.Args)
+
+	// [ Child Runtime System ]
+	if len(with) > 0 {
+		for _, childPath := range with {
+			err := AddRPC(childPath)
+			if err != nil {
+				logger.Warning("Unable to add child naml %s: %v", childPath, err)
+			}
+		}
+	}
+
+	// If running naml with children, register them with the registry
+	if len(remotes) > 0 {
+		err := RegisterRemoteApplications()
+		if err != nil {
+			return fmt.Errorf("unable to register children: %v", err)
+		}
+	}
+	return nil
 }
 
 // Install is used to install an application in Kubernetes
 func Install(app Deployable) error {
+
+	// Check if app is a remote app
+	if remoteApp, ok := app.(*RPCApplication); ok {
+		// Do NOT pass in this local kubernetes client!
+		return remoteApp.Install(nil)
+	}
+
+	// Only grab a client if we are running in this instance!
 	client, err := Client()
 	if err != nil {
 		return err
 	}
+
+	// Install
 	err = app.Install(client)
 	if err != nil {
 		return err
@@ -156,21 +275,28 @@ func List() {
 	fmt.Println("")
 	for _, app := range Registry() {
 		fmt.Printf("[%s]\n", app.Meta().Name)
-		fmt.Printf("\tnamespace  : %s\n", app.Meta().Namespace)
-		fmt.Printf("\tversion    : %s\n", app.Meta().ResourceVersion)
-		if description, ok := app.Meta().Labels["description"]; ok {
-			fmt.Printf("\tdescription : %s\n", description)
-		}
+		fmt.Printf("  description : %s\n", app.Description())
+		fmt.Printf("  version     : %s\n", app.Meta().ResourceVersion)
 		fmt.Printf("\n")
 	}
-	fmt.Println("")
 }
 
 // Uninstall is used to uninstall an application in Kubernetes
 func Uninstall(app Deployable) error {
+
+	// Check if app is a remote app
+	if remoteApp, ok := app.(*RPCApplication); ok {
+		// Do NOT pass in this local kubernetes client!
+		return remoteApp.Uninstall(nil)
+	}
+
+	// Only grab a client if we are running in this instance!
+
 	client, err := Client()
 	if err != nil {
 		return err
 	}
+
+	// Uninstall
 	return app.Uninstall(client)
 }

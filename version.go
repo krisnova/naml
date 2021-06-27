@@ -22,24 +22,5 @@
 
 package naml
 
-import (
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
-)
-
-// Deployable is an interface that can be implemented
-// for deployable applications.
-type Deployable interface {
-
-	// Install will attempt to install in Kubernetes
-	Install(client *kubernetes.Clientset) error
-
-	// Uninstall will attempt to uninstall in Kubernetes
-	Uninstall(client *kubernetes.Clientset) error
-
-	// Meta returns the Kubernetes native ObjectMeta which is used to manage applications with naml.
-	Meta() *v1.ObjectMeta
-
-	// Description returns the application description
-	Description() string
-}
+// Version is this specific version on naml
+var Version string

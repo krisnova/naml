@@ -23,23 +23,42 @@
 package naml
 
 import (
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/client-go/kubernetes"
+	appsv1 "k8s.io/api/apps/v1"
+	apiv1 "k8s.io/api/core/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+
+	v1 "k8s.io/api/apps/v1"
 )
 
-// Deployable is an interface that can be implemented
-// for deployable applications.
-type Deployable interface {
-
-	// Install will attempt to install in Kubernetes
-	Install(client *kubernetes.Clientset) error
-
-	// Uninstall will attempt to uninstall in Kubernetes
-	Uninstall(client *kubernetes.Clientset) error
-
-	// Meta returns the Kubernetes native ObjectMeta which is used to manage applications with naml.
-	Meta() *v1.ObjectMeta
-
-	// Description returns the application description
-	Description() string
+// BusyboxDeployment is useful for quick testing and debugging.
+// This is broken by design.
+func BusyboxDeployment(name string) *v1.Deployment {
+	labeles := map[string]string{
+		"app": "naml-busybox",
+	}
+	deployment := &v1.Deployment{
+		ObjectMeta: metav1.ObjectMeta{
+			Name: name,
+		},
+		Spec: appsv1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labeles,
+			},
+			Replicas: I32p(1),
+			Template: apiv1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labeles,
+				},
+				Spec: apiv1.PodSpec{
+					Containers: []apiv1.Container{
+						{
+							Name:  name,
+							Image: "busybox",
+						},
+					},
+				},
+			},
+		},
+	}
+	return deployment
 }
