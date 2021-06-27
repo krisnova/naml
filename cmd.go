@@ -232,8 +232,6 @@ func AllInit(verbose bool, with []string) error {
 			err := AddRPC(childPath)
 			if err != nil {
 				logger.Warning("Unable to add child naml %s: %v", childPath, err)
-			} else {
-				logger.Success("Child naml [%s] Success!", childPath)
 			}
 		}
 	}
@@ -285,9 +283,20 @@ func List() {
 
 // Uninstall is used to uninstall an application in Kubernetes
 func Uninstall(app Deployable) error {
+
+	// Check if app is a remote app
+	if remoteApp, ok := app.(*RPCApplication); ok {
+		// Do NOT pass in this local kubernetes client!
+		return remoteApp.Uninstall(nil)
+	}
+
+	// Only grab a client if we are running in this instance!
+
 	client, err := Client()
 	if err != nil {
 		return err
 	}
+
+	// Uninstall
 	return app.Uninstall(client)
 }

@@ -30,15 +30,25 @@ import (
 	v1 "k8s.io/api/apps/v1"
 )
 
+// BusyboxDeployment is useful for quick testing and debugging.
+// This is broken by design.
 func BusyboxDeployment(name string) *v1.Deployment {
+	labeles := map[string]string{
+		"app": "naml-busybox",
+	}
 	deployment := &v1.Deployment{
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
 		},
 		Spec: appsv1.DeploymentSpec{
+			Selector: &metav1.LabelSelector{
+				MatchLabels: labeles,
+			},
 			Replicas: I32p(1),
 			Template: apiv1.PodTemplateSpec{
-				ObjectMeta: metav1.ObjectMeta{},
+				ObjectMeta: metav1.ObjectMeta{
+					Labels: labeles,
+				},
 				Spec: apiv1.PodSpec{
 					Containers: []apiv1.Container{
 						{

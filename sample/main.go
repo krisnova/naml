@@ -38,7 +38,7 @@ func (n *NAMLApp) Install(client *kubernetes.Clientset) error {
 }
 
 func (n *NAMLApp) Uninstall(client *kubernetes.Clientset) error {
-	return nil
+	return client.AppsV1().Deployments("default").Delete(context.TODO(), n.Name, metav1.DeleteOptions{})
 }
 
 func (n *NAMLApp) Description() string {

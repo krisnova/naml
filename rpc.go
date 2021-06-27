@@ -210,7 +210,40 @@ func writeError(w http.ResponseWriter, message string) {
 
 // uninstall will install an application with the child binary
 func uninstall(w http.ResponseWriter, r *http.Request) {
+	remotejson, err := ioutil.ReadAll(r.Body)
+	if err != nil {
+		writeError(w, fmt.Sprintf("unable to read body: %v", err))
+		return
+	}
+	remoteApp := RPCApplication{}
+	err = json.Unmarshal(remotejson, &remoteApp)
+	if err != nil {
+		writeError(w, fmt.Sprintf("unable to json unmarshal body: %v", err))
+		return
+	}
 
+	app := Find(remoteApp.AppName)
+	if app == nil {
+		writeError(w, fmt.Sprintf("unable to find app: %s", remoteApp.AppName))
+		return
+	}
+
+	// Now we handle auth
+	client, err := Client()
+	if err != nil {
+		writeError(w, fmt.Sprintf("unable to generate client: %v", err))
+		return
+	}
+
+	// Try to install the remote application
+	err = app.Uninstall(client)
+	if err != nil {
+		writeError(w, fmt.Sprintf("unable to uninstall on remote: %v", err))
+		return
+	}
+
+	// Success!
+	w.WriteHeader(http.StatusOK)
 }
 
 // AddRPC will attempt to add a remote RPC server to the current runtime.
@@ -227,7 +260,7 @@ func AddRPC(path string) error {
 
 	// Todo use the file.Sys() interface to validate the file type
 
-	logger.Info("Starting IPC with child %s", file.Name())
+	logger.Info("Starting IPC with remote RPC server %s", file.Name())
 
 	// Execute the child binary and pass in "c" for
 	// shorthand to tell the child to run in child runtime mode.
@@ -268,7 +301,7 @@ func AddRPC(path string) error {
 				// According to the naml RPC this should be the TCP port
 				rpcHello := string(message)
 				rpcSplit := strings.Split(rpcHello, "\n")
-				if len(rpcSplit) != 2 {
+				if len(rpcSplit) < 1 {
 					return fmt.Errorf("child failed validation, initial rpc message invalid use of newline")
 				}
 				// According to the spec the first line is our TCP port

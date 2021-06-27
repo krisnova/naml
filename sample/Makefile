@@ -24,7 +24,7 @@ version=$(shell git rev-parse HEAD)
 
 compile: ## Compile for the local architecture ⚙
 	@echo "Compiling..."
-	go build -o app main.go
+	go build -o sample.naml main.go
 
 clean: ## Clean your artifacts 🧼
 	@echo "Cleaning..."
