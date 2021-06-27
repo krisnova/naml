@@ -13,12 +13,13 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 //
-//    ███╗   ██╗ ██████╗ ██╗   ██╗ █████╗
-//    ████╗  ██║██╔═████╗██║   ██║██╔══██╗
-//    ██╔██╗ ██║██║██╔██║██║   ██║███████║
-//    ██║╚██╗██║████╔╝██║╚██╗ ██╔╝██╔══██║
-//    ██║ ╚████║╚██████╔╝ ╚████╔╝ ██║  ██║
-//    ╚═╝  ╚═══╝ ╚═════╝   ╚═══╝  ╚═╝  ╚═╝
+//   ███╗   ██╗ █████╗ ███╗   ███╗██╗
+//   ████╗  ██║██╔══██╗████╗ ████║██║
+//   ██╔██╗ ██║███████║██╔████╔██║██║
+//   ██║╚██╗██║██╔══██║██║╚██╔╝██║██║
+//   ██║ ╚████║██║  ██║██║ ╚═╝ ██║███████╗
+//   ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝
+//
 
 package naml
 
@@ -69,19 +70,27 @@ func RunCommandLineWithOptions() error {
 	// ********************************************************
 
 	app := &cli.App{
-		Name:      "naml",
-		HelpName:  "naml",
-		Usage:     "YAML alternative for managing Kubernetes packages directly with Go.",
-		UsageText: " $ naml [options] <arguments>",
-		Description: `
-NAML Ain't Markup Langauge. Use NAML to encapsulate Kubernetes applications in Go.
-`,
-		Version: Version,
-		Authors: []*cli.Author{
-			{
-				Name:  "Kris Nóva",
-				Email: "kris@nivenly.com",
-			},
+		Name:     "naml",
+		HelpName: "Not Another Markup Language",
+		Usage:    "Kubernetes applications in pure Go 🎉",
+		UsageText: `Use naml like any command line tool.
+      naml [options] command [arguments...]
+
+   Use naml to list applications that it is aware of.
+      naml list
+
+   Include other compiled naml executables at runtime.
+      naml -f my/app.naml list
+
+   Install applications from another program at runtime.
+      naml -f my/app.naml install <app>
+
+   Uninstall applications.
+      naml uninstall <app>`,
+		Action: func(context *cli.Context) error {
+			Banner()
+			cli.ShowSubcommandHelp(context)
+			return nil
 		},
 		Flags: []cli.Flag{
 			&cli.BoolFlag{
@@ -108,7 +117,7 @@ NAML Ain't Markup Langauge. Use NAML to encapsulate Kubernetes applications in G
 				Name:        "install",
 				Aliases:     []string{"i"},
 				Description: "Will execute the Install method for a specific app.",
-				Usage:       "Install a package in Kubernetes.",
+				Usage:       "Install a package in Kubernetes",
 				UsageText:   "naml install [app]",
 				Action: func(c *cli.Context) error {
 					// ----------------------------------
@@ -120,7 +129,7 @@ NAML Ain't Markup Langauge. Use NAML to encapsulate Kubernetes applications in G
 
 					arguments := c.Args()
 					if arguments.Len() != 1 {
-						// Feature: We might want to have "naml install" just iterate through every application.
+						Banner()
 						cli.ShowCommandHelp(c, "install")
 						List()
 						return nil
@@ -156,6 +165,7 @@ NAML Ain't Markup Langauge. Use NAML to encapsulate Kubernetes applications in G
 					arguments := c.Args()
 					if arguments.Len() != 1 {
 						// Feature: We might want to have "naml install" just iterate through every application.
+						Banner()
 						cli.ShowCommandHelp(c, "uninstall")
 						List()
 						return nil
@@ -177,7 +187,7 @@ NAML Ain't Markup Langauge. Use NAML to encapsulate Kubernetes applications in G
 			{
 				Name:    "list",
 				Aliases: []string{"l"},
-				Usage:   "List applications.",
+				Usage:   "List applications",
 				Action: func(c *cli.Context) error {
 					// ----------------------------------
 					err := AllInit(verbose, with.Value())
@@ -185,7 +195,7 @@ NAML Ain't Markup Langauge. Use NAML to encapsulate Kubernetes applications in G
 						return err
 					}
 					// ----------------------------------
-
+					Banner()
 					List()
 					return nil
 				},
@@ -198,7 +208,7 @@ NAML Ain't Markup Langauge. Use NAML to encapsulate Kubernetes applications in G
 			{
 				Name:        "rpc",
 				Aliases:     []string{"r"},
-				Usage:       "Run the program in child (json rpc) mode to be used with another naml.",
+				Usage:       "Run the program in child (json rpc) mode to be used with another naml",
 				Description: "Run naml as an insecure RPC server. The program will advertise it's applications, and can execute Install(), List(), and Uninstall() via inter process RPC.",
 				Action: func(c *cli.Context) error {
 					err := RunRPC()
