@@ -22,20 +22,9 @@
 
 package main
 
-import (
-	"os"
+import "github.com/kris-nova/naml"
 
-	"github.com/kris-nova/logger"
-	"github.com/kris-nova/naml"
-)
-
-// main is the main entry point for your CLI application
 func main() {
-
-	// Run the default CLI tooling
-	err := naml.RunCommandLine()
-	if err != nil {
-		logger.Critical("%v", err)
-		os.Exit(1)
-	}
+	// Less in more. No apps are loaded here.
+	naml.RunCommandLineAndExit()
 }

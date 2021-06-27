@@ -39,4 +39,7 @@ type Deployable interface {
 
 	// Meta returns the Kubernetes native ObjectMeta which is used to manage applications with naml.
 	Meta() *v1.ObjectMeta
+
+	// Description returns the application description
+	Description() string
 }

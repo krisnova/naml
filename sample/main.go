@@ -25,7 +25,6 @@ func main() {
 }
 
 // NAMLApp is used for testing and debugging
-
 type NAMLApp struct {
 	Name string
 }
@@ -38,8 +37,13 @@ func (n *NAMLApp) Uninstall(client *kubernetes.Clientset) error {
 	return nil
 }
 
+func (n *NAMLApp) Description() string {
+	return "A wonderful sample application."
+}
+
 func (n *NAMLApp) Meta() *v1.ObjectMeta {
 	return &v1.ObjectMeta{
-		Name: n.Name,
+		Name:            n.Name,
+		ResourceVersion: "1.0.0",
 	}
 }

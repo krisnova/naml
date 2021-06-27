@@ -35,66 +35,69 @@ import (
 	"github.com/kris-nova/logger"
 )
 
-// ChildMeta is the meta data for all requests
-type ChildMeta struct {
-	Addr string
+// RPCApplication is the pointer in the parent process
+// to the child process internal application.
+type RPCApplication struct {
+	// Name is the name of the remote application
+	AppName string
+
+	// Remote is the associated remote RPC server
+	Remote *RPCPointer
+
+	// AppDescription is the application description
+	AppDescription string
+
+	// AppVersion is the application version
+	AppVersion string
 }
 
-type ChildApp struct {
-	Name string
-}
-
-func (c *ChildApp) Install(clientset *kubernetes.Clientset) error {
+func (c *RPCApplication) Install(clientset *kubernetes.Clientset) error {
 	return nil
 }
 
-func (c *ChildApp) Uninstall(clientset *kubernetes.Clientset) error {
+func (c *RPCApplication) Uninstall(clientset *kubernetes.Clientset) error {
 	return nil
 }
 
-func (c *ChildApp) Meta() *v1.ObjectMeta {
+func (c *RPCApplication) Description() string {
+	return c.AppDescription
+}
+
+func (c *RPCApplication) Meta() *v1.ObjectMeta {
 	return &v1.ObjectMeta{
-		Name: c.Name,
+		Name:            c.AppName,
+		ResourceVersion: c.AppVersion,
 	}
 }
 
-// children are our child RPC namls
-var children = make(map[string]*ChildMeta)
-
-func RegisterChildren() error {
-
-	for path, child := range children {
-		logger.Info("Calling list() on child %s from child %s", child.Addr, path)
-		childRegistry := []string{""}
-		resp, err := http.Get(fmt.Sprintf("%s/list", child.Addr))
+// RegisterRemoteApplications will call list() on all remote RPC servers
+// and register the applications as pointers on the remote.
+func RegisterRemoteApplications() error {
+	for path, remote := range remotes {
+		logger.Info("Calling list() on remote RPC %s from %s", remote.Addr, path)
+		var remoteApps []*RPCApplication
+		resp, err := http.Get(fmt.Sprintf("%s/list", remote.Addr))
 		if err != nil {
-			return fmt.Errorf("unable to list() child [1] %s: %v", path, err)
+			return fmt.Errorf("unable to list() remote [1] %s: %v", path, err)
 		}
 		body, err := ioutil.ReadAll(resp.Body)
 		if err != nil {
-			return fmt.Errorf("unable to list() child [2] %s: %v", path, err)
+			return fmt.Errorf("unable to list() remote [2] %s: %v", path, err)
 		}
-		err = json.Unmarshal(body, &childRegistry)
+		err = json.Unmarshal(body, &remoteApps)
 		if err != nil {
-			return fmt.Errorf("unable to list() child [3] %s: %v", path, err)
+			return fmt.Errorf("unable to list() remote [3] %s: %v", path, err)
 		}
-		logger.Info("Registering children...")
-		for _, appName := range childRegistry {
-			logger.Info("Registering child app %s", appName)
-
-			// Here is where we *FINALLY* register the child app
-			childApp := &ChildApp{
-				Name: appName,
-			}
+		for _, app := range remoteApps {
+			logger.Info("Registering remote app %s", app.AppName)
 
 			//
 			// ***************
-			Register(childApp) // *
+			Register(app) // *
 			// ***************
 			//
 
 		}
 	}
-
 	return nil
 }

@@ -30,6 +30,14 @@ import (
 	"github.com/urfave/cli/v2"
 )
 
+func RunCommandLineAndExit() {
+	err := RunCommandLine()
+	if err != nil {
+		logger.Critical(err.Error())
+		os.Exit(1)
+	}
+}
+
 // RunCommandLine is the global NAML command line program.
 //
 // Use this if you would like to use the built in NAML command line interface.
@@ -169,7 +177,7 @@ NAML Ain't Markup Langauge. Use NAML to encapsulate Kubernetes applications in G
 			{
 				Name:    "list",
 				Aliases: []string{"l"},
-				Usage:   "[local] List applications.",
+				Usage:   "List applications.",
 				Action: func(c *cli.Context) error {
 					// ----------------------------------
 					err := AllInit(verbose, with.Value())
@@ -184,15 +192,16 @@ NAML Ain't Markup Langauge. Use NAML to encapsulate Kubernetes applications in G
 			},
 
 			// ********************************************************
-			// [ CHILD ]
+			// [ rpc ]
 			// ********************************************************
 
 			{
-				Name:    "child",
-				Aliases: []string{"c"},
-				Usage:   "[Local] Run the program in child runtime mode to be used with another NAML.",
+				Name:        "rpc",
+				Aliases:     []string{"r"},
+				Usage:       "Run the program in child (json rpc) mode to be used with another naml.",
+				Description: "Run naml as an insecure RPC server. The program will advertise it's applications, and can execute Install(), List(), and Uninstall() via inter process RPC.",
 				Action: func(c *cli.Context) error {
-					err := RuntimeChild()
+					err := RunRPC()
 					if err != nil {
 						return fmt.Errorf("unable to run in runtime mode: %v", err)
 					}
@@ -211,10 +220,8 @@ func AllInit(verbose bool, with []string) error {
 
 	// [ Verbosity System ]
 	if verbose {
-		fmt.Println("boops")
-
 		logger.BitwiseLevel = logger.LogEverything
-		logger.Always("[Verbose Mode]")
+		logger.Always("*** [ Verbose Mode ] ***")
 	} else {
 		logger.BitwiseLevel = logger.LogAlways | logger.LogCritical | logger.LogWarning | logger.LogDeprecated
 	}
@@ -222,7 +229,7 @@ func AllInit(verbose bool, with []string) error {
 	// [ Child Runtime System ]
 	if len(with) > 0 {
 		for _, childPath := range with {
-			err := AddChild(childPath)
+			err := AddRPC(childPath)
 			if err != nil {
 				logger.Warning("Unable to add child naml %s: %v", childPath, err)
 			} else {
@@ -231,9 +238,9 @@ func AllInit(verbose bool, with []string) error {
 		}
 	}
 
-	// Hook in for child namls
-	if len(children) > 0 {
-		err := RegisterChildren()
+	// If running naml with children, register them with the registry
+	if len(remotes) > 0 {
+		err := RegisterRemoteApplications()
 		if err != nil {
 			return fmt.Errorf("unable to register children: %v", err)
 		}
@@ -260,14 +267,10 @@ func List() {
 	fmt.Println("")
 	for _, app := range Registry() {
 		fmt.Printf("[%s]\n", app.Meta().Name)
-		fmt.Printf("\tnamespace  : %s\n", app.Meta().Namespace)
-		fmt.Printf("\tversion    : %s\n", app.Meta().ResourceVersion)
-		if description, ok := app.Meta().Labels["description"]; ok {
-			fmt.Printf("\tdescription : %s\n", description)
-		}
+		fmt.Printf("  description : %s\n", app.Description())
+		fmt.Printf("  version     : %s\n", app.Meta().ResourceVersion)
 		fmt.Printf("\n")
 	}
-	fmt.Println("")
 }
 
 // Uninstall is used to uninstall an application in Kubernetes
