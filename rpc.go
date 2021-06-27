@@ -31,6 +31,7 @@ import (
 	"net/http"
 	"net/url"
 	"os"
+	"path/filepath"
 	"strings"
 
 	"sigs.k8s.io/kind/pkg/exec"
@@ -164,7 +165,12 @@ func uninstall(w http.ResponseWriter, r *http.Request) {
 
 // AddRPC will attempt to add a remote RPC server to the current runtime.
 func AddRPC(path string) error {
-	file, err := os.Stat(path)
+	absolutePath, err := filepath.Abs(path)
+	if err != nil {
+		return fmt.Errorf("unable to find absolute path of remote: %v", err)
+	}
+
+	file, err := os.Stat(absolutePath)
 	if err != nil {
 		return fmt.Errorf("unable to execut file: %v", err)
 	}
@@ -176,12 +182,11 @@ func AddRPC(path string) error {
 	// Execute the child binary and pass in "c" for
 	// shorthand to tell the child to run in child runtime mode.
 	// logger.Info("Command %s c", path)
-	cmd := exec.Command(path, "r")
+	cmd := exec.Command(absolutePath, "rpc")
 	childOut := &bytes.Buffer{}
 	childErr := &bytes.Buffer{}
 	cmd.SetStdout(childOut)
 	cmd.SetStderr(childErr)
-
 	errCh := make(chan error)
 	go func() {
 		err = cmd.Run()
