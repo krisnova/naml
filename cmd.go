@@ -35,8 +35,7 @@ import (
 // Use this if you would like to use the built in NAML command line interface.
 func RunCommandLine() error {
 	// Default options
-	RunCommandLineWithOptions()
-	return nil
+	return RunCommandLineWithOptions()
 }
 
 // RunCommandLineWithOptions is here so we can default values in RunCommandLine() that
@@ -104,7 +103,12 @@ NAML Ain't Markup Langauge. Use NAML to encapsulate Kubernetes applications in G
 				Usage:       "Install a package in Kubernetes.",
 				UsageText:   "naml install [app]",
 				Action: func(c *cli.Context) error {
-					AllInit(verbose, with.Value())
+					// ----------------------------------
+					err := AllInit(verbose, with.Value())
+					if err != nil {
+						return err
+					}
+					// ----------------------------------
 
 					arguments := c.Args()
 					if arguments.Len() != 1 {
@@ -134,7 +138,13 @@ NAML Ain't Markup Langauge. Use NAML to encapsulate Kubernetes applications in G
 				Usage:       "Uninstall a package in Kubernetes",
 				UsageText:   "naml uninstall [app]",
 				Action: func(c *cli.Context) error {
-					AllInit(verbose, with.Value())
+					// ----------------------------------
+					err := AllInit(verbose, with.Value())
+					if err != nil {
+						return err
+					}
+					// ----------------------------------
+
 					arguments := c.Args()
 					if arguments.Len() != 1 {
 						// Feature: We might want to have "naml install" just iterate through every application.
@@ -161,7 +171,13 @@ NAML Ain't Markup Langauge. Use NAML to encapsulate Kubernetes applications in G
 				Aliases: []string{"l"},
 				Usage:   "[local] List applications.",
 				Action: func(c *cli.Context) error {
-					AllInit(verbose, with.Value())
+					// ----------------------------------
+					err := AllInit(verbose, with.Value())
+					if err != nil {
+						return err
+					}
+					// ----------------------------------
+
 					List()
 					return nil
 				},
@@ -191,7 +207,7 @@ NAML Ain't Markup Langauge. Use NAML to encapsulate Kubernetes applications in G
 
 // AllInit is the "constructor" for every command line flag.
 // This is how we use naml -w to include sub-namls
-func AllInit(verbose bool, with []string) {
+func AllInit(verbose bool, with []string) error {
 
 	// [ Verbosity System ]
 	if verbose {
@@ -206,14 +222,23 @@ func AllInit(verbose bool, with []string) {
 	// [ Child Runtime System ]
 	if len(with) > 0 {
 		for _, childPath := range with {
-			err := AddRuntimeChild(childPath)
+			err := AddChild(childPath)
 			if err != nil {
-				logger.Warning("unable to add child naml %s: %v", childPath, err)
+				logger.Warning("Unable to add child naml %s: %v", childPath, err)
 			} else {
-				logger.Success("added child naml: %s", childPath)
+				logger.Success("Child naml [%s] Success!", childPath)
 			}
 		}
 	}
+
+	// Hook in for child namls
+	if len(children) > 0 {
+		err := RegisterChildren()
+		if err != nil {
+			return fmt.Errorf("unable to register children: %v", err)
+		}
+	}
+	return nil
 }
 
 // Install is used to install an application in Kubernetes
