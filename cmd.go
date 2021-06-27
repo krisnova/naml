@@ -85,7 +85,7 @@ NAML Ain't Markup Langauge. Use NAML to encapsulate Kubernetes applications in G
 			},
 			&cli.StringSliceFlag{
 				Name:        "with",
-				Aliases:     []string{"w"},
+				Aliases:     []string{"f", "w"}, // use -f to follow kubectl -f syntax trolol
 				Usage:       "include other naml binaries.",
 				Destination: &with,
 			},
