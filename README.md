@@ -17,7 +17,7 @@ Get your application directly into Go instead of YAML and use it in controllers,
 Check out the [examples](https://github.com/naml-examples) GitHub organization.
 
 - [simple](https://github.com/naml-examples/simple) basic CLI example.
-- [full](https://github.com/naml-examples/simple) CLI example with custom commands and flags.
+- [full](https://github.com/naml-examples/full) CLI example with custom commands and flags.
 
 #### Implement Deployable
 
