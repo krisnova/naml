@@ -26,6 +26,9 @@ package naml
 import (
 	"fmt"
 	"os"
+	"strings"
+
+	"k8s.io/client-go/util/homedir"
 
 	"github.com/kris-nova/logger"
 	"github.com/urfave/cli/v2"
@@ -56,6 +59,10 @@ func RunCommandLineWithOptions() error {
 
 	// verbose is the logger verbosity
 	var verbose bool = false
+
+	// kubeconfig is the --kubeconfig value
+	// which is used in our Client() code
+	var kubeconfig string
 
 	// cli assumes "-v" for version.
 	// override that here
@@ -100,6 +107,12 @@ func RunCommandLineWithOptions() error {
 				Usage:       "toggle verbose mode for logger.",
 				Destination: &verbose,
 			},
+			&cli.StringFlag{
+				Name:        "kubeconfig",
+				Value:       "~/.kube/config",
+				Usage:       "Kubeconfig path (default: ~/.kube/config)",
+				Destination: &kubeconfig,
+			},
 			&cli.StringSliceFlag{
 				Name:        "with",
 				Aliases:     []string{"f", "w"}, // use -f to follow kubectl -f syntax trolol
@@ -121,7 +134,7 @@ func RunCommandLineWithOptions() error {
 				UsageText:   "naml install [app]",
 				Action: func(c *cli.Context) error {
 					// ----------------------------------
-					err := AllInit(verbose, with.Value())
+					err := AllInit(kubeconfig, verbose, with.Value())
 					if err != nil {
 						return err
 					}
@@ -156,7 +169,7 @@ func RunCommandLineWithOptions() error {
 				UsageText:   "naml uninstall [app]",
 				Action: func(c *cli.Context) error {
 					// ----------------------------------
-					err := AllInit(verbose, with.Value())
+					err := AllInit(kubeconfig, verbose, with.Value())
 					if err != nil {
 						return err
 					}
@@ -190,7 +203,7 @@ func RunCommandLineWithOptions() error {
 				Usage:   "List applications",
 				Action: func(c *cli.Context) error {
 					// ----------------------------------
-					err := AllInit(verbose, with.Value())
+					err := AllInit(kubeconfig, verbose, with.Value())
 					if err != nil {
 						return err
 					}
@@ -226,7 +239,7 @@ func RunCommandLineWithOptions() error {
 
 // AllInit is the "constructor" for every command line flag.
 // This is how we use naml -w to include sub-namls
-func AllInit(verbose bool, with []string) error {
+func AllInit(kubeConfigPath string, verbose bool, with []string) error {
 
 	// [ Verbosity System ]
 	if verbose {
@@ -235,6 +248,25 @@ func AllInit(verbose bool, with []string) error {
 	} else {
 		logger.BitwiseLevel = logger.LogAlways | logger.LogCritical | logger.LogWarning | logger.LogDeprecated
 	}
+
+	// [ Kubeconfig System ]
+	// 1. Check if environmental variable is set
+	// 2. Default to the --kubeconfig flag
+	// 3. Follow the logic in the Clientcmd (path, masterURL, inCluster, default)
+
+	// Format "~" in command line string
+	kubeConfigPath = strings.ReplaceAll(kubeConfigPath, "~", homedir.HomeDir())
+
+	// Here be dragons
+	// We probably need an entire fucking client package, but for now
+	// this will get us to 1.0.0
+	envVarValue := os.Getenv(KubeconfigEnvironmentalVariable)
+	if envVarValue == "" {
+		kubeConfigPathValue = kubeConfigPath
+	} else {
+		kubeConfigPathValue = envVarValue
+	}
+	logger.Debug("Kubeconfig Value: %s", kubeConfigPathValue)
 
 	// [ Child Runtime System ]
 	if len(with) > 0 {
