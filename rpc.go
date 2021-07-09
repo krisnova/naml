@@ -297,7 +297,7 @@ func AddRPC(path string) error {
 			break
 		default:
 			switch {
-			case childOut.Len() > 0:
+			case childOut.Len() > 1:
 				message := childOut.Bytes()
 				// According to the naml RPC this should be the TCP port
 				rpcHello := string(message)
