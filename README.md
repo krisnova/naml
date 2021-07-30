@@ -12,6 +12,10 @@ Test your code directly in local Kubernetes using [kind](https://github.com/kube
 
 Get your application directly into Go instead of YAML and use it in controllers, operators, CRs/CRDs easily. Use the Go compiler to your advantage.
 
+### Okay, but seriously
+
+This is just `client-go`. There isn't really anything more to see here.
+
 #### Quickstart
 
 Check out the [examples](https://github.com/naml-examples) GitHub organization.
