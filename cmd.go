@@ -193,6 +193,34 @@ func RunCommandLineWithOptions() error {
 				},
 			},
 
+
+			// ********************************************************
+			// [ CODIFY ]
+			// ********************************************************
+
+			{
+				Name:        "codify",
+				Aliases:     []string{"c"},
+				Description: "Will try to read valid YAML from stdin to generate go struct literals.",
+				Usage:       "Use this to convert YAML to valid NAML structs.",
+				UsageText:   "kubectl get po <name> -oyaml | naml codify <flags>",
+				Action: func(c *cli.Context) error {
+					// ----------------------------------
+					err := AllInit(kubeconfig, verbose, with.Value())
+					if err != nil {
+						return err
+					}
+					// ----------------------------------
+
+					cbytes, err := Codify(os.Stdin)
+					if err != nil {
+						return err
+					}
+					fmt.Println(cbytes)
+					return nil
+				},
+			},
+
 			// ********************************************************
 			// [ LIST ]
 			// ********************************************************

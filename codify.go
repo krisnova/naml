@@ -23,21 +23,50 @@
 
 package naml
 
-import "fmt"
+import (
+	"fmt"
+	"github.com/kris-nova/logger"
+	"io"
+	v1 "k8s.io/api/core/v1"
+	"k8s.io/client-go/kubernetes/scheme"
+)
 
-// Version is this specific version on naml
-var Version string
+func Codify(input io.Reader) ([]byte, error) {
 
-func Banner() {
-	fmt.Printf("\n+---------------------------------------------+\n")
-	fmt.Printf("|    ███╗   ██╗ █████╗ ███╗   ███╗██╗         |\n")
-	fmt.Printf("|    ████╗  ██║██╔══██╗████╗ ████║██║         |\n")
-	fmt.Printf("|    ██╔██╗ ██║███████║██╔████╔██║██║         |\n")
-	fmt.Printf("|    ██║╚██╗██║██╔══██║██║╚██╔╝██║██║         |\n")
-	fmt.Printf("|    ██║ ╚████║██║  ██║██║ ╚═╝ ██║███████╗    |\n")
-	fmt.Printf("|    ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝    |\n")
-	fmt.Printf("|       Not Another Markup Language           |\n")
-	fmt.Printf("|       Kris Nóva <kris@nivenly.com>          |\n")
-	fmt.Printf("+---------------------------------------------+\n\n")
+	// For the first few versions let's just
+	// read "all" of stdin
+	//
+	// Todo: use scanner to read by \n
+	var code []byte
+	ibytes, err := io.ReadAll(input)
+	if err != nil {
+		return code, fmt.Errorf("unable to read all of stdin: %v", err)
+	}
+	logger.Debug("Read %d bytes from stdin", len(ibytes))
 
+	serializer := scheme.Codecs.UniversalDeserializer()
+	obj, _, err := serializer.Decode(ibytes, nil, nil)
+	if err != nil {
+		return code, fmt.Errorf("unable to deserialize: %v", err)
+	}
+	return CodifyKubeObject(obj)
+}
+
+func CodifyKubeObject(object interface{}) ([]byte, error) {
+
+	// ---
+	// Left off here, we need to come up with a way to start
+	// generating go code for us :)
+	//
+	// Have fun :)
+	// ---
+
+	var code []byte
+	switch x := object.(type){
+	case *v1.Pod:
+		logger.Debug("pod %s", x.Name)
+	default:
+
+	}
+	return code, nil
 }
