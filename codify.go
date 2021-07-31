@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"github.com/kris-nova/logger"
 	"github.com/kris-nova/naml/codify"
+	"go/format"
 	"io"
 	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
@@ -130,8 +131,15 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 		return code, fmt.Errorf("unable to generate source code: %v", err)
 	}
 
-	// Return the buffer bytes :)
-	return buf.Bytes(), nil
+	// Grab the source code in []byte form
+	src := buf.Bytes()
+
+	// Go fmt! 
+	fmtBytes, err := format.Source(src)
+	if err != nil {
+		return code, fmt.Errorf("unable to auto format code: %v", err)
+	}
+	return fmtBytes, nil
 }
 
 

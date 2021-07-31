@@ -35,17 +35,73 @@ func NewPod(pod *v1.Pod) *Pod {
 
 func (p Pod) Install() string {
 	return `
+
 	pod := &v1.Pod{
+		TypeMeta:   metav1.TypeMeta{
+			Kind:       "",
+			APIVersion: "",
+		},
 		ObjectMeta: metav1.ObjectMeta{
-			Labels: map[string]string{
-				"": "",
-			},
+			Name:                       "",
+			GenerateName:               "",
+			Namespace:                  "",
+			SelfLink:                   "",
+			UID:                        "",
+			ResourceVersion:            "",
+			Generation:                 0,
+			CreationTimestamp:          metav1.Time{},
+			DeletionTimestamp:          nil,
+			DeletionGracePeriodSeconds: nil,
+			Labels:                     map[string]string{},
+			Annotations:                map[string]string{},
+			OwnerReferences:            nil,
+			Finalizers:                 nil,
+			ClusterName:                "",
+			ManagedFields:              nil,
+		},
+		Spec:       v1.PodSpec{
+			Volumes:                       nil,
+			InitContainers:                nil,
+			Containers:                    nil,
+			EphemeralContainers:           nil,
+			RestartPolicy:                 "",
+			TerminationGracePeriodSeconds: nil,
+			ActiveDeadlineSeconds:         nil,
+			DNSPolicy:                     "",
+			NodeSelector:                  nil,
+			ServiceAccountName:            "",
+			DeprecatedServiceAccount:      "",
+			AutomountServiceAccountToken:  nil,
+			NodeName:                      "",
+			HostNetwork:                   false,
+			HostPID:                       false,
+			HostIPC:                       false,
+			ShareProcessNamespace:         nil,
+			SecurityContext:               nil,
+			ImagePullSecrets:              nil,
+			Hostname:                      "",
+			Subdomain:                     "",
+			Affinity:                      nil,
+			SchedulerName:                 "",
+			Tolerations:                   nil,
+			HostAliases:                   nil,
+			PriorityClassName:             "",
+			Priority:                      nil,
+			DNSConfig:                     nil,
+			ReadinessGates:                nil,
+			RuntimeClassName:              nil,
+			EnableServiceLinks:            nil,
+			PreemptionPolicy:              nil,
+			Overhead:                      nil,
+			TopologySpreadConstraints:     nil,
+			SetHostnameAsFQDN:             nil,
 		},
 	}
 	_, err = client.CoreV1().Pods("").Create(context.TODO(), pod, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
+
 `
 }
 
