@@ -1,4 +1,6 @@
-//
+package naml
+
+const FormatMainGo string = `
 // Copyright © 2021 Kris Nóva <kris@nivenly.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,7 +48,7 @@ func main() {
 
 type App struct {
 	metav1.ObjectMeta
-	description string `json:"Description"`
+	description string
 	// --------------------
 	// Add your fields here
 	// --------------------
@@ -89,3 +91,4 @@ func (n *App) Description() string {
 func (n *App) Meta() *metav1.ObjectMeta {
 	return &n.ObjectMeta
 }
+`

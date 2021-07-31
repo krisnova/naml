@@ -1,4 +1,3 @@
-//
 // Copyright © 2021 Kris Nóva <kris@nivenly.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
@@ -46,7 +45,7 @@ func main() {
 
 type App struct {
 	metav1.ObjectMeta
-	description string `json:"Description"`
+	description string
 	// --------------------
 	// Add your fields here
 	// --------------------
