@@ -177,7 +177,7 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 	case *v1.List:
 		// Lists are recursive items
 		// But we error each time and just
-		// bass the error from the inner system.
+		// base the error from the inner system.
 		for _, item := range x.Items {
 			cObjects, err := toCodify(item.Raw)
 			if err != nil {

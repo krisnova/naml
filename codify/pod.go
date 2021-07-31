@@ -55,5 +55,5 @@ func (p Pod) Uninstall() string {
 	if err != nil {
 		return err
 	}
-`
+ `
 }
