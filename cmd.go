@@ -216,7 +216,7 @@ func RunCommandLineWithOptions() error {
 					if err != nil {
 						return err
 					}
-					fmt.Println(cbytes)
+					fmt.Println(string(cbytes))
 					return nil
 				},
 			},
