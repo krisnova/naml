@@ -38,6 +38,7 @@ type MainGoValues struct {
 	CopyrightYear string
 	AppNameTitle string
 	AppNameLower string
+	Description string
 	Version string
 	Install string
 	Uninstall string

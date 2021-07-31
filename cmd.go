@@ -72,6 +72,7 @@ func RunCommandLineWithOptions() error {
 		AppNameLower: "app",
 		AppNameTitle: "App",
 		Version: "0.0.1",
+		Description: "very serious grown up business application does important beep boops",
 	}
 
 	// cli assumes "-v" for version.
@@ -226,6 +227,12 @@ func RunCommandLineWithOptions() error {
 						Value:       "<kris@nivenly.com>",
 						Usage:       "Email for the copyright header.",
 						Destination: &codifyValues.AuthorEmail,
+					},
+					&cli.StringFlag{
+						Name:        "description",
+						Value:       "very serious grown up business application does important beep boops",
+						Usage:       "Description for the application.",
+						Destination: &codifyValues.Description,
 					},
 				},
 				Action: func(c *cli.Context) error {
