@@ -21,61 +21,20 @@
 //   ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝
 //
 
-package main
+package codify
 
-import (
-	"context"
-	"fmt"
-	v1 "k8s.io/api/core/v1"
-	"os"
+import v1 "k8s.io/api/core/v1"
 
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+type Pod struct {
 
-	"github.com/kris-nova/naml"
-	"k8s.io/client-go/kubernetes"
-)
-
-var Version string = "1.0.0"
-
-func main() {
-	naml.Register(NewApp("Barnaby", "A lovely sample application."))
-	err := naml.RunCommandLine()
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
 }
 
-type App struct {
-	metav1.ObjectMeta
-	description string `json:"Description"`
-	// --------------------
-	// Add your fields here
-	// --------------------
+func NewPod(pod *v1.Pod) *Pod {
+	return &Pod{}
 }
 
-// NewApp will create a new instance of App.
-//
-// See https://github.com/naml-examples for more examples.
-//
-// Example: func NewApp(name string, example string, something int) *App
-func NewApp(name, description string) *App {
-	return &App{
-		description: description,
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-			ResourceVersion: Version,
-		},
-		// --------------------
-		// Add your fields here
-		// --------------------
-	}
-}
-
-func (n *App) Install(client *kubernetes.Clientset) error {
-	var err error
-
-
+func (p Pod) Install() string {
+	return `
 	pod := &v1.Pod{
 		ObjectMeta: metav1.ObjectMeta{
 			Labels: map[string]string{
@@ -87,26 +46,14 @@ func (n *App) Install(client *kubernetes.Clientset) error {
 	if err != nil {
 		return err
 	}
-
-
-	return err
+`
 }
 
-func (n *App) Uninstall(client *kubernetes.Clientset) error {
-	var err error
-
+func (p Pod) Uninstall() string {
+	return `
 	err = client.CoreV1().Pods("").Delete(context.TODO(), "", metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
-
-	return err
-}
-
-func (n *App) Description() string {
-	return n.description
-}
-
-func (n *App) Meta() *metav1.ObjectMeta {
-	return &n.ObjectMeta
+`
 }

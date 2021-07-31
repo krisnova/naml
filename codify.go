@@ -27,11 +27,34 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/kris-nova/logger"
+	"github.com/kris-nova/naml/codify"
 	"io"
+	v1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
+	"strings"
 	"text/template"
 )
 
+// YAMLDelimiter is the official delimiter used to append multiple
+// YAML files together into the same file.
+// 								Reference: https://yaml.org/spec/1.2/spec.html
+//
+// Furthermore let it be documented that at the 2018 KubeCon pub trivia
+// Bryan Liles (https://twitter.com/bryanl) correctly had answered the
+// trivia question with the correct delimiter of 3 characters "---" and
+// was awarded no points for his correct answer, while an opposing team
+// was awarded a single point for their incorrect answer of 2 characters "--".
+//
+// If the correct delimiter points would have been awarded to Brian's team
+// they would technically should have been crowned KubeCon pub champions of 2018.
+const YAMLDelimiter string = "---"
+
+// We ARE in fact doing a lot of string handling here
+// So we use strings as often as possible.
+
+// MainGoValues are ultimately what is rendered
+// into the .naml files in /src. These values
+// are what will be created in the output.
 type MainGoValues struct {
 	AuthorName string
 	AuthorEmail string
@@ -44,13 +67,28 @@ type MainGoValues struct {
 	Uninstall string
 }
 
+type CodifyObject interface {
+	// Install returns the snippet of code that would
+	// traditionall live INSIDE of a function. This
+	// will define literally (what it can) a struct
+	// for the object, and pass it to the corresponding
+	// kubernetes library.
+	Install() string
+
+	// Uninstall is the reverse library call of install
+	Uninstall() string
+
+}
+
+// Codify will take any valid Kubernetes YAML as an io.Reader
+// and do it's best to return a syntactically correct Go program
+// that is NAML compliant.
+//
+// The NAML codebase is Apache 2.0 licensed, so we assume that
+// any calling code will adopt the same Apache license.
 func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
-
-	// For the first few versions let's just
-	// read "all" of stdin
-	//
-	// Todo: use scanner to read by \n
-
+	// Right away we assume this is a finite stream that can
+	// fit into memory. Therefore there is no need for a scanner.
 	var code []byte
 	ibytes, err := io.ReadAll(input)
 	if err != nil {
@@ -64,26 +102,26 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 	// Create the base file
 	tpl, err = tpl.Parse(FormatMainGo)
 
-	// Read the YAML
-	serializer := scheme.Codecs.UniversalDeserializer()
-	obj, _, err := serializer.Decode(ibytes, nil, nil)
+	// Find the objects
+	objs, err := YAMLToCodifyObjects(ibytes)
 	if err != nil {
-		return code, fmt.Errorf("unable to deserialize: %v", err)
+		return code, fmt.Errorf("unable to parse objects: %v", err)
 	}
+	logger.Debug("Found %d objects to parse", len(objs))
 
-	// Generate install source code
-	iBytes, err := InstallBytes(obj)
-	if err != nil {
-		return code, fmt.Errorf("unable to generate Install(): %v", err)
+	// Append both install and uninstall for every object
+	for _, obj := range objs {
+		if v.Install == "" {
+			v.Install = obj.Install()
+		}else {
+			v.Install = fmt.Sprintf("%s\n%s", v.Install, obj.Install())
+		}
+		if v.Uninstall == "" {
+			v.Uninstall = obj.Uninstall()
+		}else {
+			v.Uninstall = fmt.Sprintf("%s\n%s", v.Uninstall, obj.Uninstall())
+		}
 	}
-	v.Install = string(iBytes)
-
-	// Generate uninstall source code
-	uBytes, err := UninstallBytes(obj)
-	if err != nil {
-		return code, fmt.Errorf("unable to generate Uninstall(): %v", err)
-	}
-	v.Uninstall = string(uBytes)
 
 	// Parse the system
 	buf := &bytes.Buffer{}
@@ -96,25 +134,65 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 	return buf.Bytes(), nil
 }
 
-func InstallBytes(object interface{}) ([]byte, error) {
-	var code []byte
-	// ---
-	// Left off here, we need to come up with a way to start
-	// generating go code for us :)
-	//
-	// Have fun :)
-	// ---
 
-	//switch x := object.(type){
-	//case *v1.Pod:
-	//	logger.Debug("pod %s", x.Name)
-	//default:
-	//
-	//}
-	return code, nil
+func YAMLToCodifyObjects(raw []byte) ([]CodifyObject, error) {
+	rawStr := string(raw)
+	var objects []CodifyObject
+	yamls := strings.Split(rawStr, YAMLDelimiter)
+	// We support more than one "YAML" per the delimiter
+	// So we need to deal in sets.
+	for _, yaml := range yamls {
+		raw := []byte(yaml)
+		cObjects, err := toCodify(raw)
+		if err != nil {
+			return objects, fmt.Errorf("unable to codify: %v", err)
+		}
+		// Merge the items
+		for _, c := range cObjects {
+			objects = append(objects, c)
+		}
+	}
+	return objects, nil
 }
 
-func UninstallBytes(object interface{}) ([]byte, error) {
-	var code []byte
-	return code, nil
+func toCodify(raw []byte) ([]CodifyObject, error) {
+	var objects []CodifyObject
+
+	serializer := scheme.Codecs.UniversalDeserializer()
+	decoded, _, err := serializer.Decode([]byte(raw), nil, nil)
+	if err != nil {
+		return nil, fmt.Errorf("unable to deserialize: %v", err)
+	}
+
+	// -------------------------------------------------------------------
+	// [NAML Type Switch]
+	//
+	// Because of the lack of generics in Go, we are having a lot of fun
+	// doing things like this.
+	//
+	// Anyway if you are interested in adding a NAML type it MUST be switched
+	// on here.
+	//
+	switch x := decoded.(type) {
+	case *v1.List:
+		// Lists are recursive items
+		// But we error each time and just
+		// bass the error from the inner system.
+		for _, item := range x.Items {
+			cObjects, err := toCodify(item.Raw)
+			if err != nil {
+				return objects, err
+			}
+			// Merge the items
+			for _, c := range cObjects {
+				objects = append(objects, c)
+			}
+		}
+	case *v1.Pod:
+		objects = append(objects, codify.NewPod(x))
+	default:
+		return nil, fmt.Errorf("missing NAML support for type: %s", x.GetObjectKind().GroupVersionKind().Kind)
+	}
+	// -------------------------------------------------------------------
+	return objects, nil
 }

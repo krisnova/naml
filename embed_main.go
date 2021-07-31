@@ -61,8 +61,9 @@ import (
 var Version string = "{{ .Version }}"
 
 func main() {
-    // Load the application into memory.
-    // Note: naml.Register() can be used multiple times.
+	// Load the application into the NAML registery
+	// Note: naml.Register() can be used multiple times.
+	//
 	naml.Register(NewApp("{{ .AppNameTitle }}", "{{ .Description }}"))
 
 	// Run the generic naml command line program with

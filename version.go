@@ -23,7 +23,9 @@
 
 package naml
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Version is this specific version on naml
 var Version string
