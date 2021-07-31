@@ -23,69 +23,65 @@
 
 package codify
 
-import v1 "k8s.io/api/core/v1"
+import (
+	"bytes"
+	v1 "k8s.io/api/core/v1"
+	"text/template"
+)
 
 type Pod struct {
-
+	i *v1.Pod
 }
 
 func NewPod(pod *v1.Pod) *Pod {
-	return &Pod{}
+	return &Pod{
+		i: pod,
+	}
 }
 
 func (p Pod) Install() string {
-	return `
-
+	install := `
 	pod := &v1.Pod{
 		TypeMeta:   metav1.TypeMeta{
 			Kind:       "",
 			APIVersion: "",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:                       "",
-			GenerateName:               "",
-			Namespace:                  "",
-			SelfLink:                   "",
-			UID:                        "",
-			ResourceVersion:            "",
-			Generation:                 0,
-			CreationTimestamp:          metav1.Time{},
-			DeletionTimestamp:          nil,
-			DeletionGracePeriodSeconds: nil,
+			Name:                       "{{ .Name }}",
+			GenerateName:               "{{ .GenerateName }}",
+			Namespace:                  "{{ .Namespace }}",
+			ResourceVersion:            "{{ .ResourceVersion }}",
 			Labels:                     map[string]string{},
 			Annotations:                map[string]string{},
-			OwnerReferences:            nil,
-			Finalizers:                 nil,
-			ClusterName:                "",
-			ManagedFields:              nil,
+			ClusterName:                "{{ .ClusterName }}",
 		},
 		Spec:       v1.PodSpec{
 			Volumes:                       nil,
 			InitContainers:                nil,
 			Containers:                    nil,
 			EphemeralContainers:           nil,
-			RestartPolicy:                 "",
+			RestartPolicy:                 "{{ .Spec.RestartPolicy }}",
 			TerminationGracePeriodSeconds: nil,
 			ActiveDeadlineSeconds:         nil,
-			DNSPolicy:                     "",
+			DNSPolicy:                     "{{ .Spec.DNSPolicy }}",
 			NodeSelector:                  nil,
-			ServiceAccountName:            "",
-			DeprecatedServiceAccount:      "",
+			ServiceAccountName:            "{{ .Spec.ServiceAccountName }}",
+			DeprecatedServiceAccount:      "{{ .Spec.DeprecatedServiceAccount }}",
 			AutomountServiceAccountToken:  nil,
-			NodeName:                      "",
-			HostNetwork:                   false,
-			HostPID:                       false,
-			HostIPC:                       false,
+			NodeName:                      "{{ .Spec.NodeName }}",
+			HostNetwork:                   {{ .Spec.HostNetwork }},
+			HostPID:                       {{ .Spec.HostPID }},
+			HostIPC:                       {{ .Spec.HostIPC }},
 			ShareProcessNamespace:         nil,
 			SecurityContext:               nil,
 			ImagePullSecrets:              nil,
-			Hostname:                      "",
-			Subdomain:                     "",
+			Hostname:                      "{{ .Spec.Hostname }}",
+			Subdomain:                     "{{ .Spec.Subdomain }}",
 			Affinity:                      nil,
-			SchedulerName:                 "",
+			SchedulerName:                 "{{ .Spec.SchedulerName }}",
 			Tolerations:                   nil,
 			HostAliases:                   nil,
-			PriorityClassName:             "",
+			PriorityClassName:             "{{ .Spec.PriorityClassName }}",
 			Priority:                      nil,
 			DNSConfig:                     nil,
 			ReadinessGates:                nil,
@@ -97,19 +93,28 @@ func (p Pod) Install() string {
 			SetHostnameAsFQDN:             nil,
 		},
 	}
-	_, err = client.CoreV1().Pods("").Create(context.TODO(), pod, metav1.CreateOptions{})
+	_, err = client.CoreV1().Pods("{{ .Namespace }}").Create(context.TODO(), pod, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
-
 `
+	tpl := template.New("pod")
+	tpl.Parse(install)
+	buf := &bytes.Buffer{}
+	tpl.Execute(buf, p.i)
+	return buf.String()
 }
 
 func (p Pod) Uninstall() string {
-	return `
-	err = client.CoreV1().Pods("").Delete(context.TODO(), "", metav1.DeleteOptions{})
+	uninstall := `
+	err = client.CoreV1().Pods("{{ .Namespace }}").Delete(context.TODO(), "{{ .Name }}", metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
  `
+	tpl := template.New("dpod")
+	tpl.Parse(uninstall)
+	buf := &bytes.Buffer{}
+	tpl.Execute(buf, p.i)
+	return buf.String()
 }

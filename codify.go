@@ -134,7 +134,7 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 	// Grab the source code in []byte form
 	src := buf.Bytes()
 
-	// Go fmt! 
+	// Go fmt!
 	fmtBytes, err := format.Source(src)
 	if err != nil {
 		return code, fmt.Errorf("unable to auto format code: %v", err)
