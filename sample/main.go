@@ -63,7 +63,7 @@ func NewApp(name, description string) *App {
 	return &App{
 		description: description,
 		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
+			Name:            name,
 			ResourceVersion: Version,
 		},
 		// --------------------
@@ -75,9 +75,8 @@ func NewApp(name, description string) *App {
 func (n *App) Install(client *kubernetes.Clientset) error {
 	var err error
 
-
-	pod := &v1.Pod{
-		TypeMeta:   metav1.TypeMeta{
+	var pod = &v1.Pod{
+		TypeMeta: metav1.TypeMeta{
 			Kind:       "",
 			APIVersion: "",
 		},
@@ -99,10 +98,35 @@ func (n *App) Install(client *kubernetes.Clientset) error {
 			ClusterName:                "",
 			ManagedFields:              nil,
 		},
-		Spec:       v1.PodSpec{
-			Volumes:                       nil,
-			InitContainers:                nil,
-			Containers:                    nil,
+		Spec: v1.PodSpec{
+			Volumes:        nil,
+			InitContainers: nil,
+			Containers: []v1.Container{
+				v1.Container{
+					Name:                     "",
+					Image:                    "",
+					Command:                  nil,
+					Args:                     nil,
+					WorkingDir:               "",
+					Ports:                    nil,
+					EnvFrom:                  nil,
+					Env:                      nil,
+					Resources:                v1.ResourceRequirements{},
+					VolumeMounts:             nil,
+					VolumeDevices:            nil,
+					LivenessProbe:            nil,
+					ReadinessProbe:           nil,
+					StartupProbe:             nil,
+					Lifecycle:                nil,
+					TerminationMessagePath:   "",
+					TerminationMessagePolicy: "",
+					ImagePullPolicy:          "",
+					SecurityContext:          nil,
+					Stdin:                    false,
+					StdinOnce:                false,
+					TTY:                      false,
+				},
+			},
 			EphemeralContainers:           nil,
 			RestartPolicy:                 "",
 			TerminationGracePeriodSeconds: nil,
@@ -141,7 +165,6 @@ func (n *App) Install(client *kubernetes.Clientset) error {
 	if err != nil {
 		return err
 	}
-
 
 	return err
 }

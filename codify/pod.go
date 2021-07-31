@@ -25,6 +25,8 @@ package codify
 
 import (
 	"bytes"
+	"fmt"
+	"github.com/kris-nova/logger"
 	v1 "k8s.io/api/core/v1"
 	"text/template"
 )
@@ -40,68 +42,20 @@ func NewPod(pod *v1.Pod) *Pod {
 }
 
 func (p Pod) Install() string {
-	install := `
-	pod := &v1.Pod{
-		TypeMeta:   metav1.TypeMeta{
-			Kind:       "",
-			APIVersion: "",
-		},
-		ObjectMeta: metav1.ObjectMeta{
-			Name:                       "{{ .Name }}",
-			GenerateName:               "{{ .GenerateName }}",
-			Namespace:                  "{{ .Namespace }}",
-			ResourceVersion:            "{{ .ResourceVersion }}",
-			Labels:                     map[string]string{},
-			Annotations:                map[string]string{},
-			ClusterName:                "{{ .ClusterName }}",
-		},
-		Spec:       v1.PodSpec{
-			Volumes:                       nil,
-			InitContainers:                nil,
-			Containers:                    nil,
-			EphemeralContainers:           nil,
-			RestartPolicy:                 "{{ .Spec.RestartPolicy }}",
-			TerminationGracePeriodSeconds: nil,
-			ActiveDeadlineSeconds:         nil,
-			DNSPolicy:                     "{{ .Spec.DNSPolicy }}",
-			NodeSelector:                  nil,
-			ServiceAccountName:            "{{ .Spec.ServiceAccountName }}",
-			DeprecatedServiceAccount:      "{{ .Spec.DeprecatedServiceAccount }}",
-			AutomountServiceAccountToken:  nil,
-			NodeName:                      "{{ .Spec.NodeName }}",
-			HostNetwork:                   {{ .Spec.HostNetwork }},
-			HostPID:                       {{ .Spec.HostPID }},
-			HostIPC:                       {{ .Spec.HostIPC }},
-			ShareProcessNamespace:         nil,
-			SecurityContext:               nil,
-			ImagePullSecrets:              nil,
-			Hostname:                      "{{ .Spec.Hostname }}",
-			Subdomain:                     "{{ .Spec.Subdomain }}",
-			Affinity:                      nil,
-			SchedulerName:                 "{{ .Spec.SchedulerName }}",
-			Tolerations:                   nil,
-			HostAliases:                   nil,
-			PriorityClassName:             "{{ .Spec.PriorityClassName }}",
-			Priority:                      nil,
-			DNSConfig:                     nil,
-			ReadinessGates:                nil,
-			RuntimeClassName:              nil,
-			EnableServiceLinks:            nil,
-			PreemptionPolicy:              nil,
-			Overhead:                      nil,
-			TopologySpreadConstraints:     nil,
-			SetHostnameAsFQDN:             nil,
-		},
-	}
-	_, err = client.CoreV1().Pods("{{ .Namespace }}").Create(context.TODO(), pod, metav1.CreateOptions{})
+	install := fmt.Sprintf(`
+	{{ .Name }}Pod := %#v
+	_, err = client.CoreV1().Pods("{{ .Namespace }}").Create(context.TODO(), {{ .Name }}Pod, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
-`
+`, p.i)
 	tpl := template.New("pod")
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
-	tpl.Execute(buf, p.i)
+	err := tpl.Execute(buf, p.i)
+	if err != nil {
+		logger.Debug(err.Error())
+	}
 	return buf.String()
 }
 
@@ -115,6 +69,9 @@ func (p Pod) Uninstall() string {
 	tpl := template.New("dpod")
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	tpl.Execute(buf, p.i)
+	err := tpl.Execute(buf, p.i)
+	if err != nil {
+		logger.Debug(err.Error())
+	}
 	return buf.String()
 }
