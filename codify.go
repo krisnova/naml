@@ -205,6 +205,8 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		objects = append(objects, codify.NewDaemonSet(x))
 	case *corev1.ConfigMap:
 		objects = append(objects, codify.NewConfigMap(x))
+	case *corev1.Service:
+		objects = append(objects, codify.NewService(x))
 	default:
 		return nil, fmt.Errorf("missing NAML support for type: %s", x.GetObjectKind().GroupVersionKind().Kind)
 	}
