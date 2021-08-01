@@ -199,6 +199,12 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		objects = append(objects, codify.NewPod(x))
 	case *appsv1.Deployment:
 		objects = append(objects, codify.NewDeployment(x))
+	case *appsv1.StatefulSet:
+		objects = append(objects, codify.NewStatefulSet(x))
+	case *appsv1.DaemonSet:
+		objects = append(objects, codify.NewDaemonSet(x))
+	case *corev1.ConfigMap:
+		objects = append(objects, codify.NewConfigMap(x))
 	default:
 		return nil, fmt.Errorf("missing NAML support for type: %s", x.GetObjectKind().GroupVersionKind().Kind)
 	}
