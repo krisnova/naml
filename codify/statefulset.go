@@ -29,17 +29,18 @@ import (
 	"github.com/kris-nova/logger"
 	appsv1 "k8s.io/api/apps/v1"
 	"text/template"
+	"time"
 )
 
 type StatefulSet struct {
 	i *appsv1.StatefulSet
 }
 
-func NewStatefulSet(sts *appsv1.StatefulSet) *StatefulSet {
-	sts.ObjectMeta = cleanObjectMeta(sts.ObjectMeta)
-	sts.Status = appsv1.StatefulSetStatus{}
+func NewStatefulSet(obj *appsv1.StatefulSet) *StatefulSet {
+	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
+	obj.Status = appsv1.StatefulSetStatus{}
 	return &StatefulSet{
-		i: sts,
+		i: obj,
 	}
 }
 
@@ -53,7 +54,7 @@ func (k StatefulSet) Install() string {
 		return err
 	}
 `, l)
-	tpl := template.New("sts")
+	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
 	err := tpl.Execute(buf, k.i)
@@ -70,7 +71,7 @@ func (k StatefulSet) Uninstall() string {
 		return err
 	}
  `
-	tpl := template.New("dsts")
+	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
 	k.i.Name = varName(k.i.Name)

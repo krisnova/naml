@@ -29,17 +29,18 @@ import (
 	"github.com/kris-nova/logger"
 	corev1 "k8s.io/api/core/v1"
 	"text/template"
+	"time"
 )
 
 type Service struct {
 	i *corev1.Service
 }
 
-func NewService(svc *corev1.Service) *Service {
-	svc.ObjectMeta = cleanObjectMeta(svc.ObjectMeta)
-	svc.Status = corev1.ServiceStatus{}
+func NewService(obj *corev1.Service) *Service {
+	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
+	obj.Status = corev1.ServiceStatus{}
 	return &Service{
-		i: svc,
+		i: obj,
 	}
 }
 
@@ -54,7 +55,7 @@ func (k Service) Install() string {
 	}
 `, l)
 
-	tpl := template.New("s")
+	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
 	k.i.Name = varName(k.i.Name)
@@ -72,7 +73,7 @@ func (k Service) Uninstall() string {
 		return err
 	}
  `
-	tpl := template.New("ds")
+	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
 	err := tpl.Execute(buf, k.i)

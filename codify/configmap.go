@@ -29,16 +29,17 @@ import (
 	"github.com/kris-nova/logger"
 	corev1 "k8s.io/api/core/v1"
 	"text/template"
+	"time"
 )
 
 type ConfigMap struct {
 	i *corev1.ConfigMap
 }
 
-func NewConfigMap(cm *corev1.ConfigMap) *ConfigMap {
-	cm.ObjectMeta = cleanObjectMeta(cm.ObjectMeta)
+func NewConfigMap(obj *corev1.ConfigMap) *ConfigMap {
+	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	return &ConfigMap{
-		i: cm,
+		i: obj,
 	}
 }
 
@@ -53,7 +54,7 @@ func (k ConfigMap) Install() string {
 	}
 `, l)
 
-	tpl := template.New("cm")
+	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
 	k.i.Name = varName(k.i.Name)
@@ -71,7 +72,7 @@ func (k ConfigMap) Uninstall() string {
 		return err
 	}
  `
-	tpl := template.New("dcm")
+	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
 	err := tpl.Execute(buf, k.i)

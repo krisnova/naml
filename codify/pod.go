@@ -29,17 +29,18 @@ import (
 	"github.com/kris-nova/logger"
 	corev1 "k8s.io/api/core/v1"
 	"text/template"
+	"time"
 )
 
 type Pod struct {
 	i *corev1.Pod
 }
 
-func NewPod(pod *corev1.Pod) *Pod {
-	pod.ObjectMeta = cleanObjectMeta(pod.ObjectMeta)
-	pod.Status = corev1.PodStatus{}
+func NewPod(obj *corev1.Pod) *Pod {
+	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
+	obj.Status = corev1.PodStatus{}
 	return &Pod{
-		i: pod,
+		i: obj,
 	}
 }
 
@@ -53,7 +54,7 @@ func (k Pod) Install() string {
 		return err
 	}
 `, l)
-	tpl := template.New("pod")
+	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
 	k.i.Name = varName(k.i.Name)
@@ -71,7 +72,7 @@ func (k Pod) Uninstall() string {
 		return err
 	}
  `
-	tpl := template.New("dpod")
+	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
 	err := tpl.Execute(buf, k.i)
