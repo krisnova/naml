@@ -23,7 +23,9 @@
 
 package naml
 
-import "fmt"
+import (
+	"fmt"
+)
 
 // Version is this specific version on naml
 var Version string
@@ -38,7 +40,6 @@ func Banner() {
 	fmt.Printf("|    ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝    |\n")
 	fmt.Printf("|       Not Another Markup Language           |\n")
 	fmt.Printf("|       Kris Nóva <kris@nivenly.com>          |\n")
-	fmt.Printf("|  %s   |\n", Version)
 	fmt.Printf("+---------------------------------------------+\n\n")
 
 }

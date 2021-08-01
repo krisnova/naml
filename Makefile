@@ -22,10 +22,11 @@
 
 all: compile
 version=$(shell git rev-parse HEAD)
-version="1.0.0"
+version="0.2.1"
 
 compile: ## Compile for the local architecture ⚙
 	@echo "Compiling..."
+	./embed-go.sh
 	go build -ldflags "-X 'github.com/kris-nova/naml.Version=$(version)'" -o naml cmd/*.go
 
 install: ## Install your naml 🎉
@@ -39,6 +40,7 @@ test: ## 🤓 Test is used to test your naml
 clean: ## Clean your artifacts 🧼
 	@echo "Cleaning..."
 	rm -rf release
+	rm -rf embed_*
 	rm -rf naml
 	rm -rf app
 

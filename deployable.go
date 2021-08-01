@@ -24,7 +24,7 @@
 package naml
 
 import (
-	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -39,7 +39,7 @@ type Deployable interface {
 	Uninstall(client *kubernetes.Clientset) error
 
 	// Meta returns the Kubernetes native ObjectMeta which is used to manage applications with naml.
-	Meta() *v1.ObjectMeta
+	Meta() *metav1.ObjectMeta
 
 	// Description returns the application description
 	Description() string

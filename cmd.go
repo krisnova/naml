@@ -27,6 +27,7 @@ import (
 	"fmt"
 	"os"
 	"strings"
+	"time"
 
 	"k8s.io/client-go/util/homedir"
 
@@ -63,6 +64,16 @@ func RunCommandLineWithOptions() error {
 	// kubeconfig is the --kubeconfig value
 	// which is used in our Client() code
 	var kubeconfig string
+
+	codifyValues := &MainGoValues{
+		AuthorEmail: "<kris@nivenly.com>",
+		AuthorName: "Kris Nóva",
+		CopyrightYear: fmt.Sprintf("%d",time.Now().Year()),
+		AppNameLower: "app",
+		AppNameTitle: "App",
+		Version: "0.0.1",
+		Description: "very serious grown up business application does important beep boops",
+	}
 
 	// cli assumes "-v" for version.
 	// override that here
@@ -190,6 +201,54 @@ func RunCommandLineWithOptions() error {
 					}
 					logger.Info("Uninstalling [%s]", appName)
 					return Uninstall(app)
+				},
+			},
+
+
+			// ********************************************************
+			// [ CODIFY ]
+			// ********************************************************
+
+			{
+				Name:        "codify",
+				Aliases:     []string{"c"},
+				Description: "Will try to read valid YAML from stdin to generate go struct literals.",
+				Usage:       "Use this to convert YAML to valid NAML structs.",
+				UsageText:   "kubectl get po <name> -oyaml | naml codify <flags>",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:        "author-name",
+						Value:       "Kris Nóva",
+						Usage:       "Name for the copyright header.",
+						Destination: &codifyValues.AuthorName,
+					},
+					&cli.StringFlag{
+						Name:        "author-email",
+						Value:       "<kris@nivenly.com>",
+						Usage:       "Email for the copyright header.",
+						Destination: &codifyValues.AuthorEmail,
+					},
+					&cli.StringFlag{
+						Name:        "description",
+						Value:       "very serious grown up business application does important beep boops",
+						Usage:       "Description for the application.",
+						Destination: &codifyValues.Description,
+					},
+				},
+				Action: func(c *cli.Context) error {
+					// ----------------------------------
+					err := AllInit(kubeconfig, verbose, with.Value())
+					if err != nil {
+						return err
+					}
+					// ----------------------------------
+
+					cbytes, err := Codify(os.Stdin, codifyValues)
+					if err != nil {
+						return err
+					}
+					fmt.Println(string(cbytes))
+					return nil
 				},
 			},
 
