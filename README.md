@@ -46,6 +46,26 @@ There is a "repository" of examples to borrow/fork:
 - [simple](https://github.com/naml-examples/simple) quick and simple example.
 - [full](https://github.com/naml-examples/full) example pattern to simulate a `Values.yaml` file.
 
+## Usage 
+
+```bash 
+# Compile your code using the naml library
+make
+
+# Once an application is compiled with naml
+# they can be standalone executables, or referenced from the default binary.
+naml -f app.naml list
+
+# Is the same as
+./app.naml list
+
+# install 
+naml -f app.naml install App
+
+# uninstall 
+naml -f app.naml uninstall App
+```
+
 #### Implement Deployable
 
 As long as there is a Go system that implements this interface it can be used with `naml`. See examples for how to include an implementation in your project.
