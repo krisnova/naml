@@ -33,6 +33,8 @@ import (
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
+	networkingv1 "k8s.io/api/networking/v1"
+	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"strings"
 	"text/template"
@@ -215,6 +217,18 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		objects = append(objects, codify.NewPersistentVolumeClaim(x))
 	case *batchv1.Job:
 		objects = append(objects, codify.NewJob(x))
+	case *batchv1.CronJob:
+		objects = append(objects, codify.NewCronJob(x))
+	case *rbacv1.Role:
+		objects = append(objects, codify.NewRole(x))
+	case *rbacv1.ClusterRole:
+		objects = append(objects, codify.NewClusterRole(x))
+	case *rbacv1.RoleBinding:
+		objects = append(objects, codify.NewRoleBinding(x))
+	case *rbacv1.ClusterRoleBinding:
+		objects = append(objects, codify.NewClusterRoleBinding(x))
+	case *networkingv1.Ingress:
+		objects = append(objects, codify.NewIngress(x))
 	case *appsv1.ReplicaSet:
 	case *corev1.Endpoints:
 		// Ignore ReplicaSet, Endpoints
