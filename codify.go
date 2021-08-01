@@ -207,6 +207,10 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		objects = append(objects, codify.NewConfigMap(x))
 	case *corev1.Service:
 		objects = append(objects, codify.NewService(x))
+	case *corev1.PersistentVolume:
+		objects = append(objects, codify.NewPersistentVolume(x))
+	case *corev1.PersistentVolumeClaim:
+		objects = append(objects, codify.NewPersistentVolumeClaim(x))
 	default:
 		return nil, fmt.Errorf("missing NAML support for type: %s", x.GetObjectKind().GroupVersionKind().Kind)
 	}
