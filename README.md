@@ -12,9 +12,32 @@ Test your code directly in local Kubernetes using [kind](https://github.com/kube
 
 Get your application directly into Go instead of YAML and use it in controllers, operators, CRs/CRDs easily. Use the Go compiler to your advantage.
 
-### Okay, but seriously
+#### Existing YAML
 
-This is just `client-go`. There isn't really anything more to see here.
+There is a new (alpha) feature `codify` that will attempt to generate as much go code as possible for existing Kubernetes YAML.
+
+You can pipe valid Kubernetes `.yaml` to `naml codify` and it will do it's best to generate as much code as possible for you. This will work best if you know what you are doing and just want a place to get started coding.
+
+Currently the following types are supported. If there is a type that you are looking for that isn't here feel free to open a pull request or submit an issue and I will add it as soon as I can.
+
+ - Service
+ - ConfigMap
+ - Deployment
+ - StatefulSet
+ - DaemonSet
+ - Deployment
+ - Pod
+ - List
+
+You can use the `codify` feature like this:
+
+```bash
+kubectl get deploy -oyaml | naml codify > main.go
+cat configmap.yaml | naml codify > main.go
+helm template chart | naml codify > main.go
+```
+
+
 
 #### Quickstart
 
