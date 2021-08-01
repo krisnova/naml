@@ -27,39 +27,43 @@ import (
 	"bytes"
 	"fmt"
 	"github.com/kris-nova/logger"
-	v1 "k8s.io/api/core/v1"
+	corev1 "k8s.io/api/core/v1"
 	"text/template"
 )
 
 type Pod struct {
-	i *v1.Pod
+	i *corev1.Pod
 }
 
-func NewPod(pod *v1.Pod) *Pod {
+func NewPod(pod *corev1.Pod) *Pod {
+	pod.Status = corev1.PodStatus{}
 	return &Pod{
 		i: pod,
 	}
 }
 
-func (p Pod) Install() string {
+func (k Pod) Install() string {
+	l := fmt.Sprintf("%#v", k.i)
 	install := fmt.Sprintf(`
-	{{ .Name }}Pod := %#v
-	_, err = client.CoreV1().Pods("{{ .Namespace }}").Create(context.TODO(), {{ .Name }}Pod, metav1.CreateOptions{})
+	{{ .Name }}Pod := %s
+
+	_, err = client.CoreV1().Pods("{{ .Namespace }}").Create(context.TODO(), {{ .Name }}Pod, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
-`, p.i)
+`, newl(l))
 	tpl := template.New("pod")
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, p.i)
+	k.i.Name = varName(k.i.Name)
+	err := tpl.Execute(buf, k.i)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return buf.String()
+	return alias(buf.String(), "corev1")
 }
 
-func (p Pod) Uninstall() string {
+func (k Pod) Uninstall() string {
 	uninstall := `
 	err = client.CoreV1().Pods("{{ .Namespace }}").Delete(context.TODO(), "{{ .Name }}", metav1.DeleteOptions{})
 	if err != nil {
@@ -69,7 +73,7 @@ func (p Pod) Uninstall() string {
 	tpl := template.New("dpod")
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, p.i)
+	err := tpl.Execute(buf, k.i)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

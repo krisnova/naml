@@ -30,7 +30,8 @@ import (
 	"github.com/kris-nova/naml/codify"
 	"go/format"
 	"io"
-	v1 "k8s.io/api/core/v1"
+	appsv1 "k8s.io/api/apps/v1"
+	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"strings"
 	"text/template"
@@ -57,15 +58,15 @@ const YAMLDelimiter string = "---"
 // into the .naml files in /src. These values
 // are what will be created in the output.
 type MainGoValues struct {
-	AuthorName string
-	AuthorEmail string
+	AuthorName    string
+	AuthorEmail   string
 	CopyrightYear string
-	AppNameTitle string
-	AppNameLower string
-	Description string
-	Version string
-	Install string
-	Uninstall string
+	AppNameTitle  string
+	AppNameLower  string
+	Description   string
+	Version       string
+	Install       string
+	Uninstall     string
 }
 
 type CodifyObject interface {
@@ -78,7 +79,6 @@ type CodifyObject interface {
 
 	// Uninstall is the reverse library call of install
 	Uninstall() string
-
 }
 
 // Codify will take any valid Kubernetes YAML as an io.Reader
@@ -114,12 +114,12 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 	for _, obj := range objs {
 		if v.Install == "" {
 			v.Install = obj.Install()
-		}else {
+		} else {
 			v.Install = fmt.Sprintf("%s\n%s", v.Install, obj.Install())
 		}
 		if v.Uninstall == "" {
 			v.Uninstall = obj.Uninstall()
-		}else {
+		} else {
 			v.Uninstall = fmt.Sprintf("%s\n%s", v.Uninstall, obj.Uninstall())
 		}
 	}
@@ -141,7 +141,6 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 	}
 	return fmtBytes, nil
 }
-
 
 func YAMLToCodifyObjects(raw []byte) ([]CodifyObject, error) {
 	rawStr := string(raw)
@@ -182,7 +181,7 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 	// on here.
 	//
 	switch x := decoded.(type) {
-	case *v1.List:
+	case *corev1.List:
 		// Lists are recursive items
 		// But we error each time and just
 		// base the error from the inner system.
@@ -196,8 +195,10 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 				objects = append(objects, c)
 			}
 		}
-	case *v1.Pod:
+	case *corev1.Pod:
 		objects = append(objects, codify.NewPod(x))
+	case *appsv1.Deployment:
+		objects = append(objects, codify.NewDeployment(x))
 	default:
 		return nil, fmt.Errorf("missing NAML support for type: %s", x.GetObjectKind().GroupVersionKind().Kind)
 	}
