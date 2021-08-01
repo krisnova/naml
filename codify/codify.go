@@ -91,6 +91,7 @@ func alias(generated, defaultalias string) string {
 	// ------------------------------
 	// [ corev1 ]
 	corev1types := []string{
+		"Volume",
 		"PodTemplateSpec",
 		"PodSpec",
 		"ResourceRequirements",
