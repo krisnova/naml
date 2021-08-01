@@ -22,7 +22,7 @@ If you have existing YAML on disk or in a Kubernetes cluster, you can pipe it di
 mkdir out
 
 # Get started quickly with all objects in a namespace
-kubectl get all -n default | naml codify > out/main.go
+kubectl get all -n default -o yaml | naml codify > out/main.go
 
 # Pipe multiple .yaml files to a single Application
 cat deployment.yaml service.yaml | naml codify \
