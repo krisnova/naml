@@ -22,7 +22,7 @@
 
 all: compile
 version=$(shell git rev-parse HEAD)
-version="0.2.2"
+version="0.2.3"
 
 compile: ## Compile for the local architecture ⚙
 	@echo "Compiling..."
