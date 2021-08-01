@@ -35,14 +35,16 @@ type Service struct {
 	i *corev1.Service
 }
 
-func NewService(cm *corev1.Service) *Service {
+func NewService(svc *corev1.Service) *Service {
+	svc.ObjectMeta = cleanObjectMeta(svc.ObjectMeta)
+	svc.Status = corev1.ServiceStatus{}
 	return &Service{
-		i: cm,
+		i: svc,
 	}
 }
 
 func (k Service) Install() string {
-	l := fmt.Sprintf("%#v", k.i)
+	l := Literal(k.i)
 	install := fmt.Sprintf(`
 	{{ .Name }}Service := %s
 
@@ -50,7 +52,7 @@ func (k Service) Install() string {
 	if err != nil {
 		return err
 	}
-`, newl(l))
+`, l)
 
 	tpl := template.New("s")
 	tpl.Parse(install)

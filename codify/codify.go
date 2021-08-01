@@ -25,10 +25,16 @@ package codify
 
 import (
 	"fmt"
+	"github.com/hexops/valast"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"regexp"
 	"strings"
 )
+
+func Literal(kubeobject interface{}) string {
+	l := valast.String(kubeobject)
+	return l
+}
 
 // cleanObjectMeta helps us get rid of things like timestamps
 // by only "opting in" to certain fields.
@@ -113,6 +119,11 @@ func alias(generated, defaultalias string) string {
 		"PodReadinessGate",
 		"PreemptionPolicy",
 		"TopologySpreadConstraint",
+		"TerminationMessagePolicy",
+		"PullPolicy",
+		"RestartPolicy",
+		"DNSPolicy",
+		"PodSecurityContext",
 	}
 	// ------------------------------
 
@@ -132,6 +143,9 @@ func varName(name string) string {
 }
 
 func newl(n string) string {
-	return strings.Replace(n, ",", `,
-`, -1)
+	n = strings.ReplaceAll(n, "{", `{
+`)
+	return strings.ReplaceAll(n, ",", `,
+`)
+
 }

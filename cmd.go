@@ -66,13 +66,13 @@ func RunCommandLineWithOptions() error {
 	var kubeconfig string
 
 	codifyValues := &MainGoValues{
-		AuthorEmail: "<kris@nivenly.com>",
-		AuthorName: "Kris Nóva",
-		CopyrightYear: fmt.Sprintf("%d",time.Now().Year()),
-		AppNameLower: "app",
-		AppNameTitle: "App",
-		Version: "0.0.1",
-		Description: "very serious grown up business application does important beep boops",
+		AuthorEmail:   "<kris@nivenly.com>",
+		AuthorName:    "Kris Nóva",
+		CopyrightYear: fmt.Sprintf("%d", time.Now().Year()),
+		AppNameLower:  "app",
+		AppNameTitle:  "App",
+		Version:       "0.0.1",
+		Description:   "very serious grown up business application does important beep boops",
 	}
 
 	// cli assumes "-v" for version.
@@ -203,7 +203,6 @@ func RunCommandLineWithOptions() error {
 					return Uninstall(app)
 				},
 			},
-
 
 			// ********************************************************
 			// [ CODIFY ]

@@ -36,13 +36,14 @@ type ConfigMap struct {
 }
 
 func NewConfigMap(cm *corev1.ConfigMap) *ConfigMap {
+	cm.ObjectMeta = cleanObjectMeta(cm.ObjectMeta)
 	return &ConfigMap{
 		i: cm,
 	}
 }
 
 func (k ConfigMap) Install() string {
-	l := fmt.Sprintf("%#v", k.i)
+	l := Literal(k.i)
 	install := fmt.Sprintf(`
 	{{ .Name }}ConfigMap := %s
 
@@ -50,7 +51,7 @@ func (k ConfigMap) Install() string {
 	if err != nil {
 		return err
 	}
-`, newl(l))
+`, l)
 
 	tpl := template.New("cm")
 	tpl.Parse(install)

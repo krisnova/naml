@@ -36,6 +36,7 @@ type DaemonSet struct {
 }
 
 func NewDaemonSet(ds *appsv1.DaemonSet) *DaemonSet {
+	ds.ObjectMeta = cleanObjectMeta(ds.ObjectMeta)
 	ds.Status = appsv1.DaemonSetStatus{}
 	return &DaemonSet{
 		i: ds,
@@ -43,7 +44,7 @@ func NewDaemonSet(ds *appsv1.DaemonSet) *DaemonSet {
 }
 
 func (k DaemonSet) Install() string {
-	l := fmt.Sprintf("%#v", k.i)
+	l := Literal(k.i)
 	install := fmt.Sprintf(`
 	{{ .Name }}DaemonSet := %s
 
@@ -51,7 +52,7 @@ func (k DaemonSet) Install() string {
 	if err != nil {
 		return err
 	}
-`, newl(l))
+`, l)
 	tpl := template.New("ds")
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}

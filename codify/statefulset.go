@@ -36,6 +36,7 @@ type StatefulSet struct {
 }
 
 func NewStatefulSet(sts *appsv1.StatefulSet) *StatefulSet {
+	sts.ObjectMeta = cleanObjectMeta(sts.ObjectMeta)
 	sts.Status = appsv1.StatefulSetStatus{}
 	return &StatefulSet{
 		i: sts,
@@ -43,7 +44,7 @@ func NewStatefulSet(sts *appsv1.StatefulSet) *StatefulSet {
 }
 
 func (k StatefulSet) Install() string {
-	l := fmt.Sprintf("%#v", k.i)
+	l := Literal(k.i)
 	install := fmt.Sprintf(`
 	{{ .Name }}StatefulSet := %s
 
@@ -51,7 +52,7 @@ func (k StatefulSet) Install() string {
 	if err != nil {
 		return err
 	}
-`, newl(l))
+`, l)
 	tpl := template.New("sts")
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}

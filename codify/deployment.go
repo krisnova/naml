@@ -36,6 +36,7 @@ type Deployment struct {
 }
 
 func NewDeployment(deploy *appsv1.Deployment) *Deployment {
+	deploy.ObjectMeta = cleanObjectMeta(deploy.ObjectMeta)
 	deploy.Status = appsv1.DeploymentStatus{}
 	return &Deployment{
 		i: deploy,
@@ -43,7 +44,7 @@ func NewDeployment(deploy *appsv1.Deployment) *Deployment {
 }
 
 func (k Deployment) Install() string {
-	l := fmt.Sprintf("%#v", k.i)
+	l := Literal(k.i)
 	install := fmt.Sprintf(`
 	{{ .Name }}Deployment := %s
 
@@ -51,7 +52,7 @@ func (k Deployment) Install() string {
 	if err != nil {
 		return err
 	}
-`, newl(l))
+`, l)
 	tpl := template.New("deploy")
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}

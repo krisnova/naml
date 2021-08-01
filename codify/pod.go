@@ -36,6 +36,7 @@ type Pod struct {
 }
 
 func NewPod(pod *corev1.Pod) *Pod {
+	pod.ObjectMeta = cleanObjectMeta(pod.ObjectMeta)
 	pod.Status = corev1.PodStatus{}
 	return &Pod{
 		i: pod,
@@ -43,7 +44,7 @@ func NewPod(pod *corev1.Pod) *Pod {
 }
 
 func (k Pod) Install() string {
-	l := fmt.Sprintf("%#v", k.i)
+	l := Literal(k.i)
 	install := fmt.Sprintf(`
 	{{ .Name }}Pod := %s
 
@@ -51,7 +52,7 @@ func (k Pod) Install() string {
 	if err != nil {
 		return err
 	}
-`, newl(l))
+`, l)
 	tpl := template.New("pod")
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
