@@ -244,6 +244,8 @@ func RunCommandLineWithOptions() error {
 
 					cbytes, err := Codify(os.Stdin, codifyValues)
 					if err != nil {
+						// Codify prints to stderr
+						fmt.Fprintf(os.Stderr, "Error during codify: %v", err)
 						return err
 					}
 					fmt.Println(string(cbytes))
