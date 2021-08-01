@@ -23,10 +23,11 @@
 
 all: compile
 version=$(shell git rev-parse HEAD)
+exe="app"
 
 compile: ## Compile for the local architecture ⚙
 	@echo "Compiling..."
-	go build -o out.naml main.go
+	go build -o ${exe} main.go
 
 clean: ## Clean your artifacts 🧼
 	@echo "Cleaning..."

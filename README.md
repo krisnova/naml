@@ -6,45 +6,45 @@ Replace Kubernetes YAML with raw Go!
 
 Say so long 👋 to YAML and start using the Go 🎉 programming language to represent and deploy applications.
 
-Take advantage of all the lovely features of Go.
+✅ Take advantage of all the lovely features of Go.
 
-Test your code directly in local Kubernetes using [kind](https://github.com/kubernetes-sigs/kind).
+✅ Test your code directly in local Kubernetes using [kind](https://github.com/kubernetes-sigs/kind).
 
-Get your application directly into Go instead of YAML and use it in controllers, operators, CRs/CRDs easily. Use the Go compiler to your advantage.
+✅ Get your application directly into Go instead of YAML and use it in controllers, operators, CRs/CRDs easily. Use the Go compiler to your advantage.
 
-#### Existing YAML
+## Quickstart
 
-There is a new (alpha) feature `codify` that will attempt to generate as much go code as possible for existing Kubernetes YAML.
+Turn existing YAML into Go.
 
-You can pipe valid Kubernetes `.yaml` to `naml codify` and it will do it's best to generate as much code as possible for you. This will work best if you know what you are doing and just want a place to get started coding.
-
-Currently the following types are supported. If there is a type that you are looking for that isn't here feel free to open a pull request or submit an issue and I will add it as soon as I can.
-
- - Service
- - ConfigMap
- - Deployment
- - StatefulSet
- - DaemonSet
- - Deployment
- - Pod
- - List
-
-You can use the `codify` feature like this:
+If you have existing YAML on disk or in a Kubernetes cluster, you can pipe it directly to `naml codify` to generate Go code.
 
 ```bash
-kubectl get deploy -oyaml | naml codify > main.go
-cat configmap.yaml | naml codify > main.go
-helm template chart | naml codify > main.go
+mkdir out
+
+# Get started quickly with all objects in a namespace
+kubectl get all -n default | naml codify > out/main.go
+
+# Pipe multiple .yaml files to a single Application
+cat deployment.yaml service.yaml | naml codify \
+  --author-name="Charlie" \
+  --author-email="<charlie@nivenly.com>" > out/main.go
 ```
 
+Copy the generic [Makefile](https://github.com/kris-nova/naml/blob/main/out/Makefile) to the same directory as your `main.go`
 
+```bash 
+wget https://raw.githubusercontent.com/kris-nova/naml/main/out/Makefile -o out/Makefile
+```
 
-#### Quickstart
+Use `make help` for more. Happy coding 🎉.
 
-Check out the [examples](https://github.com/naml-examples) GitHub organization.
+## Examples
 
-- [simple](https://github.com/naml-examples/simple) basic CLI example.
-- [full](https://github.com/naml-examples/full) CLI example with custom commands and flags.
+There is a "repository" of examples to borrow/fork:
+
+- [examples](https://github.com/naml-examples) GitHub organization.
+- [simple](https://github.com/naml-examples/simple) quick and simple example.
+- [full](https://github.com/naml-examples/full) example pattern to simulate a `Values.yaml` file.
 
 #### Implement Deployable
 
@@ -52,7 +52,6 @@ As long as there is a Go system that implements this interface it can be used wi
 
 ```go
 // Deployable is used to deploy applications.
-// v0.2.0
 type Deployable interface {
 
 	// Install will attempt to install in Kubernetes
@@ -110,11 +109,3 @@ Feel free to fork this repository and begin using it for your team. There isn't 
  - Define custom installation logic. What happens if it fails?
  - Define custom application registries. Multiple apps of the same flavor? No problem.
  - Use the latest client (the same client the rest of Kubernetes uses).
-
-
-## Getting Started
-
-Check out the [examples](https://github.com/naml-examples) GitHub organization. 
-
-- [simple](https://github.com/naml-examples/simple) basic CLI example.
-- [full](https://github.com/naml-examples/full) CLI example with custom commands and flags.

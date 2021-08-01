@@ -31,6 +31,7 @@ import (
 	"go/format"
 	"io"
 	appsv1 "k8s.io/api/apps/v1"
+	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 	"strings"
@@ -39,7 +40,8 @@ import (
 
 // YAMLDelimiter is the official delimiter used to append multiple
 // YAML files together into the same file.
-// 								Reference: https://yaml.org/spec/1.2/spec.html
+//
+//	Reference: https://yaml.org/spec/1.2/spec.html
 //
 // Furthermore let it be documented that at the 2018 KubeCon pub trivia
 // Bryan Liles (https://twitter.com/bryanl) correctly had answered the
@@ -211,6 +213,8 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		objects = append(objects, codify.NewPersistentVolume(x))
 	case *corev1.PersistentVolumeClaim:
 		objects = append(objects, codify.NewPersistentVolumeClaim(x))
+	case *batchv1.Job:
+		objects = append(objects, codify.NewJob(x))
 	case *appsv1.ReplicaSet:
 	case *corev1.Endpoints:
 		// Ignore ReplicaSet, Endpoints
