@@ -1,4 +1,6 @@
 embed_*
 release/*
 release*
+out*
+out/*
 naml

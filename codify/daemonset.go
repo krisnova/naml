@@ -29,21 +29,23 @@ import (
 	"github.com/kris-nova/logger"
 	appsv1 "k8s.io/api/apps/v1"
 	"text/template"
+	"time"
 )
 
 type DaemonSet struct {
 	i *appsv1.DaemonSet
 }
 
-func NewDaemonSet(ds *appsv1.DaemonSet) *DaemonSet {
-	ds.Status = appsv1.DaemonSetStatus{}
+func NewDaemonSet(obj *appsv1.DaemonSet) *DaemonSet {
+	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
+	obj.Status = appsv1.DaemonSetStatus{}
 	return &DaemonSet{
-		i: ds,
+		i: obj,
 	}
 }
 
 func (k DaemonSet) Install() string {
-	l := fmt.Sprintf("%#v", k.i)
+	l := Literal(k.i)
 	install := fmt.Sprintf(`
 	{{ .Name }}DaemonSet := %s
 
@@ -51,8 +53,8 @@ func (k DaemonSet) Install() string {
 	if err != nil {
 		return err
 	}
-`, newl(l))
-	tpl := template.New("ds")
+`, l)
+	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
 	err := tpl.Execute(buf, k.i)
@@ -69,7 +71,7 @@ func (k DaemonSet) Uninstall() string {
 		return err
 	}
  `
-	tpl := template.New("dds")
+	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
 	k.i.Name = varName(k.i.Name)

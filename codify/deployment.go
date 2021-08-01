@@ -29,21 +29,23 @@ import (
 	"github.com/kris-nova/logger"
 	appsv1 "k8s.io/api/apps/v1"
 	"text/template"
+	"time"
 )
 
 type Deployment struct {
 	i *appsv1.Deployment
 }
 
-func NewDeployment(deploy *appsv1.Deployment) *Deployment {
-	deploy.Status = appsv1.DeploymentStatus{}
+func NewDeployment(obj *appsv1.Deployment) *Deployment {
+	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
+	obj.Status = appsv1.DeploymentStatus{}
 	return &Deployment{
-		i: deploy,
+		i: obj,
 	}
 }
 
 func (k Deployment) Install() string {
-	l := fmt.Sprintf("%#v", k.i)
+	l := Literal(k.i)
 	install := fmt.Sprintf(`
 	{{ .Name }}Deployment := %s
 
@@ -51,8 +53,8 @@ func (k Deployment) Install() string {
 	if err != nil {
 		return err
 	}
-`, newl(l))
-	tpl := template.New("deploy")
+`, l)
+	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
 	err := tpl.Execute(buf, k.i)
@@ -69,7 +71,7 @@ func (k Deployment) Uninstall() string {
 		return err
 	}
  `
-	tpl := template.New("ddeploy")
+	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
 	k.i.Name = varName(k.i.Name)

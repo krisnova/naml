@@ -43,6 +43,7 @@ clean: ## Clean your artifacts 🧼
 	rm -rf embed_*
 	rm -rf naml
 	rm -rf app
+	rm -rf out/*
 
 release: ## Make the binaries for a GitHub release 📦
 	mkdir -p release

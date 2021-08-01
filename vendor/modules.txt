@@ -31,6 +31,9 @@ github.com/google/gofuzz
 github.com/googleapis/gnostic/compiler
 github.com/googleapis/gnostic/extensions
 github.com/googleapis/gnostic/openapiv2
+# github.com/hexops/valast v1.4.0
+## explicit
+github.com/hexops/valast
 # github.com/imdario/mergo v0.3.5
 github.com/imdario/mergo
 # github.com/inconshreveable/mousetrap v1.0.0
@@ -52,6 +55,8 @@ github.com/pelletier/go-toml
 github.com/pkg/errors
 # github.com/russross/blackfriday/v2 v2.0.1
 github.com/russross/blackfriday/v2
+# github.com/shurcooL/go-goon v0.0.0-20170922171312-37c2f522c041
+github.com/shurcooL/go-goon/bypass
 # github.com/shurcooL/sanitized_anchor_name v1.0.0
 github.com/shurcooL/sanitized_anchor_name
 # github.com/spf13/cobra v1.1.1
@@ -61,6 +66,8 @@ github.com/spf13/pflag
 # github.com/urfave/cli/v2 v2.3.0
 ## explicit
 github.com/urfave/cli/v2
+# golang.org/x/mod v0.4.0
+golang.org/x/mod/semver
 # golang.org/x/net v0.0.0-20210224082022-3d97a244fca7
 golang.org/x/net/context
 golang.org/x/net/context/ctxhttp
@@ -85,6 +92,22 @@ golang.org/x/text/unicode/bidi
 golang.org/x/text/unicode/norm
 # golang.org/x/time v0.0.0-20210220033141-f8bda1e9f3ba
 golang.org/x/time/rate
+# golang.org/x/tools v0.0.0-20210106214847-113979e3529a
+golang.org/x/tools/go/ast/astutil
+golang.org/x/tools/go/gcexportdata
+golang.org/x/tools/go/internal/gcimporter
+golang.org/x/tools/go/internal/packagesdriver
+golang.org/x/tools/go/packages
+golang.org/x/tools/internal/event
+golang.org/x/tools/internal/event/core
+golang.org/x/tools/internal/event/keys
+golang.org/x/tools/internal/event/label
+golang.org/x/tools/internal/gocommand
+golang.org/x/tools/internal/packagesinternal
+golang.org/x/tools/internal/typesinternal
+# golang.org/x/xerrors v0.0.0-20200804184101-5ec99f83aff1
+golang.org/x/xerrors
+golang.org/x/xerrors/internal
 # google.golang.org/appengine v1.6.5
 google.golang.org/appengine/internal
 google.golang.org/appengine/internal/base
@@ -327,6 +350,8 @@ k8s.io/client-go/util/workqueue
 k8s.io/klog/v2
 # k8s.io/utils v0.0.0-20201110183641-67b214c5f920
 k8s.io/utils/integer
+# mvdan.cc/gofumpt v0.0.0-20210107193838-d24d34e18d44
+mvdan.cc/gofumpt/format
 # sigs.k8s.io/kind v0.11.1
 ## explicit
 sigs.k8s.io/kind/pkg/apis/config/defaults
