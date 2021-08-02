@@ -28,28 +28,32 @@ import (
 	"fmt"
 	"github.com/kris-nova/logger"
 	appsv1 "k8s.io/api/apps/v1"
+	"strings"
 	"text/template"
 	"time"
 )
 
 type Deployment struct {
-	i *appsv1.Deployment
+	*appsv1.Deployment
+	GoName string
 }
 
 func NewDeployment(obj *appsv1.Deployment) *Deployment {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	obj.Status = appsv1.DeploymentStatus{}
 	return &Deployment{
-		i: obj,
+		Deployment: obj,
+		GoName:     strings.ReplaceAll(obj.Name, "-", "_"),
 	}
 }
 
 func (k Deployment) Install() string {
-	l := Literal(k.i)
+	l := Literal(k.Deployment)
 	install := fmt.Sprintf(`
-	{{ .Name }}Deployment := %s
+	// Adding a deployment: "{{ .Name }}"
+	{{ .GoName }}Deployment := %s
 
-	_, err = client.AppsV1().Deployments("{{ .Namespace }}").Create(context.TODO(), {{ .Name }}Deployment, v1.CreateOptions{})
+	_, err = client.AppsV1().Deployments("{{ .Namespace }}").Create(context.TODO(), {{ .GoName }}Deployment, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -57,7 +61,7 @@ func (k Deployment) Install() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.i)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -74,8 +78,8 @@ func (k Deployment) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	k.i.Name = varName(k.i.Name)
-	err := tpl.Execute(buf, k.i)
+	k.Name = varName(k.Name)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
