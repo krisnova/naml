@@ -33,19 +33,19 @@ import (
 )
 
 type DaemonSet struct {
-	i *appsv1.DaemonSet
+	KubeObject *appsv1.DaemonSet
 }
 
 func NewDaemonSet(obj *appsv1.DaemonSet) *DaemonSet {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	obj.Status = appsv1.DaemonSetStatus{}
 	return &DaemonSet{
-		i: obj,
+		KubeObject: obj,
 	}
 }
 
 func (k DaemonSet) Install() string {
-	l := Literal(k.i)
+	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .Name }}DaemonSet := %s
 
@@ -57,7 +57,7 @@ func (k DaemonSet) Install() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.i)
+	err := tpl.Execute(buf, k.KubeObject)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -74,8 +74,8 @@ func (k DaemonSet) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	k.i.Name = sanitizeK8sObjectName(k.i.Name)
-	err := tpl.Execute(buf, k.i)
+	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
+	err := tpl.Execute(buf, k.KubeObject)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

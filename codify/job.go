@@ -33,19 +33,19 @@ import (
 )
 
 type Job struct {
-	i *batchv1.Job
+	KubeObject *batchv1.Job
 }
 
 func NewJob(obj *batchv1.Job) *Job {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	obj.Status = batchv1.JobStatus{}
 	return &Job{
-		i: obj,
+		KubeObject: obj,
 	}
 }
 
 func (k Job) Install() string {
-	l := Literal(k.i)
+	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .Name }}Job := %s
 
@@ -58,8 +58,8 @@ func (k Job) Install() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
-	k.i.Name = sanitizeK8sObjectName(k.i.Name)
-	err := tpl.Execute(buf, k.i)
+	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
+	err := tpl.Execute(buf, k.KubeObject)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -76,7 +76,7 @@ func (k Job) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.i)
+	err := tpl.Execute(buf, k.KubeObject)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

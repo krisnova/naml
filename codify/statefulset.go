@@ -33,19 +33,19 @@ import (
 )
 
 type StatefulSet struct {
-	i *appsv1.StatefulSet
+	KubeObject *appsv1.StatefulSet
 }
 
 func NewStatefulSet(obj *appsv1.StatefulSet) *StatefulSet {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	obj.Status = appsv1.StatefulSetStatus{}
 	return &StatefulSet{
-		i: obj,
+		KubeObject: obj,
 	}
 }
 
 func (k StatefulSet) Install() string {
-	l := Literal(k.i)
+	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .Name }}StatefulSet := %s
 
@@ -57,7 +57,7 @@ func (k StatefulSet) Install() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.i)
+	err := tpl.Execute(buf, k.KubeObject)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -74,8 +74,8 @@ func (k StatefulSet) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	k.i.Name = sanitizeK8sObjectName(k.i.Name)
-	err := tpl.Execute(buf, k.i)
+	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
+	err := tpl.Execute(buf, k.KubeObject)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

@@ -33,18 +33,18 @@ import (
 )
 
 type Ingress struct {
-	i *networkingv1.Ingress
+	KubeObject *networkingv1.Ingress
 }
 
 func NewIngress(obj *networkingv1.Ingress) *Ingress {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	return &Ingress{
-		i: obj,
+		KubeObject: obj,
 	}
 }
 
 func (k Ingress) Install() string {
-	l := Literal(k.i)
+	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .Name }}Ingress := %s
 
@@ -57,8 +57,8 @@ func (k Ingress) Install() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
-	k.i.Name = sanitizeK8sObjectName(k.i.Name)
-	err := tpl.Execute(buf, k.i)
+	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
+	err := tpl.Execute(buf, k.KubeObject)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -75,7 +75,7 @@ func (k Ingress) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.i)
+	err := tpl.Execute(buf, k.KubeObject)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

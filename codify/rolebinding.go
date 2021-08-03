@@ -33,18 +33,18 @@ import (
 )
 
 type RoleBinding struct {
-	i *rbacv1.RoleBinding
+	KubeObject *rbacv1.RoleBinding
 }
 
 func NewRoleBinding(obj *rbacv1.RoleBinding) *RoleBinding {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	return &RoleBinding{
-		i: obj,
+		KubeObject: obj,
 	}
 }
 
 func (k RoleBinding) Install() string {
-	l := Literal(k.i)
+	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .Name }}RoleBinding := %s
 
@@ -57,8 +57,8 @@ func (k RoleBinding) Install() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
-	k.i.Name = sanitizeK8sObjectName(k.i.Name)
-	err := tpl.Execute(buf, k.i)
+	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
+	err := tpl.Execute(buf, k.KubeObject)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -75,7 +75,7 @@ func (k RoleBinding) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.i)
+	err := tpl.Execute(buf, k.KubeObject)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

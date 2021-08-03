@@ -33,18 +33,18 @@ import (
 )
 
 type ClusterRoleBinding struct {
-	i *rbacv1.ClusterRoleBinding
+	KubeObject *rbacv1.ClusterRoleBinding
 }
 
 func NewClusterRoleBinding(obj *rbacv1.ClusterRoleBinding) *ClusterRoleBinding {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	return &ClusterRoleBinding{
-		i: obj,
+		KubeObject: obj,
 	}
 }
 
 func (k ClusterRoleBinding) Install() string {
-	l := Literal(k.i)
+	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .Name }}ClusterRoleBinding := %s
 
@@ -57,8 +57,8 @@ func (k ClusterRoleBinding) Install() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
-	k.i.Name = sanitizeK8sObjectName(k.i.Name)
-	err := tpl.Execute(buf, k.i)
+	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
+	err := tpl.Execute(buf, k.KubeObject)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -75,7 +75,7 @@ func (k ClusterRoleBinding) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.i)
+	err := tpl.Execute(buf, k.KubeObject)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

@@ -33,18 +33,18 @@ import (
 )
 
 type Role struct {
-	i *rbacv1.Role
+	KubeObject *rbacv1.Role
 }
 
 func NewRole(obj *rbacv1.Role) *Role {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	return &Role{
-		i: obj,
+		KubeObject: obj,
 	}
 }
 
 func (k Role) Install() string {
-	l := Literal(k.i)
+	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .Name }}Role := %s
 
@@ -57,8 +57,8 @@ func (k Role) Install() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
-	k.i.Name = sanitizeK8sObjectName(k.i.Name)
-	err := tpl.Execute(buf, k.i)
+	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
+	err := tpl.Execute(buf, k.KubeObject)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -75,7 +75,7 @@ func (k Role) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.i)
+	err := tpl.Execute(buf, k.KubeObject)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

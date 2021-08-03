@@ -33,19 +33,19 @@ import (
 )
 
 type PersistentVolume struct {
-	i *corev1.PersistentVolume
+	KubeObject *corev1.PersistentVolume
 }
 
 func NewPersistentVolume(obj *corev1.PersistentVolume) *PersistentVolume {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	obj.Status = corev1.PersistentVolumeStatus{}
 	return &PersistentVolume{
-		i: obj,
+		KubeObject: obj,
 	}
 }
 
 func (k PersistentVolume) Install() string {
-	l := Literal(k.i)
+	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .Name }}PersistentVolume := %s
 
@@ -58,8 +58,8 @@ func (k PersistentVolume) Install() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
-	k.i.Name = sanitizeK8sObjectName(k.i.Name)
-	err := tpl.Execute(buf, k.i)
+	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
+	err := tpl.Execute(buf, k.KubeObject)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -76,7 +76,7 @@ func (k PersistentVolume) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.i)
+	err := tpl.Execute(buf, k.KubeObject)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

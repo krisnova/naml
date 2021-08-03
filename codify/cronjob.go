@@ -33,19 +33,19 @@ import (
 )
 
 type CronJob struct {
-	i *batchv1.CronJob
+	KubeObject *batchv1.CronJob
 }
 
 func NewCronJob(obj *batchv1.CronJob) *CronJob {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	obj.Status = batchv1.CronJobStatus{}
 	return &CronJob{
-		i: obj,
+		KubeObject: obj,
 	}
 }
 
 func (k CronJob) Install() string {
-	l := Literal(k.i)
+	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .Name }}CronJob := %s
 
@@ -58,8 +58,8 @@ func (k CronJob) Install() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
-	k.i.Name = sanitizeK8sObjectName(k.i.Name)
-	err := tpl.Execute(buf, k.i)
+	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
+	err := tpl.Execute(buf, k.KubeObject)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -76,7 +76,7 @@ func (k CronJob) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.i)
+	err := tpl.Execute(buf, k.KubeObject)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
