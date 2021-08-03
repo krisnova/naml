@@ -34,21 +34,23 @@ import (
 
 type ConfigMap struct {
 	KubeObject *corev1.ConfigMap
+	GoName     string
 }
 
 func NewConfigMap(obj *corev1.ConfigMap) *ConfigMap {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	return &ConfigMap{
 		KubeObject: obj,
+		GoName:     goName(obj.Name),
 	}
 }
 
 func (k ConfigMap) Install() string {
 	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
-	{{ .Name }}ConfigMap := %s
+	{{ .GoName }}ConfigMap := %s
 
-	_, err = client.CoreV1().ConfigMaps("{{ .Namespace }}").Create(context.TODO(), {{ .Name }}ConfigMap, v1.CreateOptions{})
+	_, err = client.CoreV1().ConfigMaps("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .KubeObject.Name }}ConfigMap, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -58,7 +60,7 @@ func (k ConfigMap) Install() string {
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
 	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
-	err := tpl.Execute(buf, k.KubeObject)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -67,7 +69,7 @@ func (k ConfigMap) Install() string {
 
 func (k ConfigMap) Uninstall() string {
 	uninstall := `
-	err = client.CoreV1().ConfigMaps("{{ .Namespace }}").Delete(context.TODO(), "{{ .Name }}", metav1.DeleteOptions{})
+	err = client.CoreV1().ConfigMaps("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
@@ -75,7 +77,7 @@ func (k ConfigMap) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.KubeObject)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

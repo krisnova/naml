@@ -34,6 +34,7 @@ import (
 
 type Job struct {
 	KubeObject *batchv1.Job
+	GoName     string
 }
 
 func NewJob(obj *batchv1.Job) *Job {
@@ -41,15 +42,16 @@ func NewJob(obj *batchv1.Job) *Job {
 	obj.Status = batchv1.JobStatus{}
 	return &Job{
 		KubeObject: obj,
+		GoName:     goName(obj.Name),
 	}
 }
 
 func (k Job) Install() string {
 	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
-	{{ .Name }}Job := %s
+	{{ .GoName }}Job := %s
 
-	_, err = client.BatchV1().Jobs("{{ .Namespace }}").Create(context.TODO(), {{ .Name }}Job, v1.CreateOptions{})
+	_, err = client.BatchV1().Jobs("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .KubeObject.Name }}Job, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -59,7 +61,7 @@ func (k Job) Install() string {
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
 	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
-	err := tpl.Execute(buf, k.KubeObject)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -68,7 +70,7 @@ func (k Job) Install() string {
 
 func (k Job) Uninstall() string {
 	uninstall := `
-	err = client.BatchV1().Jobs("{{ .Namespace }}").Delete(context.TODO(), "{{ .Name }}", metav1.DeleteOptions{})
+	err = client.BatchV1().Jobs("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
@@ -76,7 +78,7 @@ func (k Job) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.KubeObject)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

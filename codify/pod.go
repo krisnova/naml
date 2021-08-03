@@ -34,6 +34,7 @@ import (
 
 type Pod struct {
 	KubeObject *corev1.Pod
+	GoName     string
 }
 
 func NewPod(obj *corev1.Pod) *Pod {
@@ -41,15 +42,16 @@ func NewPod(obj *corev1.Pod) *Pod {
 	obj.Status = corev1.PodStatus{}
 	return &Pod{
 		KubeObject: obj,
+		GoName:     goName(obj.Name),
 	}
 }
 
 func (k Pod) Install() string {
 	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
-	{{ .Name }}Pod := %s
+	{{ .GoName }}Pod := %s
 
-	_, err = client.CoreV1().Pods("{{ .Namespace }}").Create(context.TODO(), {{ .Name }}Pod, v1.CreateOptions{})
+	_, err = client.CoreV1().Pods("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .KubeObject.Name }}Pod, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -58,7 +60,7 @@ func (k Pod) Install() string {
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
 	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
-	err := tpl.Execute(buf, k.KubeObject)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -67,7 +69,7 @@ func (k Pod) Install() string {
 
 func (k Pod) Uninstall() string {
 	uninstall := `
-	err = client.CoreV1().Pods("{{ .Namespace }}").Delete(context.TODO(), "{{ .Name }}", metav1.DeleteOptions{})
+	err = client.CoreV1().Pods("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
@@ -75,7 +77,7 @@ func (k Pod) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.KubeObject)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

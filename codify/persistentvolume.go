@@ -34,6 +34,7 @@ import (
 
 type PersistentVolume struct {
 	KubeObject *corev1.PersistentVolume
+	GoName     string
 }
 
 func NewPersistentVolume(obj *corev1.PersistentVolume) *PersistentVolume {
@@ -41,15 +42,16 @@ func NewPersistentVolume(obj *corev1.PersistentVolume) *PersistentVolume {
 	obj.Status = corev1.PersistentVolumeStatus{}
 	return &PersistentVolume{
 		KubeObject: obj,
+		GoName:     goName(obj.Name),
 	}
 }
 
 func (k PersistentVolume) Install() string {
 	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
-	{{ .Name }}PersistentVolume := %s
+	{{ .GoName }}PersistentVolume := %s
 
-	_, err = client.CoreV1().PersistentVolumes("{{ .Namespace }}").Create(context.TODO(), {{ .Name }}PersistentVolume, v1.CreateOptions{})
+	_, err = client.CoreV1().PersistentVolumes("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .KubeObject.Name }}PersistentVolume, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -59,7 +61,7 @@ func (k PersistentVolume) Install() string {
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
 	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
-	err := tpl.Execute(buf, k.KubeObject)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -68,7 +70,7 @@ func (k PersistentVolume) Install() string {
 
 func (k PersistentVolume) Uninstall() string {
 	uninstall := `
-	err = client.CoreV1().PersistentVolumes("{{ .Namespace }}").Delete(context.TODO(), "{{ .Name }}", metav1.DeleteOptions{})
+	err = client.CoreV1().PersistentVolumes("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
@@ -76,7 +78,7 @@ func (k PersistentVolume) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.KubeObject)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

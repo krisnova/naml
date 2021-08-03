@@ -34,6 +34,7 @@ import (
 
 type Service struct {
 	KubeObject *corev1.Service
+	GoName     string
 }
 
 func NewService(obj *corev1.Service) *Service {
@@ -41,15 +42,16 @@ func NewService(obj *corev1.Service) *Service {
 	obj.Status = corev1.ServiceStatus{}
 	return &Service{
 		KubeObject: obj,
+		GoName:     goName(obj.Name),
 	}
 }
 
 func (k Service) Install() string {
 	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
-	{{ .Name }}Service := %s
+	{{ .GoName }}Service := %s
 
-	_, err = client.CoreV1().Services("{{ .Namespace }}").Create(context.TODO(), {{ .Name }}Service, v1.CreateOptions{})
+	_, err = client.CoreV1().Services("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .KubeObject.Name }}Service, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -59,7 +61,7 @@ func (k Service) Install() string {
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
 	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
-	err := tpl.Execute(buf, k.KubeObject)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -68,7 +70,7 @@ func (k Service) Install() string {
 
 func (k Service) Uninstall() string {
 	uninstall := `
-	err = client.CoreV1().Services("{{ .Namespace }}").Delete(context.TODO(), "{{ .Name }}", metav1.DeleteOptions{})
+	err = client.CoreV1().Services("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
@@ -76,7 +78,7 @@ func (k Service) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.KubeObject)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

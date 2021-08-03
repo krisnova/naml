@@ -34,21 +34,23 @@ import (
 
 type Secret struct {
 	KubeObject *corev1.Secret
+	GoName     string
 }
 
 func NewSecret(obj *corev1.Secret) *Secret {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	return &Secret{
 		KubeObject: obj,
+		GoName:     goName(obj.Name),
 	}
 }
 
 func (k Secret) Install() string {
 	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
-	{{ .Name }}Secret := %s
+	{{ .GoName }}Secret := %s
 
-	_, err = client.CoreV1().Secrets("{{ .Namespace }}").Create(context.TODO(), {{ .Name }}Secret, v1.CreateOptions{})
+	_, err = client.CoreV1().Secrets("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .KubeObject.Name }}Secret, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -58,7 +60,7 @@ func (k Secret) Install() string {
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
 	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
-	err := tpl.Execute(buf, k.KubeObject)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -67,7 +69,7 @@ func (k Secret) Install() string {
 
 func (k Secret) Uninstall() string {
 	uninstall := `
-	err = client.CoreV1().Secrets("{{ .Namespace }}").Delete(context.TODO(), "{{ .Name }}", metav1.DeleteOptions{})
+	err = client.CoreV1().Secrets("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
@@ -75,7 +77,7 @@ func (k Secret) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.KubeObject)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
