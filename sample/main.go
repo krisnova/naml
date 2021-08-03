@@ -25,11 +25,15 @@ package main
 import (
 	"context"
 	"fmt"
+	"os"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"os"
+	"k8s.io/apimachinery/pkg/types"
+	"k8s.io/apimachinery/pkg/util/intstr"
 
+	"github.com/hexops/valast"
 	"github.com/kris-nova/naml"
 	"k8s.io/client-go/kubernetes"
 )
@@ -80,96 +84,133 @@ func NewApp(name, description string) *App {
 func (a *App) Install(client *kubernetes.Clientset) error {
 	var err error
 
-	boopsDeployment := &appsv1.Deployment{
+	// Adding a deployment: "nginx"
+	nginxDeployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{
 			Kind:       "Deployment",
-			APIVersion: "apps/appsv1"},
+			APIVersion: "apps/appsv1",
+		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:         "boops",
-			GenerateName: "",
-			Namespace:    "default",
-			Labels:       map[string]string{"app": "boops"},
-			Annotations:  map[string]string{"deployment.kubernetes.io/revision": "1"},
+			Name:            "nginx",
+			Namespace:       "default",
+			UID:             types.UID("c39ccefc-491a-4857-bb47-1aa540f2129a"),
+			ResourceVersion: "187098",
+			Generation:      1,
+			Labels:          map[string]string{"app": "nginx"},
+			Annotations:     map[string]string{"deployment.kubernetes.io/revision": "1"},
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: naml.I32p(1),
+			Replicas: valast.Addr(1).(*int32),
+			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{
+				"app": "nginx",
+			}},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
-					Name:   "",
-					Labels: map[string]string{"app": "boops"},
+					Labels: map[string]string{"app": "nginx"},
 				},
 				Spec: corev1.PodSpec{
-					Volumes:        []corev1.Volume(nil),
-					InitContainers: []corev1.Container(nil),
-					Containers: []corev1.Container{
-						{
-							Name:       "nginx",
-							Image:      "nginx",
-							Command:    []string(nil),
-							Args:       []string(nil),
-							WorkingDir: "",
-							Ports:      []corev1.ContainerPort(nil),
-							EnvFrom:    []corev1.EnvFromSource(nil),
-							Env:        []corev1.EnvVar(nil),
-							Resources: corev1.ResourceRequirements{Limits: corev1.ResourceList(nil),
-								Requests: corev1.ResourceList(nil)},
-							VolumeMounts:             []corev1.VolumeMount(nil),
-							VolumeDevices:            []corev1.VolumeDevice(nil),
-							LivenessProbe:            (*corev1.Probe)(nil),
-							ReadinessProbe:           (*corev1.Probe)(nil),
-							StartupProbe:             (*corev1.Probe)(nil),
-							Lifecycle:                (*corev1.Lifecycle)(nil),
-							TerminationMessagePath:   "/dev/termination-log",
-							TerminationMessagePolicy: "File",
-							ImagePullPolicy:          "Always",
-							SecurityContext:          (*corev1.SecurityContext)(nil),
-							Stdin:                    false,
-							StdinOnce:                false,
-							TTY:                      false}},
-					EphemeralContainers:       []corev1.EphemeralContainer(nil),
-					RestartPolicy:             "Always",
-					ActiveDeadlineSeconds:     (*int64)(nil),
-					DNSPolicy:                 "ClusterFirst",
-					NodeSelector:              map[string]string(nil),
-					ServiceAccountName:        "",
-					NodeName:                  "",
-					HostNetwork:               false,
-					HostPID:                   false,
-					HostIPC:                   false,
-					ImagePullSecrets:          []corev1.LocalObjectReference(nil),
-					Hostname:                  "",
-					Subdomain:                 "",
-					Affinity:                  (*corev1.Affinity)(nil),
-					SchedulerName:             "default-scheduler",
-					Tolerations:               []corev1.Toleration(nil),
-					HostAliases:               []corev1.HostAlias(nil),
-					PriorityClassName:         "",
-					Priority:                  (*int32)(nil),
-					DNSConfig:                 (*corev1.PodDNSConfig)(nil),
-					ReadinessGates:            []corev1.PodReadinessGate(nil),
-					RuntimeClassName:          (*string)(nil),
-					EnableServiceLinks:        (*bool)(nil),
-					PreemptionPolicy:          (*corev1.PreemptionPolicy)(nil),
-					Overhead:                  corev1.ResourceList(nil),
-					TopologySpreadConstraints: []corev1.TopologySpreadConstraint(nil),
-					SetHostnameAsFQDN:         (*bool)(nil)}},
-			Strategy: appsv1.DeploymentStrategy{
-				Type: "RollingUpdate",
+					Containers: []corev1.Container{corev1.Container{
+						Name:                     "nginx",
+						Image:                    "nginx",
+						TerminationMessagePath:   "/dev/termination-log",
+						TerminationMessagePolicy: corev1.TerminationMessagePolicy("File"),
+						ImagePullPolicy:          corev1.PullPolicy("Always"),
+					}},
+					RestartPolicy:                 corev1.RestartPolicy("Always"),
+					TerminationGracePeriodSeconds: valast.Addr(30).(*int64),
+					DNSPolicy:                     corev1.DNSPolicy("ClusterFirst"),
+					SecurityContext:               &corev1.PodSecurityContext{},
+					SchedulerName:                 "default-scheduler",
+				},
 			},
-			MinReadySeconds: 0,
-			Paused:          false,
-		},
-		Status: appsv1.DeploymentStatus{ObservedGeneration: 0,
-			Replicas:            0,
-			UpdatedReplicas:     0,
-			ReadyReplicas:       0,
-			AvailableReplicas:   0,
-			UnavailableReplicas: 0,
-			Conditions:          []appsv1.DeploymentCondition(nil),
+			Strategy: appsv1.DeploymentStrategy{
+				Type: appsv1.DeploymentStrategyType("RollingUpdate"),
+				RollingUpdate: &appsv1.RollingUpdateDeployment{
+					MaxUnavailable: &intstr.IntOrString{
+						Type:   intstr.Type(1),
+						StrVal: "25%",
+					},
+					MaxSurge: &intstr.IntOrString{
+						Type:   intstr.Type(1),
+						StrVal: "25%",
+					},
+				},
+			},
+			RevisionHistoryLimit:    valast.Addr(10).(*int32),
+			ProgressDeadlineSeconds: valast.Addr(600).(*int32),
 		},
 	}
 
-	_, err = client.AppsV1().Deployments("default").Create(context.TODO(), boopsDeployment, metav1.CreateOptions{})
+	_, err = client.AppsV1().Deployments("default").Create(context.TODO(), nginxDeployment, metav1.CreateOptions{})
+	if err != nil {
+		return err
+	}
+
+	// Adding a deployment: "nginx-deployment"
+	nginx_deploymentDeployment := &appsv1.Deployment{
+		TypeMeta: metav1.TypeMeta{
+			Kind:       "Deployment",
+			APIVersion: "apps/appsv1",
+		},
+		ObjectMeta: metav1.ObjectMeta{
+			Name:            "nginx-deployment",
+			Namespace:       "default",
+			UID:             types.UID("445061d9-5000-471b-8e06-45f5240dedb6"),
+			ResourceVersion: "254882",
+			Generation:      3,
+			Annotations: map[string]string{
+				"deployment.kubernetes.io/revision": "3",
+				"kubectl.kubernetes.io/last-applied-configuration": `{"apiVersion":"apps/appsv1","kind":"Deployment","metadata":{"annotations":{},"name":"nginx-deployment","namespace":"default"},"spec":{"replicas":4,"selector":{"matchLabels":{"app":"nginx"}},"template":{"metadata":{"labels":{"app":"nginx"}},"spec":{"containers":[{"image":"nginx:1.14.2","name":"nginx","ports":[{"containerPort":80}]}]}}}}
+`,
+			},
+		},
+		Spec: appsv1.DeploymentSpec{
+			Replicas: valast.Addr(4).(*int32),
+			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{"app": "nginx"}},
+			Template: corev1.PodTemplateSpec{
+				ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{
+					"app": "nginx",
+				}},
+				Spec: corev1.PodSpec{
+					Containers: []corev1.Container{corev1.Container{
+						Name:  "nginx",
+						Image: "nginx:1.14.2",
+						Ports: []corev1.ContainerPort{
+							corev1.ContainerPort{
+								ContainerPort: 80,
+								Protocol:      appsv1.Protocol("TCP"),
+							},
+						},
+						TerminationMessagePath:   "/dev/termination-log",
+						TerminationMessagePolicy: corev1.TerminationMessagePolicy("File"),
+						ImagePullPolicy:          corev1.PullPolicy("IfNotPresent"),
+					}},
+					RestartPolicy:                 corev1.RestartPolicy("Always"),
+					TerminationGracePeriodSeconds: valast.Addr(30).(*int64),
+					DNSPolicy:                     corev1.DNSPolicy("ClusterFirst"),
+					SecurityContext:               &corev1.PodSecurityContext{},
+					SchedulerName:                 "default-scheduler",
+				},
+			},
+			Strategy: appsv1.DeploymentStrategy{
+				Type: appsv1.DeploymentStrategyType("RollingUpdate"),
+				RollingUpdate: &appsv1.RollingUpdateDeployment{
+					MaxUnavailable: &intstr.IntOrString{
+						Type:   intstr.Type(1),
+						StrVal: "25%",
+					},
+					MaxSurge: &intstr.IntOrString{
+						Type:   intstr.Type(1),
+						StrVal: "25%",
+					},
+				},
+			},
+			RevisionHistoryLimit:    valast.Addr(10).(*int32),
+			ProgressDeadlineSeconds: valast.Addr(600).(*int32),
+		},
+	}
+
+	_, err = client.AppsV1().Deployments("default").Create(context.TODO(), nginx_deploymentDeployment, metav1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -180,7 +221,12 @@ func (a *App) Install(client *kubernetes.Clientset) error {
 func (a *App) Uninstall(client *kubernetes.Clientset) error {
 	var err error
 
-	err = client.AppsV1().Deployments("default").Delete(context.TODO(), "boops", metav1.DeleteOptions{})
+	err = client.AppsV1().Deployments("default").Delete(context.TODO(), "nginx", metav1.DeleteOptions{})
+	if err != nil {
+		return err
+	}
+
+	err = client.AppsV1().Deployments("default").Delete(context.TODO(), "nginx-deployment", metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}

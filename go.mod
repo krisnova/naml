@@ -3,6 +3,7 @@ module github.com/kris-nova/naml
 go 1.16
 
 require (
+	github.com/fatih/color v1.12.0
 	github.com/hexops/valast v1.4.0
 	github.com/kris-nova/logger v0.2.2
 	github.com/urfave/cli/v2 v2.3.0

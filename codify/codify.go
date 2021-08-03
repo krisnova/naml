@@ -25,10 +25,11 @@ package codify
 
 import (
 	"fmt"
-	"github.com/hexops/valast"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"regexp"
 	"strings"
+
+	"github.com/hexops/valast"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func Literal(kubeobject interface{}) string {
