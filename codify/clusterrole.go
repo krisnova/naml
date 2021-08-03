@@ -50,7 +50,7 @@ func (k ClusterRole) Install() string {
 	install := fmt.Sprintf(`
 	{{ .GoName }}ClusterRole := %s
 
-	_, err = client.RbacV1().ClusterRoles("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .KubeObject.Name }}ClusterRole, v1.CreateOptions{})
+	_, err = client.RbacV1().ClusterRoles("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}ClusterRole, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
