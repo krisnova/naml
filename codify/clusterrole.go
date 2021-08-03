@@ -33,22 +33,24 @@ import (
 )
 
 type ClusterRole struct {
-	i *rbacv1.ClusterRole
+	KubeObject *rbacv1.ClusterRole
+	GoName     string
 }
 
 func NewClusterRole(obj *rbacv1.ClusterRole) *ClusterRole {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	return &ClusterRole{
-		i: obj,
+		KubeObject: obj,
+		GoName: goName(obj.Name),
 	}
 }
 
 func (k ClusterRole) Install() string {
-	l := Literal(k.i)
+	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
-	{{ .Name }}ClusterRole := %s
+	{{ .GoName }}ClusterRole := %s
 
-	_, err = client.RbacV1().ClusterRoles("{{ .Namespace }}").Create(context.TODO(), {{ .Name }}ClusterRole, v1.CreateOptions{})
+	_, err = client.RbacV1().ClusterRoles("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .KubeObject.Name }}ClusterRole, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -57,8 +59,8 @@ func (k ClusterRole) Install() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
-	k.i.Name = sanitizeK8sObjectName(k.i.Name)
-	err := tpl.Execute(buf, k.i)
+	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -67,15 +69,16 @@ func (k ClusterRole) Install() string {
 
 func (k ClusterRole) Uninstall() string {
 	uninstall := `
-	err = client.RbacV1().ClusterRoles("{{ .Namespace }}").Delete(context.TODO(), "{{ .Name }}", metav1.DeleteOptions{})
+	err = client.RbacV1().ClusterRoles("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
  `
+
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.i)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

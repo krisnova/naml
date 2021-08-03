@@ -28,7 +28,6 @@ import (
 	"fmt"
 	"github.com/kris-nova/logger"
 	appsv1 "k8s.io/api/apps/v1"
-	"strings"
 	"text/template"
 	"time"
 )
@@ -43,7 +42,7 @@ func NewDeployment(obj *appsv1.Deployment) *Deployment {
 	obj.Status = appsv1.DeploymentStatus{}
 	return &Deployment{
 		KubeObject: obj,
-		GoName:     strings.ReplaceAll(obj.Name, "-", "_"),
+		GoName:     goName(obj.Name),
 	}
 }
 
