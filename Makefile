@@ -22,11 +22,11 @@
 
 all: compile
 version=$(shell git rev-parse HEAD)
-version="0.2.3"
+version="0.2.4"
 
 compile: ## Compile for the local architecture ⚙
 	@echo "Compiling..."
-	./embed-go.sh
+	./_embed.sh
 	go build -ldflags "-X 'github.com/kris-nova/naml.Version=$(version)'" -o naml cmd/*.go
 
 install: ## Install your naml 🎉

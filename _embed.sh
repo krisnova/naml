@@ -21,7 +21,7 @@
 #   ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝
 #
 
-main=$(cat ./src/main.naml)
+main=$(cat ./src/main.go.tpl)
 
 rm -f embed_main.go
 touch embed_main.go
