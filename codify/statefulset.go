@@ -74,7 +74,7 @@ func (k StatefulSet) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	k.i.Name = varName(k.i.Name)
+	k.i.Name = sanitizeK8sObjectName(k.i.Name)
 	err := tpl.Execute(buf, k.i)
 	if err != nil {
 		logger.Debug(err.Error())
