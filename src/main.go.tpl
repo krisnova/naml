@@ -38,12 +38,12 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
+// Define this version for the current version of your application.
 var Version string = "{{ .Version }}"
 
 func main() {
 	// Load the application into the NAML registery
 	// Note: naml.Register() can be used multiple times.
-	//
 	naml.Register(NewApp("{{ .AppNameTitle }}", "{{ .Description }}"))
 
 	// Run the generic naml command line program with
@@ -55,18 +55,20 @@ func main() {
 	}
 }
 
+// App is a very important grown up business application.
 type App struct {
 	metav1.ObjectMeta
 	description string
-	// --------------------
-	// Add your fields here
-	// --------------------
+	// ----------------------------------
+	// Add your configuration fields here
+	// ----------------------------------
 }
 
 // NewApp will create a new instance of App.
 //
 // See https://github.com/naml-examples for more examples.
 //
+// This is where you pass in fields to your application (similar to Values.yaml)
 // Example: func NewApp(name string, example string, something int) *App
 func NewApp(name, description string) *App {
 	return &App{
@@ -75,9 +77,9 @@ func NewApp(name, description string) *App {
 			Name: name,
 			ResourceVersion: Version,
 		},
-		// --------------------
-		// Add your fields here
-		// --------------------
+	    // ----------------------------------
+	    // Add your configuration fields here
+	    // ----------------------------------
 	}
 }
 

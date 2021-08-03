@@ -143,6 +143,7 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 	if err != nil {
 		return code, fmt.Errorf("unable to auto format code: %v", err)
 	}
+
 	return fmtBytes, nil
 }
 
