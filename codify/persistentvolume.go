@@ -51,7 +51,7 @@ func (k PersistentVolume) Install() string {
 	install := fmt.Sprintf(`
 	{{ .GoName }}PersistentVolume := %s
 
-	_, err = client.CoreV1().PersistentVolumes("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .KubeObject.Name }}PersistentVolume, v1.CreateOptions{})
+	_, err = client.CoreV1().PersistentVolumes("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}PersistentVolume, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}

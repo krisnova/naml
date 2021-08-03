@@ -50,7 +50,7 @@ func (k Ingress) Install() string {
 	install := fmt.Sprintf(`
 	{{ .GoName }}Ingress := %s
 
-	_, err = client.NetworkingV1().Ingresss("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .KubeObject.Name }}Ingress, v1.CreateOptions{})
+	_, err = client.NetworkingV1().Ingresss("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Ingress, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}

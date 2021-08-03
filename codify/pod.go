@@ -51,7 +51,7 @@ func (k Pod) Install() string {
 	install := fmt.Sprintf(`
 	{{ .GoName }}Pod := %s
 
-	_, err = client.CoreV1().Pods("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .KubeObject.Name }}Pod, v1.CreateOptions{})
+	_, err = client.CoreV1().Pods("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Pod, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}

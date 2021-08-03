@@ -50,7 +50,7 @@ func (k ConfigMap) Install() string {
 	install := fmt.Sprintf(`
 	{{ .GoName }}ConfigMap := %s
 
-	_, err = client.CoreV1().ConfigMaps("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .KubeObject.Name }}ConfigMap, v1.CreateOptions{})
+	_, err = client.CoreV1().ConfigMaps("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}ConfigMap, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}

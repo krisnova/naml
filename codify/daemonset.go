@@ -51,7 +51,7 @@ func (k DaemonSet) Install() string {
 	install := fmt.Sprintf(`
 	{{ .GoName }}DaemonSet := %s
 
-	_, err = client.AppsV1().DaemonSets("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .KubeObject.Name }}Deployment, v1.CreateOptions{})
+	_, err = client.AppsV1().DaemonSets("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Deployment, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}

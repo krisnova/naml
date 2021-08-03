@@ -51,7 +51,7 @@ func (k Job) Install() string {
 	install := fmt.Sprintf(`
 	{{ .GoName }}Job := %s
 
-	_, err = client.BatchV1().Jobs("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .KubeObject.Name }}Job, v1.CreateOptions{})
+	_, err = client.BatchV1().Jobs("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Job, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}

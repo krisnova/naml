@@ -50,7 +50,7 @@ func (k Role) Install() string {
 	install := fmt.Sprintf(`
 	{{ .GoName }}Role := %s
 
-	_, err = client.RbacV1().Roles("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .KubeObject.Name }}Role, v1.CreateOptions{})
+	_, err = client.RbacV1().Roles("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Role, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}

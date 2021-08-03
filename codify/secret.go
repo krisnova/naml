@@ -50,7 +50,7 @@ func (k Secret) Install() string {
 	install := fmt.Sprintf(`
 	{{ .GoName }}Secret := %s
 
-	_, err = client.CoreV1().Secrets("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .KubeObject.Name }}Secret, v1.CreateOptions{})
+	_, err = client.CoreV1().Secrets("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Secret, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}

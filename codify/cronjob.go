@@ -51,7 +51,7 @@ func (k CronJob) Install() string {
 	install := fmt.Sprintf(`
 	{{ .GoName }}CronJob := %s
 
-	_, err = client.BatchV1().CronJobs("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .KubeObject.Name }}CronJob, v1.CreateOptions{})
+	_, err = client.BatchV1().CronJobs("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}CronJob, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}

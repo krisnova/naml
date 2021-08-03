@@ -51,7 +51,7 @@ func (k Service) Install() string {
 	install := fmt.Sprintf(`
 	{{ .GoName }}Service := %s
 
-	_, err = client.CoreV1().Services("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .KubeObject.Name }}Service, v1.CreateOptions{})
+	_, err = client.CoreV1().Services("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Service, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}

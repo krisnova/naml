@@ -50,7 +50,7 @@ func (k ServiceAccount) Install() string {
 	install := fmt.Sprintf(`
 	{{ .GoName }}ServiceAccount := %s
 
-	_, err = client.CoreV1().ServiceAccounts("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .KubeObject.Name }}ServiceAccount, v1.CreateOptions{})
+	_, err = client.CoreV1().ServiceAccounts("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}ServiceAccount, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}

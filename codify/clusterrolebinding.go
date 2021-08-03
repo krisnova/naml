@@ -50,7 +50,7 @@ func (k ClusterRoleBinding) Install() string {
 	install := fmt.Sprintf(`
 	{{ .GoName }}ClusterRoleBinding := %s
 
-	_, err = client.RbacV1().ClusterRoleBindings("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .KubeObject.Name }}ClusterRoleBinding, v1.CreateOptions{})
+	_, err = client.RbacV1().ClusterRoleBindings("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}ClusterRoleBinding, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
