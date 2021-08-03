@@ -26,18 +26,22 @@ package naml
 import (
 	"bytes"
 	"fmt"
-	"github.com/kris-nova/logger"
-	"github.com/kris-nova/naml/codify"
 	"go/format"
 	"io"
+	"strconv"
+	"strings"
+	"text/template"
+
+	"github.com/fatih/color"
+
+	"github.com/kris-nova/logger"
+	"github.com/kris-nova/naml/codify"
 	appsv1 "k8s.io/api/apps/v1"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
 	"k8s.io/client-go/kubernetes/scheme"
-	"strings"
-	"text/template"
 )
 
 // YAMLDelimiter is the official delimiter used to append multiple
@@ -141,6 +145,21 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 	// Go fmt!
 	fmtBytes, err := format.Source(src)
 	if err != nil {
+		// Unable to auto format the code so let's debug!
+		lines := strings.Split(string(buf.Bytes()), `
+`)
+		lns := strings.Split(err.Error(), ":")
+		line, err := strconv.Atoi(lns[0])
+		if err != nil || len(lines) < line {
+			return code, fmt.Errorf("unable to auto format code: %v", err)
+		}
+		fmt.Printf("Compile error on line %d:\n", line)
+		fmt.Printf("\n")
+		fmt.Printf("%s\n", lines[line-3])
+		fmt.Printf("%s\n", lines[line-2])
+		fmt.Printf("%s   %s\n", lines[line-1], color.GreenString("<---"))
+		fmt.Printf("%s\n", lines[line])
+		fmt.Printf("\n")
 		return code, fmt.Errorf("unable to auto format code: %v", err)
 	}
 

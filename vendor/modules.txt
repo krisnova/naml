@@ -8,6 +8,9 @@ github.com/cpuguy83/go-md2man/v2/md2man
 github.com/davecgh/go-spew/spew
 # github.com/evanphx/json-patch/v5 v5.2.0
 github.com/evanphx/json-patch/v5
+# github.com/fatih/color v1.12.0
+## explicit
+github.com/fatih/color
 # github.com/go-logr/logr v0.4.0
 github.com/go-logr/logr
 # github.com/gogo/protobuf v1.3.2
@@ -43,6 +46,8 @@ github.com/json-iterator/go
 # github.com/kris-nova/logger v0.2.2
 ## explicit
 github.com/kris-nova/logger
+# github.com/mattn/go-colorable v0.1.8
+github.com/mattn/go-colorable
 # github.com/mattn/go-isatty v0.0.12
 github.com/mattn/go-isatty
 # github.com/modern-go/concurrent v0.0.0-20180306012644-bacd9c7ef1dd
