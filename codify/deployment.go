@@ -34,7 +34,7 @@ import (
 )
 
 type Deployment struct {
-	*appsv1.Deployment
+	KubeObject *appsv1.Deployment
 	GoName string
 }
 
@@ -42,18 +42,18 @@ func NewDeployment(obj *appsv1.Deployment) *Deployment {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	obj.Status = appsv1.DeploymentStatus{}
 	return &Deployment{
-		Deployment: obj,
+		KubeObject: obj,
 		GoName:     strings.ReplaceAll(obj.Name, "-", "_"),
 	}
 }
 
 func (k Deployment) Install() string {
-	l := Literal(k.Deployment)
+	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
-	// Adding a deployment: "{{ .Name }}"
+	// Adding a deployment: "{{ .KubeObject.Name }}"
 	{{ .GoName }}Deployment := %s
 
-	_, err = client.AppsV1().Deployments("{{ .Namespace }}").Create(context.TODO(), {{ .GoName }}Deployment, v1.CreateOptions{})
+	_, err = client.AppsV1().Deployments("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Deployment, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -70,7 +70,7 @@ func (k Deployment) Install() string {
 
 func (k Deployment) Uninstall() string {
 	uninstall := `
-	err = client.AppsV1().Deployments("{{ .Namespace }}").Delete(context.TODO(), "{{ .Name }}", metav1.DeleteOptions{})
+	err = client.AppsV1().Deployments("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
@@ -78,7 +78,7 @@ func (k Deployment) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	k.Name = varName(k.Name)
+	k.KubeObject.Name = varName(k.KubeObject.Name)
 	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())

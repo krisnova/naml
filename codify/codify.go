@@ -138,7 +138,7 @@ func alias(generated, defaultalias string) string {
 }
 
 func varName(name string) string {
-	reg, _ := regexp.Compile("[^a-zA-Z0-9 ]+")
+	reg, _ := regexp.Compile("[^a-zA-Z0-9 \\-]+")
 	return reg.ReplaceAllString(name, "")
 }
 
