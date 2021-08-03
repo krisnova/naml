@@ -78,7 +78,7 @@ func (k Deployment) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	k.KubeObject.Name = varName(k.KubeObject.Name)
+	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
 	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
