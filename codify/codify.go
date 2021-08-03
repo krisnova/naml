@@ -25,10 +25,11 @@ package codify
 
 import (
 	"fmt"
-	"github.com/hexops/valast"
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 	"regexp"
 	"strings"
+
+	"github.com/hexops/valast"
+	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
 func Literal(kubeobject interface{}) string {
@@ -100,6 +101,7 @@ func alias(generated, defaultalias string) string {
 		"Volume",
 		"PodTemplateSpec",
 		"PodSpec",
+		"Protocol",
 		"ResourceRequirements",
 		"ResourceList",
 		"VolumeDevice",
@@ -140,12 +142,4 @@ func alias(generated, defaultalias string) string {
 func sanitizeK8sObjectName(name string) string {
 	reg, _ := regexp.Compile("[^a-zA-Z0-9 \\-]+")
 	return reg.ReplaceAllString(name, "")
-}
-
-func newl(n string) string {
-	n = strings.ReplaceAll(n, "{", `{
-`)
-	return strings.ReplaceAll(n, ",", `,
-`)
-
 }
