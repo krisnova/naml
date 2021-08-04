@@ -25,7 +25,7 @@ version=$(shell git rev-parse HEAD)
 
 # Global release version.
 # Change this to bump the build version!
-version="0.2.4"
+version="0.2.5"
 
 compile: ## Compile for the local architecture ⚙
 	@echo "Compiling..."
