@@ -26,10 +26,11 @@ package codify
 import (
 	"bytes"
 	"fmt"
-	"github.com/kris-nova/logger"
-	networkingv1 "k8s.io/api/networking/v1"
 	"text/template"
 	"time"
+
+	"github.com/kris-nova/logger"
+	networkingv1 "k8s.io/api/networking/v1"
 )
 
 type Ingress struct {

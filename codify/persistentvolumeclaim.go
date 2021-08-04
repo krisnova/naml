@@ -26,10 +26,11 @@ package codify
 import (
 	"bytes"
 	"fmt"
-	"github.com/kris-nova/logger"
-	corev1 "k8s.io/api/core/v1"
 	"text/template"
 	"time"
+
+	"github.com/kris-nova/logger"
+	corev1 "k8s.io/api/core/v1"
 )
 
 type PersistentVolumeClaim struct {

@@ -26,10 +26,11 @@ package codify
 import (
 	"bytes"
 	"fmt"
-	"github.com/kris-nova/logger"
-	rbacv1 "k8s.io/api/rbac/v1"
 	"text/template"
 	"time"
+
+	"github.com/kris-nova/logger"
+	rbacv1 "k8s.io/api/rbac/v1"
 )
 
 type ClusterRoleBinding struct {
