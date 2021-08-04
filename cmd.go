@@ -380,6 +380,7 @@ func Install(app Deployable) error {
 	if err != nil {
 		return err
 	}
+	fmt.Printf("Installed %s in namespace %s\n", app.Meta().Name, app.Meta().Namespace)
 	logger.Success("Successfully installed [%s]", app.Meta().Name)
 	return nil
 }
