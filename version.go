@@ -25,16 +25,26 @@ package naml
 
 import (
 	"fmt"
+	"runtime/debug"
 )
 
 // Version is this specific version on naml
 var Version string
 
 func Banner() {
+	if Version == "" {
+		if build, ok := debug.ReadBuildInfo(); ok {
+			Version = build.Main.Version[:5]
+		}
+	}
 	fmt.Printf("\n+---------------------------------------------+\n")
 	fmt.Printf("|    ███╗   ██╗ █████╗ ███╗   ███╗██╗         |\n")
 	fmt.Printf("|    ████╗  ██║██╔══██╗████╗ ████║██║         |\n")
-	fmt.Printf("|    ██╔██╗ ██║███████║██╔████╔██║██║ v%s  |\n", Version)
+	if Version != "" {
+		fmt.Printf("|    ██╔██╗ ██║███████║██╔████╔██║██║ v%s  |\n", Version)
+	} else {
+		fmt.Printf("|    ██╔██╗ ██║███████║██╔████╔██║██║      |\n")
+	}
 	fmt.Printf("|    ██║╚██╗██║██╔══██║██║╚██╔╝██║██║         |\n")
 	fmt.Printf("|    ██║ ╚████║██║  ██║██║ ╚═╝ ██║███████╗    |\n")
 	fmt.Printf("|    ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝    |\n")
