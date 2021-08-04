@@ -26,10 +26,11 @@ package codify
 import (
 	"bytes"
 	"fmt"
-	"github.com/kris-nova/logger"
-	batchv1 "k8s.io/api/batch/v1"
 	"text/template"
 	"time"
+
+	"github.com/kris-nova/logger"
+	batchv1 "k8s.io/api/batch/v1"
 )
 
 type Job struct {

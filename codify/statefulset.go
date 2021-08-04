@@ -26,10 +26,11 @@ package codify
 import (
 	"bytes"
 	"fmt"
-	"github.com/kris-nova/logger"
-	appsv1 "k8s.io/api/apps/v1"
 	"text/template"
 	"time"
+
+	"github.com/kris-nova/logger"
+	appsv1 "k8s.io/api/apps/v1"
 )
 
 type StatefulSet struct {
