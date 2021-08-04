@@ -33,22 +33,24 @@ import (
 )
 
 type Ingress struct {
-	i *networkingv1.Ingress
+	KubeObject *networkingv1.Ingress
+	GoName     string
 }
 
 func NewIngress(obj *networkingv1.Ingress) *Ingress {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	return &Ingress{
-		i: obj,
+		KubeObject: obj,
+		GoName:     goName(obj.Name),
 	}
 }
 
 func (k Ingress) Install() string {
-	l := Literal(k.i)
+	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
-	{{ .Name }}Ingress := %s
+	{{ .GoName }}Ingress := %s
 
-	_, err = client.NetworkingV1().Ingresss("{{ .Namespace }}").Create(context.TODO(), {{ .Name }}Ingress, v1.CreateOptions{})
+	_, err = client.NetworkingV1().Ingresss("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Ingress, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -57,8 +59,8 @@ func (k Ingress) Install() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
-	k.i.Name = sanitizeK8sObjectName(k.i.Name)
-	err := tpl.Execute(buf, k.i)
+	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -67,7 +69,7 @@ func (k Ingress) Install() string {
 
 func (k Ingress) Uninstall() string {
 	uninstall := `
-	err = client.NetworkingV1().Ingresss("{{ .Namespace }}").Delete(context.TODO(), "{{ .Name }}", metav1.DeleteOptions{})
+	err = client.NetworkingV1().Ingresss("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
@@ -75,7 +77,7 @@ func (k Ingress) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.i)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

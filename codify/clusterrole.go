@@ -41,7 +41,7 @@ func NewClusterRole(obj *rbacv1.ClusterRole) *ClusterRole {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	return &ClusterRole{
 		KubeObject: obj,
-		GoName: goName(obj.Name),
+		GoName:     goName(obj.Name),
 	}
 }
 

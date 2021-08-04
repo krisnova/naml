@@ -34,7 +34,7 @@ import (
 
 type Deployment struct {
 	KubeObject *appsv1.Deployment
-	GoName string
+	GoName     string
 }
 
 func NewDeployment(obj *appsv1.Deployment) *Deployment {

@@ -33,22 +33,24 @@ import (
 )
 
 type ServiceAccount struct {
-	i *corev1.ServiceAccount
+	KubeObject *corev1.ServiceAccount
+	GoName     string
 }
 
 func NewServiceAccount(obj *corev1.ServiceAccount) *ServiceAccount {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	return &ServiceAccount{
-		i: obj,
+		KubeObject: obj,
+		GoName:     goName(obj.Name),
 	}
 }
 
 func (k ServiceAccount) Install() string {
-	l := Literal(k.i)
+	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
-	{{ .Name }}ServiceAccount := %s
+	{{ .GoName }}ServiceAccount := %s
 
-	_, err = client.CoreV1().ServiceAccounts("{{ .Namespace }}").Create(context.TODO(), {{ .Name }}ServiceAccount, v1.CreateOptions{})
+	_, err = client.CoreV1().ServiceAccounts("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}ServiceAccount, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -57,8 +59,8 @@ func (k ServiceAccount) Install() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
-	k.i.Name = sanitizeK8sObjectName(k.i.Name)
-	err := tpl.Execute(buf, k.i)
+	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -67,7 +69,7 @@ func (k ServiceAccount) Install() string {
 
 func (k ServiceAccount) Uninstall() string {
 	uninstall := `
-	err = client.CoreV1().ServiceAccounts("{{ .Namespace }}").Delete(context.TODO(), "{{ .Name }}", metav1.DeleteOptions{})
+	err = client.CoreV1().ServiceAccounts("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
@@ -75,7 +77,7 @@ func (k ServiceAccount) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.i)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

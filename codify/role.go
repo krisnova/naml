@@ -33,22 +33,24 @@ import (
 )
 
 type Role struct {
-	i *rbacv1.Role
+	KubeObject *rbacv1.Role
+	GoName     string
 }
 
 func NewRole(obj *rbacv1.Role) *Role {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	return &Role{
-		i: obj,
+		KubeObject: obj,
+		GoName:     goName(obj.Name),
 	}
 }
 
 func (k Role) Install() string {
-	l := Literal(k.i)
+	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
-	{{ .Name }}Role := %s
+	{{ .GoName }}Role := %s
 
-	_, err = client.RbacV1().Roles("{{ .Namespace }}").Create(context.TODO(), {{ .Name }}Role, v1.CreateOptions{})
+	_, err = client.RbacV1().Roles("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Role, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -57,8 +59,8 @@ func (k Role) Install() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
-	k.i.Name = sanitizeK8sObjectName(k.i.Name)
-	err := tpl.Execute(buf, k.i)
+	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -67,7 +69,7 @@ func (k Role) Install() string {
 
 func (k Role) Uninstall() string {
 	uninstall := `
-	err = client.RbacV1().Roles("{{ .Namespace }}").Delete(context.TODO(), "{{ .Name }}", metav1.DeleteOptions{})
+	err = client.RbacV1().Roles("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
@@ -75,7 +77,7 @@ func (k Role) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.i)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

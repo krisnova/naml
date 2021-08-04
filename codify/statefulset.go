@@ -33,23 +33,25 @@ import (
 )
 
 type StatefulSet struct {
-	i *appsv1.StatefulSet
+	KubeObject *appsv1.StatefulSet
+	GoName     string
 }
 
 func NewStatefulSet(obj *appsv1.StatefulSet) *StatefulSet {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	obj.Status = appsv1.StatefulSetStatus{}
 	return &StatefulSet{
-		i: obj,
+		KubeObject: obj,
+		GoName:     goName(obj.Name),
 	}
 }
 
 func (k StatefulSet) Install() string {
-	l := Literal(k.i)
+	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
-	{{ .Name }}StatefulSet := %s
+	{{ .GoName }}StatefulSet := %s
 
-	_, err = client.AppsV1().StatefulSets("{{ .Namespace }}").Create(context.TODO(), {{ .Name }}Deployment, v1.CreateOptions{})
+	_, err = client.AppsV1().StatefulSets("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Deployment, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -57,7 +59,7 @@ func (k StatefulSet) Install() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.i)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -66,7 +68,7 @@ func (k StatefulSet) Install() string {
 
 func (k StatefulSet) Uninstall() string {
 	uninstall := `
-	err = client.AppsV1().StatefulSets("{{ .Namespace }}").Delete(context.TODO(), "{{ .Name }}", metav1.DeleteOptions{})
+	err = client.AppsV1().StatefulSets("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
@@ -74,8 +76,8 @@ func (k StatefulSet) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	k.i.Name = sanitizeK8sObjectName(k.i.Name)
-	err := tpl.Execute(buf, k.i)
+	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

@@ -33,23 +33,25 @@ import (
 )
 
 type PersistentVolume struct {
-	i *corev1.PersistentVolume
+	KubeObject *corev1.PersistentVolume
+	GoName     string
 }
 
 func NewPersistentVolume(obj *corev1.PersistentVolume) *PersistentVolume {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	obj.Status = corev1.PersistentVolumeStatus{}
 	return &PersistentVolume{
-		i: obj,
+		KubeObject: obj,
+		GoName:     goName(obj.Name),
 	}
 }
 
 func (k PersistentVolume) Install() string {
-	l := Literal(k.i)
+	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
-	{{ .Name }}PersistentVolume := %s
+	{{ .GoName }}PersistentVolume := %s
 
-	_, err = client.CoreV1().PersistentVolumes("{{ .Namespace }}").Create(context.TODO(), {{ .Name }}PersistentVolume, v1.CreateOptions{})
+	_, err = client.CoreV1().PersistentVolumes("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}PersistentVolume, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -58,8 +60,8 @@ func (k PersistentVolume) Install() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
-	k.i.Name = sanitizeK8sObjectName(k.i.Name)
-	err := tpl.Execute(buf, k.i)
+	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -68,7 +70,7 @@ func (k PersistentVolume) Install() string {
 
 func (k PersistentVolume) Uninstall() string {
 	uninstall := `
-	err = client.CoreV1().PersistentVolumes("{{ .Namespace }}").Delete(context.TODO(), "{{ .Name }}", metav1.DeleteOptions{})
+	err = client.CoreV1().PersistentVolumes("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
@@ -76,7 +78,7 @@ func (k PersistentVolume) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.i)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

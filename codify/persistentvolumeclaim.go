@@ -33,23 +33,25 @@ import (
 )
 
 type PersistentVolumeClaim struct {
-	i *corev1.PersistentVolumeClaim
+	KubeObject *corev1.PersistentVolumeClaim
+	GoName     string
 }
 
 func NewPersistentVolumeClaim(obj *corev1.PersistentVolumeClaim) *PersistentVolumeClaim {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
 	obj.Status = corev1.PersistentVolumeClaimStatus{}
 	return &PersistentVolumeClaim{
-		i: obj,
+		KubeObject: obj,
+		GoName:     goName(obj.Name),
 	}
 }
 
 func (k PersistentVolumeClaim) Install() string {
-	l := Literal(k.i)
+	l := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
-	{{ .Name }}PersistentVolumeClaim := %s
+	{{ .GoName }}PersistentVolumeClaim := %s
 
-	_, err = client.CoreV1().PersistentVolumeClaims("{{ .Namespace }}").Create(context.TODO(), {{ .Name }}PersistentVolumeClaim, v1.CreateOptions{})
+	_, err = client.CoreV1().PersistentVolumeClaims("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}PersistentVolumeClaim, v1.CreateOptions{})
 	if err != nil {
 		return err
 	}
@@ -58,8 +60,8 @@ func (k PersistentVolumeClaim) Install() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
-	k.i.Name = sanitizeK8sObjectName(k.i.Name)
-	err := tpl.Execute(buf, k.i)
+	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
@@ -68,7 +70,7 @@ func (k PersistentVolumeClaim) Install() string {
 
 func (k PersistentVolumeClaim) Uninstall() string {
 	uninstall := `
-	err = client.CoreV1().PersistentVolumeClaims("{{ .Namespace }}").Delete(context.TODO(), "{{ .Name }}", metav1.DeleteOptions{})
+	err = client.CoreV1().PersistentVolumeClaims("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 	if err != nil {
 		return err
 	}
@@ -76,7 +78,7 @@ func (k PersistentVolumeClaim) Uninstall() string {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k.i)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
