@@ -178,7 +178,7 @@ func (a *App) Install(client *kubernetes.Clientset) error {
 						Ports: []corev1.ContainerPort{
 							corev1.ContainerPort{
 								ContainerPort: 80,
-								Protocol:      appsv1.Protocol("TCP"),
+								Protocol:      corev1.Protocol("TCP"),
 							},
 						},
 						TerminationMessagePath:   "/dev/termination-log",

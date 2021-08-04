@@ -387,6 +387,7 @@ func Install(app Deployable) error {
 	if err != nil {
 		return err
 	}
+	fmt.Printf("Installed %s in namespace %s\n", app.Meta().Name, app.Meta().Namespace)
 	logger.Success("Successfully installed [%s]", app.Meta().Name)
 	return nil
 }
@@ -419,5 +420,10 @@ func Uninstall(app Deployable) error {
 	}
 
 	// Uninstall
-	return app.Uninstall(client)
+	err = app.Uninstall(client)
+	if err != nil {
+		return err
+	}
+	fmt.Printf("Uninstalled %s in namespace %s\n", app.Meta().Name, app.Meta().Namespace)
+	return nil
 }
