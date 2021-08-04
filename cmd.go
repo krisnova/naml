@@ -154,6 +154,13 @@ func RunCommandLineWithOptions() error {
 					}
 					// ----------------------------------
 
+					// Right away if it's just one app use it
+					if len(Registry()) == 1 {
+						for _, app := range Registry() {
+							return Install(app)
+						}
+					}
+
 					arguments := c.Args()
 					if arguments.Len() != 1 {
 						Banner()
