@@ -143,3 +143,7 @@ func sanitizeK8sObjectName(name string) string {
 	reg, _ := regexp.Compile("[^a-zA-Z0-9 \\-]+")
 	return reg.ReplaceAllString(name, "")
 }
+
+func goName(name string) string {
+	return strings.ReplaceAll(name, "-", "_")
+}
