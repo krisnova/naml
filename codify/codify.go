@@ -25,6 +25,7 @@ package codify
 
 import (
 	"fmt"
+	"reflect"
 	"regexp"
 	"strings"
 
@@ -32,9 +33,10 @@ import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func Literal(kubeobject interface{}) string {
+func Literal(kubeobject interface{}) (string, []string) {
 	l := valast.String(kubeobject)
-	return l
+	_, packages, _ := valast.ASTWithPackages(reflect.ValueOf(kubeobject), nil)
+	return l, packages
 }
 
 // cleanObjectMeta helps us get rid of things like timestamps

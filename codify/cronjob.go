@@ -47,8 +47,8 @@ func NewCronJob(obj *batchv1.CronJob) *CronJob {
 	}
 }
 
-func (k CronJob) Install() string {
-	l := Literal(k.KubeObject)
+func (k CronJob) Install() (string, []string) {
+	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}CronJob := %s
 
@@ -66,7 +66,7 @@ func (k CronJob) Install() string {
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return alias(buf.String(), "batchv1")
+	return alias(buf.String(), "batchv1"), packages
 }
 
 func (k CronJob) Uninstall() string {

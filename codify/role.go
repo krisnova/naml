@@ -46,8 +46,8 @@ func NewRole(obj *rbacv1.Role) *Role {
 	}
 }
 
-func (k Role) Install() string {
-	l := Literal(k.KubeObject)
+func (k Role) Install() (string, []string) {
+	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}Role := %s
 
@@ -65,7 +65,7 @@ func (k Role) Install() string {
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return alias(buf.String(), "rbacv1")
+	return alias(buf.String(), "rbacv1"), packages
 }
 
 func (k Role) Uninstall() string {

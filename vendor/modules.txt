@@ -34,7 +34,7 @@ github.com/google/gofuzz
 github.com/googleapis/gnostic/compiler
 github.com/googleapis/gnostic/extensions
 github.com/googleapis/gnostic/openapiv2
-# github.com/hexops/valast v1.4.0
+# github.com/hexops/valast v1.4.0 => github.com/fkautz/valast v1.4.1-0.20210806063143-f33a97256bcb
 ## explicit
 github.com/hexops/valast
 # github.com/imdario/mergo v0.3.5
@@ -405,3 +405,4 @@ sigs.k8s.io/structured-merge-diff/v4/typed
 sigs.k8s.io/structured-merge-diff/v4/value
 # sigs.k8s.io/yaml v1.2.0
 sigs.k8s.io/yaml
+# github.com/hexops/valast => github.com/fkautz/valast v1.4.1-0.20210806063143-f33a97256bcb

@@ -47,8 +47,8 @@ func NewDaemonSet(obj *appsv1.DaemonSet) *DaemonSet {
 	}
 }
 
-func (k DaemonSet) Install() string {
-	l := Literal(k.KubeObject)
+func (k DaemonSet) Install() (string, []string) {
+	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}DaemonSet := %s
 
@@ -64,7 +64,7 @@ func (k DaemonSet) Install() string {
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return alias(buf.String(), "appsv1")
+	return alias(buf.String(), "appsv1"), packages
 }
 
 func (k DaemonSet) Uninstall() string {

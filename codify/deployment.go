@@ -47,8 +47,8 @@ func NewDeployment(obj *appsv1.Deployment) *Deployment {
 	}
 }
 
-func (k Deployment) Install() string {
-	l := Literal(k.KubeObject)
+func (k Deployment) Install() (string, []string) {
+	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	// Adding a deployment: "{{ .KubeObject.Name }}"
 	{{ .GoName }}Deployment := %s
@@ -65,7 +65,7 @@ func (k Deployment) Install() string {
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return alias(buf.String(), "appsv1")
+	return alias(buf.String(), "appsv1"), packages
 }
 
 func (k Deployment) Uninstall() string {
