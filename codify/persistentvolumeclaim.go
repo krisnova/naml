@@ -47,8 +47,8 @@ func NewPersistentVolumeClaim(obj *corev1.PersistentVolumeClaim) *PersistentVolu
 	}
 }
 
-func (k PersistentVolumeClaim) Install() string {
-	l := Literal(k.KubeObject)
+func (k PersistentVolumeClaim) Install() (string, []string) {
+	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}PersistentVolumeClaim := %s
 
@@ -66,7 +66,7 @@ func (k PersistentVolumeClaim) Install() string {
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return alias(buf.String(), "corev1")
+	return alias(buf.String(), "corev1"), packages
 }
 
 func (k PersistentVolumeClaim) Uninstall() string {

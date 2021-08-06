@@ -46,8 +46,8 @@ func NewConfigMap(obj *corev1.ConfigMap) *ConfigMap {
 	}
 }
 
-func (k ConfigMap) Install() string {
-	l := Literal(k.KubeObject)
+func (k ConfigMap) Install() (string, []string) {
+	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}ConfigMap := %s
 
@@ -65,7 +65,7 @@ func (k ConfigMap) Install() string {
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return alias(buf.String(), "corev1")
+	return alias(buf.String(), "corev1"), packages
 }
 
 func (k ConfigMap) Uninstall() string {

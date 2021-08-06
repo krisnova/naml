@@ -47,8 +47,8 @@ func NewJob(obj *batchv1.Job) *Job {
 	}
 }
 
-func (k Job) Install() string {
-	l := Literal(k.KubeObject)
+func (k Job) Install() (string, []string) {
+	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}Job := %s
 
@@ -66,7 +66,7 @@ func (k Job) Install() string {
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return alias(buf.String(), "batchv1")
+	return alias(buf.String(), "batchv1"), packages
 }
 
 func (k Job) Uninstall() string {

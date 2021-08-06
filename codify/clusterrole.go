@@ -46,8 +46,8 @@ func NewClusterRole(obj *rbacv1.ClusterRole) *ClusterRole {
 	}
 }
 
-func (k ClusterRole) Install() string {
-	l := Literal(k.KubeObject)
+func (k ClusterRole) Install() (string, []string) {
+	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}ClusterRole := %s
 
@@ -65,7 +65,7 @@ func (k ClusterRole) Install() string {
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return alias(buf.String(), "rbacv1")
+	return alias(buf.String(), "rbacv1"), packages
 }
 
 func (k ClusterRole) Uninstall() string {

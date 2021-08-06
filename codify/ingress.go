@@ -46,8 +46,8 @@ func NewIngress(obj *networkingv1.Ingress) *Ingress {
 	}
 }
 
-func (k Ingress) Install() string {
-	l := Literal(k.KubeObject)
+func (k Ingress) Install() (string, []string) {
+	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}Ingress := %s
 
@@ -65,7 +65,7 @@ func (k Ingress) Install() string {
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return alias(buf.String(), "networkingv1")
+	return alias(buf.String(), "networkingv1"), packages
 }
 
 func (k Ingress) Uninstall() string {

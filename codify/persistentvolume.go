@@ -47,8 +47,8 @@ func NewPersistentVolume(obj *corev1.PersistentVolume) *PersistentVolume {
 	}
 }
 
-func (k PersistentVolume) Install() string {
-	l := Literal(k.KubeObject)
+func (k PersistentVolume) Install() (string, []string) {
+	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}PersistentVolume := %s
 
@@ -66,7 +66,7 @@ func (k PersistentVolume) Install() string {
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return alias(buf.String(), "corev1")
+	return alias(buf.String(), "corev1"), packages
 }
 
 func (k PersistentVolume) Uninstall() string {

@@ -46,8 +46,8 @@ func NewServiceAccount(obj *corev1.ServiceAccount) *ServiceAccount {
 	}
 }
 
-func (k ServiceAccount) Install() string {
-	l := Literal(k.KubeObject)
+func (k ServiceAccount) Install() (string, []string) {
+	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}ServiceAccount := %s
 
@@ -65,7 +65,7 @@ func (k ServiceAccount) Install() string {
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return alias(buf.String(), "corev1")
+	return alias(buf.String(), "corev1"), packages
 }
 
 func (k ServiceAccount) Uninstall() string {

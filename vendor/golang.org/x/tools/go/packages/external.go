@@ -12,10 +12,9 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	exec "golang.org/x/sys/execabs"
 	"os"
 	"strings"
-
-	exec "golang.org/x/sys/execabs"
 )
 
 // The Driver Protocol

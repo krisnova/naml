@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"go/format"
 	"io"
+	"sort"
 	"strconv"
 	"strings"
 	"text/template"
@@ -75,6 +76,7 @@ type MainGoValues struct {
 	Version       string
 	Install       string
 	Uninstall     string
+	Packages      string
 }
 
 type CodifyObject interface {
@@ -83,7 +85,7 @@ type CodifyObject interface {
 	// will define literally (what it can) a struct
 	// for the object, and pass it to the corresponding
 	// kubernetes library.
-	Install() string
+	Install() (string, []string)
 
 	// Uninstall is the reverse library call of install
 	Uninstall() string
@@ -118,12 +120,24 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 	}
 	logger.Debug("Found %d objects to parse", len(objs))
 
+	// create map of used packages
+	packages := make(map[string]bool)
+
 	// Append both install and uninstall for every object
 	for _, obj := range objs {
 		if v.Install == "" {
-			v.Install = obj.Install()
+			v.Install, _ = obj.Install()
 		} else {
-			v.Install = fmt.Sprintf("%s\n%s", v.Install, obj.Install())
+			// get the install code and packages it depends on
+			install, localPackages := obj.Install()
+
+			// add all packages to the package map
+			for _, pkg := range localPackages {
+				packages[pkg] = true
+			}
+
+			// add to install
+			v.Install = fmt.Sprintf("%s\n%s", v.Install, install)
 		}
 		if v.Uninstall == "" {
 			v.Uninstall = obj.Uninstall()
@@ -131,6 +145,32 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 			v.Uninstall = fmt.Sprintf("%s\n%s", v.Uninstall, obj.Uninstall())
 		}
 	}
+
+	// Gather list of packages and sort them
+	packagesSlice := make([]string, 0)
+	for k, _ := range packages {
+		packagesSlice = append(packagesSlice, k)
+	}
+	sort.Strings(packagesSlice)
+
+	// define list of import aliases
+	packageAliases := map[string]string{
+		"k8s.io/api/apps/v1":                   "appsv1",
+		"k8s.io/api/batch/v1":                  "batchv1",
+		"k8s.io/api/core/v1":                   "corev1",
+		"k8s.io/apimachinery/pkg/apis/meta/v1": "metav1",
+	}
+
+	packagesCode := ""
+	for _, pkg := range packagesSlice {
+		packageAlias := ""
+		if name, ok := packageAliases[pkg]; ok == true {
+			packageAlias = name + " "
+		}
+		packagesCode += fmt.Sprintf("\t%s\"%s\"\n", packageAlias, pkg)
+	}
+
+	v.Packages = packagesCode
 
 	// Parse the system
 	buf := &bytes.Buffer{}

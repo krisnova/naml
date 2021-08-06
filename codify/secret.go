@@ -46,8 +46,8 @@ func NewSecret(obj *corev1.Secret) *Secret {
 	}
 }
 
-func (k Secret) Install() string {
-	l := Literal(k.KubeObject)
+func (k Secret) Install() (string, []string) {
+	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}Secret := %s
 
@@ -65,7 +65,7 @@ func (k Secret) Install() string {
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return alias(buf.String(), "corev1")
+	return alias(buf.String(), "corev1"), packages
 }
 
 func (k Secret) Uninstall() string {

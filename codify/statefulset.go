@@ -47,8 +47,8 @@ func NewStatefulSet(obj *appsv1.StatefulSet) *StatefulSet {
 	}
 }
 
-func (k StatefulSet) Install() string {
-	l := Literal(k.KubeObject)
+func (k StatefulSet) Install() (string, []string) {
+	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}StatefulSet := %s
 
@@ -64,7 +64,7 @@ func (k StatefulSet) Install() string {
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return alias(buf.String(), "appsv1")
+	return alias(buf.String(), "appsv1"), packages
 }
 
 func (k StatefulSet) Uninstall() string {

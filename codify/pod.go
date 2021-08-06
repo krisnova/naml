@@ -47,8 +47,8 @@ func NewPod(obj *corev1.Pod) *Pod {
 	}
 }
 
-func (k Pod) Install() string {
-	l := Literal(k.KubeObject)
+func (k Pod) Install() (string, []string) {
+	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}Pod := %s
 
@@ -65,7 +65,7 @@ func (k Pod) Install() string {
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return alias(buf.String(), "corev1")
+	return alias(buf.String(), "corev1"), packages
 }
 
 func (k Pod) Uninstall() string {

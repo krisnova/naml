@@ -47,8 +47,8 @@ func NewService(obj *corev1.Service) *Service {
 	}
 }
 
-func (k Service) Install() string {
-	l := Literal(k.KubeObject)
+func (k Service) Install() (string, []string) {
+	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}Service := %s
 
@@ -66,7 +66,7 @@ func (k Service) Install() string {
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return alias(buf.String(), "corev1")
+	return alias(buf.String(), "corev1"), packages
 }
 
 func (k Service) Uninstall() string {

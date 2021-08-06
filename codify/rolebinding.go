@@ -46,8 +46,8 @@ func NewRoleBinding(obj *rbacv1.RoleBinding) *RoleBinding {
 	}
 }
 
-func (k RoleBinding) Install() string {
-	l := Literal(k.KubeObject)
+func (k RoleBinding) Install() (string, []string) {
+	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}RoleBinding := %s
 
@@ -65,7 +65,7 @@ func (k RoleBinding) Install() string {
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return alias(buf.String(), "rbacv1")
+	return alias(buf.String(), "rbacv1"), packages
 }
 
 func (k RoleBinding) Uninstall() string {
