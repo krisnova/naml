@@ -350,10 +350,16 @@ func AllInit(kubeConfigPath string, verbose bool, with []string) error {
 	// [ Child Runtime System ]
 	if len(with) > 0 {
 		for _, childPath := range with {
-			err := AddRPC(childPath)
-			if err != nil {
-				logger.Warning("Unable to add child naml %s: %v", childPath, err)
+			for i := 0; i < 3; i++ {
+				err := AddRPC(childPath)
+				if err != nil {
+					logger.Warning("Unable to add child naml %s: %v", childPath, err)
+					time.Sleep(time.Millisecond * 20)
+				} else {
+					break
+				}
 			}
+
 		}
 	}
 
