@@ -263,9 +263,7 @@ func AddRPC(path string) error {
 
 	logger.Info("Starting IPC with remote RPC server %s", file.Name())
 
-	// Execute the child binary and pass in "c" for
-	// shorthand to tell the child to run in child runtime mode.
-	// logger.Info("Command %s c", path)
+	// Execute another naml binary and pass in "rpc" to run in rpc child mode
 	cmd := exec.Command(absolutePath, "rpc")
 	childOut := &bytes.Buffer{}
 	childErr := &bytes.Buffer{}
@@ -297,8 +295,11 @@ func AddRPC(path string) error {
 			break
 		default:
 			switch {
-			case childOut.Len() > 1:
+			case childOut.Len() > 2:
 				message := childOut.Bytes()
+				if message == nil {
+					continue
+				}
 				// According to the naml RPC this should be the TCP port
 				rpcHello := string(message)
 				rpcSplit := strings.Split(rpcHello, "\n")
