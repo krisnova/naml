@@ -81,27 +81,13 @@ func File(fset *token.FileSet, file *ast.File, opts Options) {
 	}
 	pre := func(c *astutil.Cursor) bool {
 		f.applyPre(c)
-		switch node := c.Node().(type) {
-		case *ast.FieldList:
-			ft, _ := c.Parent().(*ast.FuncType)
-			if ft != nil && ft.Params == node {
-				// TODO: investigate if this is worthwhile
-				// f.longLineExtra = 20
-			}
-			if ft != nil && ft.Results == node {
-				f.longLineExtra = -1
-			}
-		case *ast.BlockStmt:
+		if _, ok := c.Node().(*ast.BlockStmt); ok {
 			f.blockLevel++
 		}
 		return true
 	}
 	post := func(c *astutil.Cursor) bool {
-		f.applyPost(c)
-		switch c.Node().(type) {
-		case *ast.FieldList:
-			f.longLineExtra = 0
-		case *ast.BlockStmt:
+		if _, ok := c.Node().(*ast.BlockStmt); ok {
 			f.blockLevel--
 		}
 		return true
@@ -109,15 +95,9 @@ func File(fset *token.FileSet, file *ast.File, opts Options) {
 	astutil.Apply(file, pre, post)
 }
 
-// Multiline nodes which could easily fit on a single line under this many bytes
-// may be collapsed onto a single line.
+// Multiline nodes which could fit on a single line under this many
+// bytes may be collapsed onto a single line.
 const shortLineLimit = 60
-
-// Single-line nodes which take over this many bytes, and could easily be split
-// into two lines of at least its 40%, may be split.
-const longLineBase = 100
-
-// const minSplitLength = 40
 
 var rxOctalInteger = regexp.MustCompile(`\A0[0-7_]+\z`)
 
@@ -129,8 +109,7 @@ type fumpter struct {
 
 	astFile *ast.File
 
-	blockLevel    int
-	longLineExtra int
+	blockLevel int
 }
 
 func (f *fumpter) commentsBetween(p1, p2 token.Pos) []*ast.CommentGroup {
@@ -231,46 +210,22 @@ func (f *fumpter) printLength(node ast.Node) int {
 	return int(count) + (f.blockLevel * 8)
 }
 
-func (f *fumpter) tabbedColumn(p token.Pos) int {
-	col := f.Position(p).Column
-
-	// Like in printLength, add an approximation of the indentation level.
-	// Since any existing tabs were already counted as one column, multiply
-	// the level by 7.
-	return col + (f.blockLevel * 7)
-}
-
-func (f *fumpter) lineEnd(line int) token.Pos {
-	if line < 1 {
-		panic("illegal line number")
-	}
-	total := f.LineCount()
-	if line > total {
-		panic("illegal line number")
-	}
-	if line == total {
-		return f.astFile.End()
-	}
-	return f.LineStart(line+1) - 1
-}
-
 // rxCommentDirective covers all common Go comment directives:
 //
-//   //go:        | standard Go directives, like go:noinline
-//   //someword:  | similar to the syntax above, like lint:ignore
-//   //line       | inserted line information for cmd/compile
-//   //export     | to mark cgo funcs for exporting
-//   //extern     | C function declarations for gccgo
-//   //sys(nb)?   | syscall function wrapper prototypes
-//   //nolint     | nolint directive for golangci
+//   //go:         | standard Go directives, like go:noinline
+//   //some-words: | similar to the syntax above, like lint:ignore or go-sumtype:decl
+//   //line        | inserted line information for cmd/compile
+//   //export      | to mark cgo funcs for exporting
+//   //extern      | C function declarations for gccgo
+//   //sys(nb)?    | syscall function wrapper prototypes
+//   //nolint      | nolint directive for golangci
 //
-// Note that the "someword:" matching expects a letter afterward, such as
+// Note that the "some-words:" matching expects a letter afterward, such as
 // "go:generate", to prevent matching false positives like "https://site".
-var rxCommentDirective = regexp.MustCompile(`^([a-z]+:[a-z]+|line\b|export\b|extern\b|sys(nb)?\b|nolint\b)`)
+var rxCommentDirective = regexp.MustCompile(`^([a-z-]+:[a-z]+|line\b|export\b|extern\b|sys(nb)?\b|nolint\b)`)
 
+// visit takes either an ast.Node or a []ast.Stmt.
 func (f *fumpter) applyPre(c *astutil.Cursor) {
-	f.splitLongLine(c)
-
 	switch node := c.Node().(type) {
 	case *ast.File:
 		var lastMulti bool
@@ -465,63 +420,6 @@ func (f *fumpter) applyPre(c *astutil.Cursor) {
 
 		f.removeLinesBetween(node.Lbrace, bodyPos)
 
-	case *ast.CaseClause:
-		f.stmts(node.Body)
-		openLine := f.Line(node.Case)
-		closeLine := f.Line(node.Colon)
-		if openLine == closeLine {
-			// nothing to do
-			break
-		}
-		if len(f.commentsBetween(node.Case, node.Colon)) > 0 {
-			// don't move comments
-			break
-		}
-		if f.printLength(node) > shortLineLimit {
-			// too long to collapse
-			break
-		}
-		f.removeLines(openLine, closeLine)
-
-	case *ast.CommClause:
-		f.stmts(node.Body)
-
-	case *ast.FieldList:
-		if node.NumFields() == 0 {
-			// Empty field lists should not contain a newline.
-			openLine := f.Line(node.Pos())
-			closeLine := f.Line(node.End())
-			f.removeLines(openLine, closeLine)
-		}
-
-		// Merging adjacent fields (e.g. parameters) is disabled by default.
-		if !f.ExtraRules {
-			break
-		}
-		switch c.Parent().(type) {
-		case *ast.FuncDecl, *ast.FuncType, *ast.InterfaceType:
-			node.List = f.mergeAdjacentFields(node.List)
-			c.Replace(node)
-		case *ast.StructType:
-			// Do not merge adjacent fields in structs.
-		}
-
-	case *ast.BasicLit:
-		// Octal number literals were introduced in 1.13.
-		if semver.Compare(f.LangVersion, "v1.13") >= 0 {
-			if node.Kind == token.INT && rxOctalInteger.MatchString(node.Value) {
-				node.Value = "0o" + node.Value[1:]
-				c.Replace(node)
-			}
-		}
-	}
-}
-
-func (f *fumpter) applyPost(c *astutil.Cursor) {
-	switch node := c.Node().(type) {
-	// Adding newlines to composite literals happens as a "post" step, so
-	// that we can take into account whether "pre" steps added any newlines
-	// that would affect us here.
 	case *ast.CompositeLit:
 		if len(node.Elts) == 0 {
 			// doesn't have elements
@@ -586,55 +484,58 @@ func (f *fumpter) applyPost(c *astutil.Cursor) {
 				f.addNewline(elem1.End())
 			}
 		}
-	}
-}
 
-func (f *fumpter) splitLongLine(c *astutil.Cursor) {
-	node := c.Node()
-	if node == nil || f.longLineExtra < 0 {
-		return
-	}
+	case *ast.CaseClause:
+		f.stmts(node.Body)
+		openLine := f.Line(node.Case)
+		closeLine := f.Line(node.Colon)
+		if openLine == closeLine {
+			// nothing to do
+			break
+		}
+		if len(f.commentsBetween(node.Case, node.Colon)) > 0 {
+			// don't move comments
+			break
+		}
+		if f.printLength(node) > shortLineLimit {
+			// too long to collapse
+			break
+		}
+		f.removeLines(openLine, closeLine)
 
-	start := f.Position(node.Pos())
-	end := f.Position(node.End())
-	if c.Index() < 0 || start.Line != end.Line {
-		return
-	}
-	if comp := isComposite(node); comp != nil && len(comp.Elts) > 0 {
-		end = f.Position(comp.Lbrace + 1)
-	}
-	// Like in printLength, add an approximation of the indentation level.
-	// Since any existing tabs were already counted as one column, multiply
-	// the level by 7.
-	startCol := start.Column + f.blockLevel*7
-	endCol := end.Column + f.blockLevel*7
+	case *ast.CommClause:
+		f.stmts(node.Body)
 
-	lineEnd := f.Position(f.lineEnd(start.Line))
-	// We subtract blockLevel to ignore indentation, to match secondLength.
-	firstLength := start.Column - f.blockLevel
-	if firstLength < 0 {
-		panic("negative length")
-	}
-	secondLength := lineEnd.Column - start.Column
-	if secondLength < 0 {
-		panic("negative length")
-	}
-	longLineLimit := longLineBase + f.longLineExtra
-	minSplitLength := int(0.4 * float64(longLineLimit))
-	if startCol > shortLineLimit && endCol > longLineLimit &&
-		firstLength >= minSplitLength && secondLength >= minSplitLength {
-		f.addNewline(node.Pos())
-	}
-}
+	case *ast.FieldList:
+		if node.NumFields() == 0 && f.inlineComment(node.Pos()) == nil {
+			// Empty field lists should not contain a newline.
+			// Do not join the two lines if the first has an inline
+			// comment, as that can result in broken formatting.
+			openLine := f.Line(node.Pos())
+			closeLine := f.Line(node.End())
+			f.removeLines(openLine, closeLine)
+		}
 
-func isComposite(node ast.Node) *ast.CompositeLit {
-	switch node := node.(type) {
-	case *ast.CompositeLit:
-		return node
-	case *ast.UnaryExpr:
-		return isComposite(node.X) // e.g. &T{}
-	default:
-		return nil
+		// Merging adjacent fields (e.g. parameters) is disabled by default.
+		if !f.ExtraRules {
+			break
+		}
+		switch c.Parent().(type) {
+		case *ast.FuncDecl, *ast.FuncType, *ast.InterfaceType:
+			node.List = f.mergeAdjacentFields(node.List)
+			c.Replace(node)
+		case *ast.StructType:
+			// Do not merge adjacent fields in structs.
+		}
+
+	case *ast.BasicLit:
+		// Octal number literals were introduced in 1.13.
+		if semver.Compare(f.LangVersion, "v1.13") >= 0 {
+			if node.Kind == token.INT && rxOctalInteger.MatchString(node.Value) {
+				node.Value = "0o" + node.Value[1:]
+				c.Replace(node)
+			}
+		}
 	}
 }
 

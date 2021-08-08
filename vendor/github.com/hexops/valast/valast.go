@@ -191,7 +191,16 @@ func basicLit(vv reflect.Value, kind token.Token, builtinType string, v interfac
 		return Result{}, err
 	}
 	if opt.Unqualify && vv.Type().Name() == builtinType && vv.Type().PkgPath() == "" {
-		return Result{AST: ast.NewIdent(fmt.Sprint(v))}, nil
+		switch builtinType {
+		case "complex64":
+			fallthrough
+		case "int":
+			fallthrough
+		case "string":
+			return Result{AST: ast.NewIdent(fmt.Sprint(v))}, nil
+		default:
+			return Result{AST: ast.NewIdent(fmt.Sprintf("%s(%v)", builtinType, v))}, nil
+		}
 	}
 	if opt.ExportedOnly && typeExpr.RequiresUnexported {
 		return Result{RequiresUnexported: true}, nil

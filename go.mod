@@ -14,5 +14,4 @@ require (
 	sigs.k8s.io/kind v0.11.1
 )
 
-replace github.com/hexops/valast => github.com/fkautz/valast v1.4.1-0.20210806063143-f33a97256bcb
-
+replace github.com/hexops/valast => github.com/fkautz/valast v1.4.1-0.20210808060515-1b4ecf536247
