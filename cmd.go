@@ -68,6 +68,9 @@ func RunCommandLineWithOptions() error {
 	// codifyAppNameRaw is the app name passed in the raw form
 	var codifyAppNameRaw string
 
+	// output will be what output type for the output subcommand
+	var output string
+
 	codifyValues := &MainGoValues{
 		AuthorEmail:   "<kris@nivenly.com>",
 		AuthorName:    "Kris Nóva",
@@ -196,6 +199,13 @@ func RunCommandLineWithOptions() error {
 					}
 					// ----------------------------------
 
+					// Right away if it's just one app use it
+					if len(Registry()) == 1 {
+						for _, app := range Registry() {
+							return Uninstall(app)
+						}
+					}
+
 					arguments := c.Args()
 					if arguments.Len() != 1 {
 						// Feature: We might want to have "naml install" just iterate through every application.
@@ -294,7 +304,55 @@ func RunCommandLineWithOptions() error {
 			},
 
 			// ********************************************************
-			// [ rpc ]
+			// [ OUTPUT ]
+			// ********************************************************
+
+			{
+				Name:        "output",
+				Aliases:     []string{"o"},
+				Usage:       "Output applications to stdout in various markup.",
+				Description: "After an application has been loaded, it can be output to various markdown (such as YAML).",
+				Action: func(c *cli.Context) error {
+					o := OutputYAML
+					switch output {
+					case "yaml":
+					case "YAML":
+						o = OutputYAML
+						break
+					case "json":
+					case "JSON":
+						o = OutputJSON
+						break
+					}
+
+					arguments := c.Args()
+					if arguments.Len() != 1 {
+						Banner()
+						cli.ShowCommandHelp(c, "output")
+						List()
+						return nil
+					}
+					appName := arguments.First()
+
+					err := RunOutput(appName, o)
+					if err != nil {
+						return fmt.Errorf("unable to output: %v", err)
+					}
+					return nil
+				},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:        "output",
+						Aliases:     []string{"o"},
+						Value:       "yaml",
+						Usage:       "Output encoding. yaml, json.",
+						Destination: &output,
+					},
+				},
+			},
+
+			// ********************************************************
+			// [ RPC ]
 			// ********************************************************
 
 			{
