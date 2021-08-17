@@ -121,20 +121,17 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 
 	// Append both install and uninstall for every object
 	for _, obj := range objs {
-		if v.Install == "" {
-			v.Install, _ = obj.Install()
-		} else {
-			// get the install code and packages it depends on
-			install, localPackages := obj.Install()
+		// get the install code and packages it depends on
+		install, localPackages := obj.Install()
 
-			// add all packages to the package map
-			for _, pkg := range localPackages {
-				packages[pkg] = true
-			}
-
-			// add to install
-			v.Install = fmt.Sprintf("%s\n%s", v.Install, install)
+		// add all packages to the package map
+		for _, pkg := range localPackages {
+			packages[pkg] = true
 		}
+
+		// add to install
+		v.Install = fmt.Sprintf("%s\n%s", v.Install, install)
+
 		if v.Uninstall == "" {
 			v.Uninstall = obj.Uninstall()
 		} else {
