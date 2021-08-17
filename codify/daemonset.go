@@ -51,11 +51,13 @@ func (k DaemonSet) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}DaemonSet := %s
-
 	a.objects = append(a.objects, {{ .GoName }}DaemonSet)
-	_, err = client.AppsV1().DaemonSets("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Deployment, v1.CreateOptions{})
-	if err != nil {
-		return err
+
+	if client != nil {
+		_, err = client.AppsV1().DaemonSets("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Deployment, v1.CreateOptions{})
+		if err != nil {
+			return err
+		}
 	}
 `, l)
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))

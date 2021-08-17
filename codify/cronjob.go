@@ -51,11 +51,13 @@ func (k CronJob) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}CronJob := %s
-
 	a.objects = append(a.objects, {{ .GoName }}CronJob)
-	_, err = client.BatchV1().CronJobs("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}CronJob, v1.CreateOptions{})
-	if err != nil {
-		return err
+
+	if client != nil {
+		_, err = client.BatchV1().CronJobs("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}CronJob, v1.CreateOptions{})
+		if err != nil {
+			return err
+		}
 	}
 `, l)
 

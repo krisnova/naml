@@ -112,6 +112,9 @@ func RunCommandLineWithOptions() error {
    Uninstall applications.
       naml uninstall <app>`,
 		Action: func(context *cli.Context) error {
+			if output != "" {
+				return outputFunc(output, context)
+			}
 			Banner()
 			cli.ShowSubcommandHelp(context)
 			return nil
@@ -129,6 +132,13 @@ func RunCommandLineWithOptions() error {
 				Value:       "~/.kube/config",
 				Usage:       "Kubeconfig path (default: ~/.kube/config)",
 				Destination: &kubeconfig,
+			},
+			&cli.StringFlag{
+				Name:        "output",
+				Aliases:     []string{"o"},
+				Value:       "",
+				Usage:       "Output as various encodings: json, yaml",
+				Destination: &output,
 			},
 			&cli.StringSliceFlag{
 				Name:        "with",
@@ -313,32 +323,7 @@ func RunCommandLineWithOptions() error {
 				Usage:       "Output applications to stdout in various markup.",
 				Description: "After an application has been loaded, it can be output to various markdown (such as YAML).",
 				Action: func(c *cli.Context) error {
-					o := OutputYAML
-					switch output {
-					case "yaml":
-					case "YAML":
-						o = OutputYAML
-						break
-					case "json":
-					case "JSON":
-						o = OutputJSON
-						break
-					}
-
-					arguments := c.Args()
-					if arguments.Len() != 1 {
-						Banner()
-						cli.ShowCommandHelp(c, "output")
-						List()
-						return nil
-					}
-					appName := arguments.First()
-
-					err := RunOutput(appName, o)
-					if err != nil {
-						return fmt.Errorf("unable to run in runtime mode: %v", err)
-					}
-					return nil
+					return outputFunc(output, c)
 				},
 				Flags: []cli.Flag{
 					&cli.StringFlag{
@@ -370,8 +355,37 @@ func RunCommandLineWithOptions() error {
 			},
 		},
 	}
-
 	return app.Run(os.Args)
+}
+
+func outputFunc(encoding string, c *cli.Context) error {
+	var o OutputEncoding
+	encoding = strings.ToLower(encoding)
+	if encoding == "json" {
+		o = OutputJSON
+	}
+	if encoding == "yaml" {
+		o = OutputYAML
+	}
+
+	arguments := c.Args()
+
+	// No specific apps were passed
+	if arguments.Len() != 1 {
+		for name, _ := range Registry() {
+			err := RunOutput(name, o)
+			if err != nil {
+				return fmt.Errorf("unable to run in runtime mode: %v", err)
+			}
+		}
+		return nil
+	}
+	appName := arguments.First()
+	err := RunOutput(appName, o)
+	if err != nil {
+		return fmt.Errorf("unable to run in runtime mode: %v", err)
+	}
+	return nil
 }
 
 // AllInit is the "constructor" for every command line flag.

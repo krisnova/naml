@@ -42,6 +42,10 @@ func RunOutput(appName string, o OutputEncoding) error {
 	if app == nil {
 		return fmt.Errorf("unable to find app: %s", appName)
 	}
+
+	// Install the application "nowhere" to register the components in memory
+	app.Install(nil)
+
 	switch o {
 
 	// ---- [ JSON ] ----
