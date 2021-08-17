@@ -73,9 +73,11 @@ func (k ClusterRoleBinding) Install() (string, []string) {
 
 func (k ClusterRoleBinding) Uninstall() string {
 	uninstall := `
-	err = client.RbacV1().ClusterRoleBindings("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		err = client.RbacV1().ClusterRoleBindings("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
 	}
  `
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))

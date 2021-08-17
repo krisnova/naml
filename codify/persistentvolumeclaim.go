@@ -74,9 +74,11 @@ func (k PersistentVolumeClaim) Install() (string, []string) {
 
 func (k PersistentVolumeClaim) Uninstall() string {
 	uninstall := `
-	err = client.CoreV1().PersistentVolumeClaims("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		err = client.CoreV1().PersistentVolumeClaims("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
 	}
  `
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))

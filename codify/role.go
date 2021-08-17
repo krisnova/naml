@@ -73,9 +73,11 @@ func (k Role) Install() (string, []string) {
 
 func (k Role) Uninstall() string {
 	uninstall := `
-	err = client.RbacV1().Roles("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		err = client.RbacV1().Roles("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
 	}
  `
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))

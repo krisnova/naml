@@ -73,9 +73,11 @@ func (k Pod) Install() (string, []string) {
 
 func (k Pod) Uninstall() string {
 	uninstall := `
-	err = client.CoreV1().Pods("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		err = client.CoreV1().Pods("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
 	}
  `
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))

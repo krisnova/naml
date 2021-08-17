@@ -73,9 +73,11 @@ func (k Ingress) Install() (string, []string) {
 
 func (k Ingress) Uninstall() string {
 	uninstall := `
-	err = client.NetworkingV1().Ingresss("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		err = client.NetworkingV1().Ingresss("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
 	}
  `
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))

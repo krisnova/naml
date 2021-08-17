@@ -73,9 +73,11 @@ func (k ClusterRole) Install() (string, []string) {
 
 func (k ClusterRole) Uninstall() string {
 	uninstall := `
-	err = client.RbacV1().ClusterRoles("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		err = client.RbacV1().ClusterRoles("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
 	}
  `
 

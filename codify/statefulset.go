@@ -72,9 +72,11 @@ func (k StatefulSet) Install() (string, []string) {
 
 func (k StatefulSet) Uninstall() string {
 	uninstall := `
-	err = client.AppsV1().StatefulSets("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		err = client.AppsV1().StatefulSets("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
 	}
  `
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
