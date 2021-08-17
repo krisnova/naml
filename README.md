@@ -67,26 +67,37 @@ naml -f app.naml install App
 naml -f app.naml uninstall App
 ```
 
-#### Implement Deployable
+### The Deployable Interface
 
 As long as there is a Go system that implements this interface it can be used with `naml`. See examples for how to include an implementation in your project.
 
 ```go
-// Deployable is used to deploy applications.
+// Deployable is an interface that can be implemented
+// for deployable applications.
 type Deployable interface {
 
-	// Install will attempt to install in Kubernetes
-	Install(client *kubernetes.Clientset) error
+    // Install will attempt to install in Kubernetes
+    Install(client *kubernetes.Clientset) error
 
-	// Uninstall will attempt to uninstall in Kubernetes
-	Uninstall(client *kubernetes.Clientset) error
+    // Uninstall will attempt to uninstall in Kubernetes
+    Uninstall(client *kubernetes.Clientset) error
 
-	// Meta returns the Kubernetes native ObjectMeta which is used to manage applications with naml.
-	Meta() *v1.ObjectMeta
-	
-	// Description will return the description of the application.
-	Description() string
+    // Meta returns the Kubernetes native ObjectMeta which is used to manage applications with naml.
+    Meta() *metav1.ObjectMeta
+
+    // Description returns the application description
+    Description() string
+
+    // Objects will return the runtime objects defined for each application
+    Objects() []runtime.Object
 }
+```
+
+Note: To get a register of the Kube objects for each application you "install" the application to a `nil` client. 
+
+```go
+    app.Install(nil)
+    objects := app.Objects()
 ```
 
 ## About

@@ -52,10 +52,13 @@ func (k Deployment) Install() (string, []string) {
 	install := fmt.Sprintf(`
 	// Adding a deployment: "{{ .KubeObject.Name }}"
 	{{ .GoName }}Deployment := %s
+	a.objects = append(a.objects, {{ .GoName }}Deployment)
 
-	_, err = client.AppsV1().Deployments("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Deployment, v1.CreateOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		_, err = client.AppsV1().Deployments("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Deployment, v1.CreateOptions{})
+		if err != nil {
+			return err
+		}
 	}
 `, l)
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
@@ -70,9 +73,11 @@ func (k Deployment) Install() (string, []string) {
 
 func (k Deployment) Uninstall() string {
 	uninstall := `
-	err = client.AppsV1().Deployments("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		err = client.AppsV1().Deployments("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
 	}
  `
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))

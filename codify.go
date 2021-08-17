@@ -87,7 +87,7 @@ type CodifyObject interface {
 	// kubernetes library.
 	Install() (string, []string)
 
-	// Uninstall is the reverse library call of install
+	// Uninstall is the reverse library call of install.
 	Uninstall() string
 }
 
@@ -98,29 +98,25 @@ type CodifyObject interface {
 // The NAML codebase is Apache 2.0 licensed, so we assume that
 // any calling code will adopt the same Apache license.
 func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
-	// Right away we assume this is a finite stream that can
-	// fit into memory. Therefore there is no need for a scanner.
 	var code []byte
-	ibytes, err := io.ReadAll(input)
-	if err != nil {
-		return code, fmt.Errorf("unable to read all of stdin: %v", err)
-	}
-	logger.Debug("Read %d bytes from stdin", len(ibytes))
 
 	// Setup template
 	tpl := template.New("main")
 
 	// Create the base file
-	tpl, err = tpl.Parse(FormatMainGo)
+	tpl, err := tpl.Parse(FormatMainGo)
+	if err != nil {
+		return code, fmt.Errorf("unable to create main go tempalte: %v", err)
+	}
 
 	// Find the objects
-	objs, err := YAMLToCodifyObjects(ibytes)
+	objs, err := ReaderToCodifyObjects(input)
 	if err != nil {
 		return code, fmt.Errorf("unable to parse objects: %v", err)
 	}
 	logger.Debug("Found %d objects to parse", len(objs))
 
-	// create map of used packages
+	// Create map of used packages
 	packages := make(map[string]bool)
 
 	// Append both install and uninstall for every object
@@ -193,12 +189,16 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 		if err != nil || len(lines) < line {
 			return code, fmt.Errorf("unable to auto format code: %v", err)
 		}
-		fmt.Printf("Compile error on line %d:\n", line)
+		fmt.Printf("------------------------------------------\n")
+		fmt.Printf("Text template compile error in main.go.tpl\n")
+		fmt.Printf("------------------------------------------\n")
 		fmt.Printf("\n")
-		fmt.Printf("%s\n", lines[line-3])
-		fmt.Printf("%s\n", lines[line-2])
-		fmt.Printf("%s   %s\n", lines[line-1], color.GreenString("<---"))
-		fmt.Printf("%s\n", lines[line])
+		fmt.Printf("%s\n", color.WhiteString(lines[line-3]))
+		fmt.Printf("%s\n", color.WhiteString(lines[line-2]))
+		fmt.Printf("%s   %s\n", color.RedString(lines[line-1]), color.YellowString("<---"))
+		fmt.Printf("%s\n", color.WhiteString(lines[line]))
+		fmt.Printf("\n")
+		fmt.Printf("------------------------------------------\n")
 		fmt.Printf("\n")
 		return code, fmt.Errorf("unable to auto format code: %v", err)
 	}
@@ -206,9 +206,25 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 	return fmtBytes, nil
 }
 
-func YAMLToCodifyObjects(raw []byte) ([]CodifyObject, error) {
-	rawStr := string(raw)
+// ReaderToBytes is basically a wrapper for ReadAll, however
+// we add in some specific error language for stdin.
+func ReaderToBytes(input io.Reader) ([]byte, error) {
+	var code []byte
+	ibytes, err := io.ReadAll(input)
+	if err != nil {
+		return code, fmt.Errorf("unable to read all of stdin: %v", err)
+	}
+	logger.Debug("Read %d bytes from stdin", len(ibytes))
+	return ibytes, nil
+}
+
+func ReaderToCodifyObjects(input io.Reader) ([]CodifyObject, error) {
 	var objects []CodifyObject
+	ibytes, err := ReaderToBytes(input)
+	if err != nil {
+		return objects, err
+	}
+	rawStr := string(ibytes)
 	yamls := strings.Split(rawStr, YAMLDelimiter)
 	// We support more than one "YAML" per the delimiter
 	// So we need to deal in sets.

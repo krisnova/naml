@@ -51,10 +51,13 @@ func (k StatefulSet) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}StatefulSet := %s
+	a.objects = append(a.objects, {{ .GoName }}StatefulSet)
 
-	_, err = client.AppsV1().StatefulSets("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Deployment, v1.CreateOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		_, err = client.AppsV1().StatefulSets("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Deployment, v1.CreateOptions{})
+		if err != nil {
+			return err
+		}
 	}
 `, l)
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
@@ -69,9 +72,11 @@ func (k StatefulSet) Install() (string, []string) {
 
 func (k StatefulSet) Uninstall() string {
 	uninstall := `
-	err = client.AppsV1().StatefulSets("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		err = client.AppsV1().StatefulSets("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
 	}
  `
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))

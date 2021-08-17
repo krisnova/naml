@@ -50,10 +50,13 @@ func (k ServiceAccount) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}ServiceAccount := %s
-
-	_, err = client.CoreV1().ServiceAccounts("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}ServiceAccount, v1.CreateOptions{})
-	if err != nil {
-		return err
+	a.objects = append(a.objects, {{ .GoName }}ServiceAccount)
+	
+	if client != nil {
+		_, err = client.CoreV1().ServiceAccounts("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}ServiceAccount, v1.CreateOptions{})
+		if err != nil {
+			return err
+		}
 	}
 `, l)
 
@@ -70,9 +73,11 @@ func (k ServiceAccount) Install() (string, []string) {
 
 func (k ServiceAccount) Uninstall() string {
 	uninstall := `
-	err = client.CoreV1().ServiceAccounts("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		err = client.CoreV1().ServiceAccounts("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
 	}
  `
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))

@@ -50,10 +50,13 @@ func (k RoleBinding) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}RoleBinding := %s
+	a.objects = append(a.objects, {{ .GoName }}RoleBinding)
 
-	_, err = client.RbacV1().RoleBindings("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}RoleBinding, v1.CreateOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		_, err = client.RbacV1().RoleBindings("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}RoleBinding, v1.CreateOptions{})
+		if err != nil {
+			return err
+		}
 	}
 `, l)
 
@@ -70,9 +73,11 @@ func (k RoleBinding) Install() (string, []string) {
 
 func (k RoleBinding) Uninstall() string {
 	uninstall := `
-	err = client.RbacV1().RoleBindings("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		err = client.RbacV1().RoleBindings("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
 	}
  `
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))

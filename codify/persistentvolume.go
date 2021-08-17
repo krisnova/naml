@@ -51,10 +51,13 @@ func (k PersistentVolume) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}PersistentVolume := %s
+	a.objects = append(a.objects, {{ .GoName }}PersistentVolume)
 
-	_, err = client.CoreV1().PersistentVolumes("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}PersistentVolume, v1.CreateOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		_, err = client.CoreV1().PersistentVolumes("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}PersistentVolume, v1.CreateOptions{})
+		if err != nil {
+			return err
+		}
 	}
 `, l)
 
@@ -71,9 +74,11 @@ func (k PersistentVolume) Install() (string, []string) {
 
 func (k PersistentVolume) Uninstall() string {
 	uninstall := `
-	err = client.CoreV1().PersistentVolumes("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		err = client.CoreV1().PersistentVolumes("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
 	}
  `
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))

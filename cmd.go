@@ -68,6 +68,9 @@ func RunCommandLineWithOptions() error {
 	// codifyAppNameRaw is the app name passed in the raw form
 	var codifyAppNameRaw string
 
+	// output will be what output type for the output subcommand
+	var output string
+
 	codifyValues := &MainGoValues{
 		AuthorEmail:   "<kris@nivenly.com>",
 		AuthorName:    "Kris Nóva",
@@ -109,6 +112,9 @@ func RunCommandLineWithOptions() error {
    Uninstall applications.
       naml uninstall <app>`,
 		Action: func(context *cli.Context) error {
+			if output != "" {
+				return outputFunc(output, context)
+			}
 			Banner()
 			cli.ShowSubcommandHelp(context)
 			return nil
@@ -126,6 +132,13 @@ func RunCommandLineWithOptions() error {
 				Value:       "~/.kube/config",
 				Usage:       "Kubeconfig path (default: ~/.kube/config)",
 				Destination: &kubeconfig,
+			},
+			&cli.StringFlag{
+				Name:        "output",
+				Aliases:     []string{"o"},
+				Value:       "",
+				Usage:       "Output as various encodings: json, yaml",
+				Destination: &output,
 			},
 			&cli.StringSliceFlag{
 				Name:        "with",
@@ -195,6 +208,13 @@ func RunCommandLineWithOptions() error {
 						return err
 					}
 					// ----------------------------------
+
+					// Right away if it's just one app use it
+					if len(Registry()) == 1 {
+						for _, app := range Registry() {
+							return Uninstall(app)
+						}
+					}
 
 					arguments := c.Args()
 					if arguments.Len() != 1 {
@@ -294,7 +314,30 @@ func RunCommandLineWithOptions() error {
 			},
 
 			// ********************************************************
-			// [ rpc ]
+			// [ OUTPUT ]
+			// ********************************************************
+
+			{
+				Name:        "output",
+				Aliases:     []string{"o"},
+				Usage:       "Output applications to stdout in various markup.",
+				Description: "After an application has been loaded, it can be output to various markdown (such as YAML).",
+				Action: func(c *cli.Context) error {
+					return outputFunc(output, c)
+				},
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:        "output",
+						Aliases:     []string{"o"},
+						Value:       "yaml",
+						Usage:       "Output encoding. yaml, json.",
+						Destination: &output,
+					},
+				},
+			},
+
+			// ********************************************************
+			// [ RPC ]
 			// ********************************************************
 
 			{
@@ -312,8 +355,37 @@ func RunCommandLineWithOptions() error {
 			},
 		},
 	}
-
 	return app.Run(os.Args)
+}
+
+func outputFunc(encoding string, c *cli.Context) error {
+	var o OutputEncoding
+	encoding = strings.ToLower(encoding)
+	if encoding == "json" {
+		o = OutputJSON
+	}
+	if encoding == "yaml" {
+		o = OutputYAML
+	}
+
+	arguments := c.Args()
+
+	// No specific apps were passed
+	if arguments.Len() != 1 {
+		for name, _ := range Registry() {
+			err := RunOutput(name, o)
+			if err != nil {
+				return fmt.Errorf("unable to run in runtime mode: %v", err)
+			}
+		}
+		return nil
+	}
+	appName := arguments.First()
+	err := RunOutput(appName, o)
+	if err != nil {
+		return fmt.Errorf("unable to run in runtime mode: %v", err)
+	}
+	return nil
 }
 
 // AllInit is the "constructor" for every command line flag.

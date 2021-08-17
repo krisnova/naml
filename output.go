@@ -24,27 +24,56 @@
 package naml
 
 import (
-	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
-	"k8s.io/apimachinery/pkg/runtime"
-	"k8s.io/client-go/kubernetes"
+	"encoding/json"
+	"fmt"
+
+	"sigs.k8s.io/yaml"
 )
 
-// Deployable is an interface that can be implemented
-// for deployable applications.
-type Deployable interface {
+const (
+	OutputYAML OutputEncoding = 0
+	OutputJSON OutputEncoding = 1
+)
 
-	// Install will attempt to install in Kubernetes
-	Install(client *kubernetes.Clientset) error
+type OutputEncoding int
 
-	// Uninstall will attempt to uninstall in Kubernetes
-	Uninstall(client *kubernetes.Clientset) error
+func RunOutput(appName string, o OutputEncoding) error {
+	app := Find(appName)
+	if app == nil {
+		return fmt.Errorf("unable to find app: %s", appName)
+	}
 
-	// Meta returns the Kubernetes native ObjectMeta which is used to manage applications with naml.
-	Meta() *metav1.ObjectMeta
+	// Install the application "nowhere" to register the components in memory
+	app.Install(nil)
 
-	// Description returns the application description
-	Description() string
+	switch o {
 
-	// Objects will return the runtime objects defined for each application
-	Objects() []runtime.Object
+	// ---- [ JSON ] ----
+	case OutputJSON:
+		raw, err := json.MarshalIndent(app.Objects(), " ", "	")
+		if err != nil {
+			return fmt.Errorf("unable to JSON marshal: %v", err)
+		}
+		fmt.Println(string(raw))
+		return nil
+
+	// ---- [ YAML ] ----
+	case OutputYAML:
+		raw, err := yaml.Marshal(app.Objects())
+		if err != nil {
+			return fmt.Errorf("unable to YAML marshal: %v", err)
+		}
+		fmt.Println(string(raw))
+		return nil
+
+	// ---- [ DEFAULT ] ----
+	default:
+		raw, err := yaml.Marshal(app.Objects())
+		if err != nil {
+			return fmt.Errorf("unable to YAML marshal: %v", err)
+		}
+		fmt.Println(string(raw))
+		return nil
+	}
+	return nil
 }

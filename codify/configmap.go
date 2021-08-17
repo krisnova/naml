@@ -50,10 +50,13 @@ func (k ConfigMap) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}ConfigMap := %s
+	a.objects = append(a.objects, {{ .GoName }}ConfigMap)
 
-	_, err = client.CoreV1().ConfigMaps("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}ConfigMap, v1.CreateOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		_, err = client.CoreV1().ConfigMaps("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}ConfigMap, v1.CreateOptions{})
+		if err != nil {
+			return err
+		}
 	}
 `, l)
 
@@ -70,9 +73,11 @@ func (k ConfigMap) Install() (string, []string) {
 
 func (k ConfigMap) Uninstall() string {
 	uninstall := `
-	err = client.CoreV1().ConfigMaps("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		err = client.CoreV1().ConfigMaps("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
 	}
  `
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))

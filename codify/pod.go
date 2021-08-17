@@ -51,10 +51,13 @@ func (k Pod) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}Pod := %s
+	a.objects = append(a.objects, {{ .GoName }}Pod)
 
-	_, err = client.CoreV1().Pods("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Pod, v1.CreateOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		_, err = client.CoreV1().Pods("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Pod, v1.CreateOptions{})
+		if err != nil {
+			return err
+		}
 	}
 `, l)
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
@@ -70,9 +73,11 @@ func (k Pod) Install() (string, []string) {
 
 func (k Pod) Uninstall() string {
 	uninstall := `
-	err = client.CoreV1().Pods("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		err = client.CoreV1().Pods("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
 	}
  `
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))

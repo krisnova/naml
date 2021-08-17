@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"os"
 
+	"k8s.io/apimachinery/pkg/runtime"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -58,6 +60,7 @@ func main() {
 type App struct {
 	metav1.ObjectMeta
 	description string
+	objects     []runtime.Object
 	// --------------------
 	// Add your fields here
 	// --------------------
@@ -100,7 +103,7 @@ func (a *App) Install(client *kubernetes.Clientset) error {
 			Annotations:     map[string]string{"deployment.kubernetes.io/revision": "1"},
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: valast.Addr(1).(*int32),
+			Replicas: valast.Addr(int32(1)).(*int32),
 			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{
 				"app": "nginx",
 			}},
@@ -117,7 +120,7 @@ func (a *App) Install(client *kubernetes.Clientset) error {
 						ImagePullPolicy:          corev1.PullPolicy("Always"),
 					}},
 					RestartPolicy:                 corev1.RestartPolicy("Always"),
-					TerminationGracePeriodSeconds: valast.Addr(30).(*int64),
+					TerminationGracePeriodSeconds: valast.Addr(int64(30)).(*int64),
 					DNSPolicy:                     corev1.DNSPolicy("ClusterFirst"),
 					SecurityContext:               &corev1.PodSecurityContext{},
 					SchedulerName:                 "default-scheduler",
@@ -136,14 +139,14 @@ func (a *App) Install(client *kubernetes.Clientset) error {
 					},
 				},
 			},
-			RevisionHistoryLimit:    valast.Addr(10).(*int32),
-			ProgressDeadlineSeconds: valast.Addr(600).(*int32),
 		},
 	}
 
-	_, err = client.AppsV1().Deployments("default").Create(context.TODO(), nginxDeployment, metav1.CreateOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		_, err = client.AppsV1().Deployments("default").Create(context.TODO(), nginxDeployment, metav1.CreateOptions{})
+		if err != nil {
+			return err
+		}
 	}
 
 	// Adding a deployment: "nginx-deployment"
@@ -165,7 +168,7 @@ func (a *App) Install(client *kubernetes.Clientset) error {
 			},
 		},
 		Spec: appsv1.DeploymentSpec{
-			Replicas: valast.Addr(4).(*int32),
+			Replicas: valast.Addr(int32(4)).(*int32),
 			Selector: &metav1.LabelSelector{MatchLabels: map[string]string{"app": "nginx"}},
 			Template: corev1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{Labels: map[string]string{
@@ -186,7 +189,7 @@ func (a *App) Install(client *kubernetes.Clientset) error {
 						ImagePullPolicy:          corev1.PullPolicy("IfNotPresent"),
 					}},
 					RestartPolicy:                 corev1.RestartPolicy("Always"),
-					TerminationGracePeriodSeconds: valast.Addr(30).(*int64),
+					TerminationGracePeriodSeconds: valast.Addr(int64(30)).(*int64),
 					DNSPolicy:                     corev1.DNSPolicy("ClusterFirst"),
 					SecurityContext:               &corev1.PodSecurityContext{},
 					SchedulerName:                 "default-scheduler",
@@ -205,16 +208,16 @@ func (a *App) Install(client *kubernetes.Clientset) error {
 					},
 				},
 			},
-			RevisionHistoryLimit:    valast.Addr(10).(*int32),
-			ProgressDeadlineSeconds: valast.Addr(600).(*int32),
 		},
 	}
 
-	_, err = client.AppsV1().Deployments("default").Create(context.TODO(), nginx_deploymentDeployment, metav1.CreateOptions{})
-	if err != nil {
-		return err
+	a.objects = append(a.objects, nginx_deploymentDeployment)
+	if client != nil {
+		_, err = client.AppsV1().Deployments("default").Create(context.TODO(), nginx_deploymentDeployment, metav1.CreateOptions{})
+		if err != nil {
+			return err
+		}
 	}
-
 	return err
 }
 
@@ -240,4 +243,8 @@ func (a *App) Description() string {
 
 func (a *App) Meta() *metav1.ObjectMeta {
 	return &a.ObjectMeta
+}
+
+func (a *App) Objects() []runtime.Object {
+	return a.objects
 }

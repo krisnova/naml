@@ -50,10 +50,13 @@ func (k Secret) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}Secret := %s
+	a.objects = append(a.objects, {{ .GoName }}Secret)
 
-	_, err = client.CoreV1().Secrets("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Secret, v1.CreateOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		_, err = client.CoreV1().Secrets("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Secret, v1.CreateOptions{})
+		if err != nil {
+			return err
+		}
 	}
 `, l)
 
@@ -70,9 +73,11 @@ func (k Secret) Install() (string, []string) {
 
 func (k Secret) Uninstall() string {
 	uninstall := `
-	err = client.CoreV1().Secrets("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		err = client.CoreV1().Secrets("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
 	}
  `
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))

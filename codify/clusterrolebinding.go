@@ -50,10 +50,13 @@ func (k ClusterRoleBinding) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}ClusterRoleBinding := %s
-
-	_, err = client.RbacV1().ClusterRoleBindings("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}ClusterRoleBinding, v1.CreateOptions{})
-	if err != nil {
-		return err
+	a.objects = append(a.objects, {{ .GoName }}ClusterRoleBinding)
+	
+	if client != nil {
+		_, err = client.RbacV1().ClusterRoleBindings("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}ClusterRoleBinding, v1.CreateOptions{})
+		if err != nil {
+			return err
+		}
 	}
 `, l)
 
@@ -70,9 +73,11 @@ func (k ClusterRoleBinding) Install() (string, []string) {
 
 func (k ClusterRoleBinding) Uninstall() string {
 	uninstall := `
-	err = client.RbacV1().ClusterRoleBindings("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		err = client.RbacV1().ClusterRoleBindings("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
 	}
  `
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))

@@ -51,10 +51,13 @@ func (k CronJob) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}CronJob := %s
+	a.objects = append(a.objects, {{ .GoName }}CronJob)
 
-	_, err = client.BatchV1().CronJobs("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}CronJob, v1.CreateOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		_, err = client.BatchV1().CronJobs("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}CronJob, v1.CreateOptions{})
+		if err != nil {
+			return err
+		}
 	}
 `, l)
 
@@ -71,9 +74,11 @@ func (k CronJob) Install() (string, []string) {
 
 func (k CronJob) Uninstall() string {
 	uninstall := `
-	err = client.BatchV1().CronJobs("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		err = client.BatchV1().CronJobs("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
 	}
  `
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))

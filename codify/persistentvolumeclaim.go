@@ -51,10 +51,13 @@ func (k PersistentVolumeClaim) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}PersistentVolumeClaim := %s
+	a.objects = append(a.objects, {{ .GoName }}PersistentVolumeClaim)
 
-	_, err = client.CoreV1().PersistentVolumeClaims("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}PersistentVolumeClaim, v1.CreateOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		_, err = client.CoreV1().PersistentVolumeClaims("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}PersistentVolumeClaim, v1.CreateOptions{})
+		if err != nil {
+			return err
+		}
 	}
 `, l)
 
@@ -71,9 +74,11 @@ func (k PersistentVolumeClaim) Install() (string, []string) {
 
 func (k PersistentVolumeClaim) Uninstall() string {
 	uninstall := `
-	err = client.CoreV1().PersistentVolumeClaims("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
-	if err != nil {
-		return err
+	if client != nil {
+		err = client.CoreV1().PersistentVolumeClaims("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		if err != nil {
+			return err
+		}
 	}
  `
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
