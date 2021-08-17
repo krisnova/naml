@@ -1,22 +1,26 @@
 [![Go Reference](https://pkg.go.dev/badge/github.com/kris-nova/naml.svg)](https://pkg.go.dev/github.com/kris-nova/naml)
 
-# Not another markup language. 
+# Not Another Markup Language.
 
 Replace Kubernetes YAML with raw Go!
 
-Say so long 👋 to YAML and start using the Go 🎉 programming language to represent and deploy applications.
+Say so long 👋 to YAML and start using the Go 🎉 programming language to represent and deploy applications with Kubernetes.
 
-✅ Take advantage of all the lovely features of Go.
+Kubernetes applications are complicated, so lets use a proper Turing complete language to reason about them.
 
-✅ Test your code directly in local Kubernetes using [kind](https://github.com/kubernetes-sigs/kind).
+✅ Take advantage of all the lovely features of Go (Syntax highlighting, Cross compiling, Code generation, Documentation)
+
+✅ Test your code directly in local Kubernetes using [kind](https://github.com/kubernetes-sigs/kind). Yes you can really deploy your applications to Kubernetes.
 
 ✅ Get your application directly into Go instead of YAML and use it in controllers, operators, CRs/CRDs easily. Use the Go compiler to your advantage.
 
-## Quickstart
+## Convert YAML to Go
 
-Turn existing YAML into Go.
+```bash
+cat deploy.yaml | naml codify > main.go
+```
 
-If you have existing YAML on disk or in a Kubernetes cluster, you can pipe it directly to `naml codify` to generate Go code.
+Turn existing YAML into formatted and syntactically correct Go that implements the `Deployable` interface.
 
 ```bash
 mkdir out
@@ -34,11 +38,16 @@ Copy the generic [Makefile](https://github.com/kris-nova/naml/blob/main/out/Make
 
 ```bash 
 wget https://raw.githubusercontent.com/kris-nova/naml/main/out/Makefile -o out/Makefile
+cd out
+make
+./app -o yaml
+./app install 
+./app uninstall
 ```
 
 Use `make help` for more. Happy coding 🎉.
 
-## Examples
+## Example Projects
 
 There is a "repository" of examples to borrow/fork:
 
@@ -46,26 +55,6 @@ There is a "repository" of examples to borrow/fork:
 - [simple](https://github.com/naml-examples/simple) quick and simple example.
 - [examples](https://github.com/naml-examples) GitHub organization.
 
-
-## Usage 
-
-```bash 
-# Compile your code using the naml library
-make
-
-# Once an application is compiled with naml
-# they can be standalone executables, or referenced from the default binary.
-naml -f app.naml list
-
-# Is the same as
-./app.naml list
-
-# install 
-naml -f app.naml install App
-
-# uninstall 
-naml -f app.naml uninstall App
-```
 
 ### The Deployable Interface
 
@@ -93,32 +82,20 @@ type Deployable interface {
 }
 ```
 
-Note: To get a register of the Kube objects for each application you "install" the application to a `nil` client. 
+In order to get the raw Kubernetes objects in Go without installing them anywhere, you pass in `nil` in place of an authenticated Kubernetes `Clientset`. 
+
+Then you can access the objects in memory.
 
 ```go
     app.Install(nil)
     objects := app.Objects()
 ```
 
-## About
-
-This is a framework for infrastructure teams who need more than just conditional manifests. 
-
-This allows teams to start encapsulating, managing, and testing their applications in raw Go.
-
-Teams can now buid controllers, operators, and custom toolchains using reliable, testable, and scalable Go.
-
-## The philosophy
-
-The bet here is that any person confident in managing `YAML` for Kubernetes can also be equally as confident managing Go for Kubernetes.
-
-The feature add is that no matter how good our YAML management tools get, they will never be as good as just plain Go when it comes to things like syntax checking, testing, shipping, and flexibility. 
-
 ## Nothing fancy
 
 Feel free to fork this repository and begin using it for your team. There isn't anything special here. 🤷‍♀ We use the same client the rest of Kubernetes does.
 
- ❎ No new tools.
+ ❎ No new complex tools.
 
  ❎ No charts.
 
@@ -138,6 +115,6 @@ Feel free to fork this repository and begin using it for your team. There isn't 
  - Use the Go compiler to check your syntax.
  - Write **real tests** 🤓 using Go to check and validate your deployments.
  - Test your applications in Kubernetes using [kind](https://github.com/kubernetes-sigs/kind).
- - Define custom installation logic. What happens if it fails?
+ - Define custom installation logic. What happens if it fails? What about logical concerns at runtime?
  - Define custom application registries. Multiple apps of the same flavor? No problem.
  - Use the latest client (the same client the rest of Kubernetes uses).
