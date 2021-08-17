@@ -336,7 +336,7 @@ func RunCommandLineWithOptions() error {
 
 					err := RunOutput(appName, o)
 					if err != nil {
-						return fmt.Errorf("unable to output: %v", err)
+						return fmt.Errorf("unable to run in runtime mode: %v", err)
 					}
 					return nil
 				},

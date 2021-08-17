@@ -30,10 +30,12 @@ import (
 	{{ .Packages }}
 
 	"github.com/kris-nova/naml"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
+
 )
 
-// Define this version for the current version of your application.
+// Version is the current release of your application.
 var Version string = "{{ .Version }}"
 
 func main() {
@@ -54,6 +56,7 @@ func main() {
 type App struct {
 	metav1.ObjectMeta
 	description string
+	objects []runtime.Object
 	// ----------------------------------
 	// Add your configuration fields here
 	// ----------------------------------
@@ -96,4 +99,8 @@ func (a *App) Description() string {
 
 func (a *App) Meta() *metav1.ObjectMeta {
 	return &a.ObjectMeta
+}
+
+func (a *App) Objects() []runtime.Object {
+	return a.objects
 }

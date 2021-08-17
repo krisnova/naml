@@ -27,6 +27,8 @@ import (
 	"fmt"
 	"os"
 
+	"k8s.io/apimachinery/pkg/runtime"
+
 	appsv1 "k8s.io/api/apps/v1"
 	corev1 "k8s.io/api/core/v1"
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
@@ -58,6 +60,7 @@ func main() {
 type App struct {
 	metav1.ObjectMeta
 	description string
+	objects     []runtime.Object
 	// --------------------
 	// Add your fields here
 	// --------------------
@@ -210,6 +213,7 @@ func (a *App) Install(client *kubernetes.Clientset) error {
 		},
 	}
 
+	a.objects = append(a.objects, nginx_deploymentDeployment)
 	_, err = client.AppsV1().Deployments("default").Create(context.TODO(), nginx_deploymentDeployment, metav1.CreateOptions{})
 	if err != nil {
 		return err
@@ -240,4 +244,8 @@ func (a *App) Description() string {
 
 func (a *App) Meta() *metav1.ObjectMeta {
 	return &a.ObjectMeta
+}
+
+func (a *App) Objects() []runtime.Object {
+	return a.objects
 }

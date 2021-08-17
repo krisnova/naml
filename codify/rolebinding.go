@@ -51,6 +51,7 @@ func (k RoleBinding) Install() (string, []string) {
 	install := fmt.Sprintf(`
 	{{ .GoName }}RoleBinding := %s
 
+	a.objects = append(a.objects, {{ .GoName }}RoleBinding)
 	_, err = client.RbacV1().RoleBindings("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}RoleBinding, v1.CreateOptions{})
 	if err != nil {
 		return err

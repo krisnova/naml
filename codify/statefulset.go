@@ -52,6 +52,7 @@ func (k StatefulSet) Install() (string, []string) {
 	install := fmt.Sprintf(`
 	{{ .GoName }}StatefulSet := %s
 
+	a.objects = append(a.objects, {{ .GoName }}StatefulSet)
 	_, err = client.AppsV1().StatefulSets("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Deployment, v1.CreateOptions{})
 	if err != nil {
 		return err

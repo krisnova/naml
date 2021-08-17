@@ -51,6 +51,7 @@ func (k ClusterRoleBinding) Install() (string, []string) {
 	install := fmt.Sprintf(`
 	{{ .GoName }}ClusterRoleBinding := %s
 
+	a.objects = append(a.objects, {{ .GoName }}ClusterRoleBinding)
 	_, err = client.RbacV1().ClusterRoleBindings("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}ClusterRoleBinding, v1.CreateOptions{})
 	if err != nil {
 		return err

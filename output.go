@@ -43,22 +43,28 @@ func RunOutput(appName string, o OutputEncoding) error {
 		return fmt.Errorf("unable to find app: %s", appName)
 	}
 	switch o {
+
+	// ---- [ JSON ] ----
 	case OutputJSON:
-		raw, err := json.MarshalIndent(app, " ", "	")
+		raw, err := json.MarshalIndent(app.Objects(), " ", "	")
 		if err != nil {
 			return fmt.Errorf("unable to JSON marshal: %v", err)
 		}
 		fmt.Println(string(raw))
 		return nil
+
+	// ---- [ YAML ] ----
 	case OutputYAML:
-		raw, err := yaml.Marshal(app)
+		raw, err := yaml.Marshal(app.Objects())
 		if err != nil {
 			return fmt.Errorf("unable to YAML marshal: %v", err)
 		}
 		fmt.Println(string(raw))
 		return nil
+
+	// ---- [ DEFAULT ] ----
 	default:
-		raw, err := yaml.Marshal(app)
+		raw, err := yaml.Marshal(app.Objects())
 		if err != nil {
 			return fmt.Errorf("unable to YAML marshal: %v", err)
 		}

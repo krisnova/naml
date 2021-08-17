@@ -30,6 +30,8 @@ import (
 	"io/ioutil"
 	"net/http"
 
+	"k8s.io/apimachinery/pkg/runtime"
+
 	v1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 
 	"k8s.io/client-go/kubernetes"
@@ -51,11 +53,19 @@ type RPCApplication struct {
 
 	// AppVersion is the application version
 	AppVersion string
+
+	// O is the runtime.Objects
+	O []runtime.Object
 }
 
 // RPCError is when something goes wrong over the RPC
 type RPCError struct {
 	Message string
+}
+
+// Objects will just return to runtime.Objects for each app.
+func (c *RPCApplication) Objects() []runtime.Object {
+	return c.O
 }
 
 // Install is the remote application install wrapper.
@@ -88,6 +98,7 @@ func (c *RPCApplication) Install(clientset *kubernetes.Clientset) error {
 	return nil
 }
 
+// Uninstall is the remote application uninstall wrapper.
 func (c *RPCApplication) Uninstall(clientset *kubernetes.Clientset) error {
 	if clientset != nil {
 		return fmt.Errorf("*** security concern: clientset != nil ***")

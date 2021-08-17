@@ -25,6 +25,7 @@ package naml
 
 import (
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
+	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 )
 
@@ -43,4 +44,7 @@ type Deployable interface {
 
 	// Description returns the application description
 	Description() string
+
+	// Objects will return the runtime objects defined for each application
+	Objects() []runtime.Object
 }
