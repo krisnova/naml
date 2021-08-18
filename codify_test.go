@@ -79,8 +79,8 @@ func TestYAMLToGo(t *testing.T) {
 	if err != nil {
 		t.Errorf("Unable to execute newly compiled program: %v", err)
 	}
-	t.Logf("New Program Stdout Logs: \n%s", stdout.String())
-	t.Logf("New Program Stderr Logs: \n%s", stderr.String())
+	t.Logf("Stdout Logs length: %d", len(stdout.Bytes()))
+	t.Logf("Stderr Logs length: %d", len(stderr.Bytes()))
 
 	// Remove the new program from the filesystem
 	err = program.Remove()
