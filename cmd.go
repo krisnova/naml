@@ -136,7 +136,7 @@ func RunCommandLineWithOptions() error {
 				Name:        "output",
 				Aliases:     []string{"o"},
 				Value:       "",
-				Usage:       "Output as various encodings: json, yaml",
+				Usage:       "Output encoded. (yaml, json)",
 				Destination: &output,
 			},
 			&cli.StringSliceFlag{
