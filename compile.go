@@ -85,10 +85,7 @@ func Compile(src []byte) (*Program, error) {
 		File: f,
 	}
 
-	fmt.Printf("Source name: %s\n", source.File.Name())
-	fmt.Printf("Program name: %s\n", program.File.Name())
-
-	cmd := exec.Command("go", "build", "-o", program.File.Name(), source.File.Name())
+	cmd := exec.Command("go", "build", "-ldflags", "-X 'github.com/kris-nova/naml.Version=tests'", "-o", program.File.Name(), source.File.Name())
 	stdout := &bytes.Buffer{}
 	stderr := &bytes.Buffer{}
 	cmd.Stdout = stdout
