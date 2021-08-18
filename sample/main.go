@@ -40,13 +40,14 @@ import (
 	"k8s.io/client-go/kubernetes"
 )
 
-var Version string = "0.0.1"
+var Version string = "1.2.3"
 
 func main() {
 	// Load the application into the NAML registery
 	// Note: naml.Register() can be used multiple times.
 	//
-	naml.Register(NewApp("App", "very serious grown up business application does important beep boops"))
+	naml.Register(NewApp("App-Barnaby", "App for Barnaby!"))
+	naml.Register(NewApp("App-Nova", "App for Nova!"))
 
 	// Run the generic naml command line program with
 	// the application loaded.
@@ -75,8 +76,7 @@ func NewApp(name, description string) *App {
 	return &App{
 		description: description,
 		ObjectMeta: metav1.ObjectMeta{
-			Name:            name,
-			ResourceVersion: Version,
+			Name: name,
 		},
 		// --------------------
 		// Add your fields here
@@ -94,13 +94,12 @@ func (a *App) Install(client *kubernetes.Clientset) error {
 			APIVersion: "apps/appsv1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:            "nginx",
-			Namespace:       "default",
-			UID:             types.UID("c39ccefc-491a-4857-bb47-1aa540f2129a"),
-			ResourceVersion: "187098",
-			Generation:      1,
-			Labels:          map[string]string{"app": "nginx"},
-			Annotations:     map[string]string{"deployment.kubernetes.io/revision": "1"},
+			Name:        "nginx",
+			Namespace:   "default",
+			UID:         types.UID("c39ccefc-491a-4857-bb47-1aa540f2129a"),
+			Generation:  1,
+			Labels:      map[string]string{"app": "nginx"},
+			Annotations: map[string]string{"deployment.kubernetes.io/revision": "1"},
 		},
 		Spec: appsv1.DeploymentSpec{
 			Replicas: valast.Addr(int32(1)).(*int32),
@@ -156,11 +155,10 @@ func (a *App) Install(client *kubernetes.Clientset) error {
 			APIVersion: "apps/appsv1",
 		},
 		ObjectMeta: metav1.ObjectMeta{
-			Name:            "nginx-deployment",
-			Namespace:       "default",
-			UID:             types.UID("445061d9-5000-471b-8e06-45f5240dedb6"),
-			ResourceVersion: "254882",
-			Generation:      3,
+			Name:       "nginx-deployment",
+			Namespace:  "default",
+			UID:        types.UID("445061d9-5000-471b-8e06-45f5240dedb6"),
+			Generation: 3,
 			Annotations: map[string]string{
 				"deployment.kubernetes.io/revision": "3",
 				"kubectl.kubernetes.io/last-applied-configuration": `{"apiVersion":"apps/appsv1","kind":"Deployment","metadata":{"annotations":{},"name":"nginx-deployment","namespace":"default"},"spec":{"replicas":4,"selector":{"matchLabels":{"app":"nginx"}},"template":{"metadata":{"labels":{"app":"nginx"}},"spec":{"containers":[{"image":"nginx:1.14.2","name":"nginx","ports":[{"containerPort":80}]}]}}}}
