@@ -101,6 +101,12 @@ func alias(generated, defaultalias string) string {
 	// [ corev1 ]
 	corev1types := []string{
 		"Volume",
+		"SecretVolumeSource",
+		"EmptyDirVolumeSource",
+		"Handler",
+		"TaintEffect",
+		"HTTPGetAction",
+		"URIScheme",
 		"PodTemplateSpec",
 		"PodSpec",
 		"Protocol",
@@ -147,5 +153,6 @@ func sanitizeK8sObjectName(name string) string {
 }
 
 func goName(name string) string {
+	name = strings.ReplaceAll(name, ".","")
 	return strings.ReplaceAll(name, "-", "_")
 }

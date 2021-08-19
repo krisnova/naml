@@ -53,7 +53,7 @@ func (k ClusterRole) Install() (string, []string) {
 	a.objects = append(a.objects, {{ .GoName }}ClusterRole)
 	
 	if client != nil {
-		_, err = client.RbacV1().ClusterRoles("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}ClusterRole, v1.CreateOptions{})
+		_, err = client.RbacV1().ClusterRoles().Create(context.TODO(), {{ .GoName }}ClusterRole, v1.CreateOptions{})
 		if err != nil {
 			return err
 		}
@@ -74,7 +74,7 @@ func (k ClusterRole) Install() (string, []string) {
 func (k ClusterRole) Uninstall() string {
 	uninstall := `
 	if client != nil {
-		err = client.RbacV1().ClusterRoles("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		err = client.RbacV1().ClusterRoles().Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}

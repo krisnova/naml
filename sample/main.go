@@ -87,6 +87,8 @@ func NewApp(name, description string) *App {
 func (a *App) Install(client *kubernetes.Clientset) error {
 	var err error
 
+	client.CoreV1().Namespaces().Create()
+
 	// Adding a deployment: "nginx"
 	nginxDeployment := &appsv1.Deployment{
 		TypeMeta: metav1.TypeMeta{

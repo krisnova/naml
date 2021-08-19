@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"go/format"
 	"io"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -42,6 +43,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
@@ -152,6 +154,8 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 		"k8s.io/api/batch/v1":                  "batchv1",
 		"k8s.io/api/core/v1":                   "corev1",
 		"k8s.io/apimachinery/pkg/apis/meta/v1": "metav1",
+		"k8s.io/api/rbac/v1": "rbacv1",
+		"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1": "apiextensionsv1",
 	}
 
 	packagesCode := ""
@@ -175,11 +179,14 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 	// Grab the source code in []byte form
 	src := buf.Bytes()
 
+	// Hack issue #62 until we get a fix for 1.0.0
+	src = hack62(src)
+
 	// Go fmt!
 	fmtBytes, err := format.Source(src)
 	if err != nil {
 		// Unable to auto format the code so let's debug!
-		lines := strings.Split(string(buf.Bytes()), `
+		lines := strings.Split(string(src), `
 `)
 		lns := strings.Split(err.Error(), ":")
 		line, err := strconv.Atoi(lns[0])
@@ -190,10 +197,9 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 		fmt.Printf("Text template compile error in main.go.tpl\n")
 		fmt.Printf("------------------------------------------\n")
 		fmt.Printf("\n")
-		fmt.Printf("%s\n", color.WhiteString(lines[line-3]))
-		fmt.Printf("%s\n", color.WhiteString(lines[line-2]))
-		fmt.Printf("%s   %s\n", color.RedString(lines[line-1]), color.YellowString("<---"))
-		fmt.Printf("%s\n", color.WhiteString(lines[line]))
+		fmt.Printf("%s\n", color.WhiteString(lines[line-1]))
+		fmt.Printf("%s   %s\n", color.RedString(lines[line]), color.YellowString("<---"))
+		fmt.Printf("%s\n", color.WhiteString(lines[line + 1]))
 		fmt.Printf("\n")
 		fmt.Printf("------------------------------------------\n")
 		fmt.Printf("\n")
@@ -243,9 +249,14 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 	var objects []CodifyObject
 
 	serializer := scheme.Codecs.UniversalDeserializer()
+	var decoded runtime.Object
 	decoded, _, err := serializer.Decode([]byte(raw), nil, nil)
 	if err != nil {
-		return nil, fmt.Errorf("unable to deserialize: %v", err)
+		// Here we try CRDs
+		decoded, _, err = serializer.Decode([]byte(raw), nil, &apiextensionsv1.CustomResourceDefinition{})
+		if err != nil {
+			return nil, fmt.Errorf("unable to deserialize in codify, even after trying CRD: %v", err)
+		}
 	}
 
 	// -------------------------------------------------------------------
@@ -300,8 +311,16 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		objects = append(objects, codify.NewRoleBinding(x))
 	case *rbacv1.ClusterRoleBinding:
 		objects = append(objects, codify.NewClusterRoleBinding(x))
+	case *corev1.ServiceAccount:
+		objects = append(objects, codify.NewServiceAccount(x))
+	case *corev1.Secret:
+		objects = append(objects, codify.NewSecret(x))
 	case *networkingv1.Ingress:
 		objects = append(objects, codify.NewIngress(x))
+	case *apiextensionsv1.CustomResourceDefinition:
+		objects = append(objects, codify.NewCustomResourceDefinition(x))
+	case *corev1.Namespace:
+		objects = append(objects, codify.NewNamespace(x))
 	case *appsv1.ReplicaSet:
 	case *corev1.Endpoints:
 		// Ignore ReplicaSet, Endpoints
@@ -311,4 +330,43 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 	}
 	// -------------------------------------------------------------------
 	return objects, nil
+}
+
+
+// Sample line matching:
+//
+//Replicas: valast.Addr(1).(*int32),
+//RunAsUser:                valast.Addr(1001).(*int64),
+//RunAsGroup:               valast.Addr(2001).(*int64),
+//RevisionHistoryLimit: valast.Addr(10).(*int32),
+//Replicas: valast.Addr(1).(*int32),
+//RunAsUser:                valast.Addr(1001).(*int64),
+//RunAsGroup:               valast.Addr(2001).(*int64),
+//RevisionHistoryLimit: valast.Addr(10).(*int32),
+
+// hack62 is a temporary function that is put in place a hacky solution
+// to temporarily solve #62 for the TGIK demo
+func hack62(input []byte) []byte {
+	str := string(input)
+	lines := strings.Split(str, `
+`)
+	newLines := lines
+	for i, line := range lines {
+		if strings.Contains(line, "int32") {
+			tline := strings.ReplaceAll(line, "valast.Addr(", "valast.Addr(int32(")
+			tline = strings.ReplaceAll(tline, ").(*int32)", ")).(*int32)")
+			newLines[i] = tline
+			continue
+		}
+		if strings.Contains(line, "int64") {
+			tline := strings.ReplaceAll(line, "valast.Addr(", "valast.Addr(int64(")
+			tline = strings.ReplaceAll(tline, ").(*int64)", ")).(*int64)")
+			newLines[i] = tline
+			continue
+		}
+		newLines[i] = line
+	}
+	ret := strings.Join(lines, `
+`)
+	return []byte(ret)
 }
