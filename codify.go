@@ -179,11 +179,14 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 	// Grab the source code in []byte form
 	src := buf.Bytes()
 
+	// Hack issue #62 until we get a fix for 1.0.0
+	src = hack62(src)
+
 	// Go fmt!
 	fmtBytes, err := format.Source(src)
 	if err != nil {
 		// Unable to auto format the code so let's debug!
-		lines := strings.Split(string(buf.Bytes()), `
+		lines := strings.Split(string(src), `
 `)
 		lns := strings.Split(err.Error(), ":")
 		line, err := strconv.Atoi(lns[0])
@@ -194,10 +197,9 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 		fmt.Printf("Text template compile error in main.go.tpl\n")
 		fmt.Printf("------------------------------------------\n")
 		fmt.Printf("\n")
-		fmt.Printf("%s\n", color.WhiteString(lines[line-3]))
-		fmt.Printf("%s\n", color.WhiteString(lines[line-2]))
-		fmt.Printf("%s   %s\n", color.RedString(lines[line-1]), color.YellowString("<---"))
-		fmt.Printf("%s\n", color.WhiteString(lines[line]))
+		fmt.Printf("%s\n", color.WhiteString(lines[line-1]))
+		fmt.Printf("%s   %s\n", color.RedString(lines[line]), color.YellowString("<---"))
+		fmt.Printf("%s\n", color.WhiteString(lines[line + 1]))
 		fmt.Printf("\n")
 		fmt.Printf("------------------------------------------\n")
 		fmt.Printf("\n")
@@ -328,4 +330,43 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 	}
 	// -------------------------------------------------------------------
 	return objects, nil
+}
+
+
+// Sample line matching:
+//
+//Replicas: valast.Addr(1).(*int32),
+//RunAsUser:                valast.Addr(1001).(*int64),
+//RunAsGroup:               valast.Addr(2001).(*int64),
+//RevisionHistoryLimit: valast.Addr(10).(*int32),
+//Replicas: valast.Addr(1).(*int32),
+//RunAsUser:                valast.Addr(1001).(*int64),
+//RunAsGroup:               valast.Addr(2001).(*int64),
+//RevisionHistoryLimit: valast.Addr(10).(*int32),
+
+// hack62 is a temporary function that is put in place a hacky solution
+// to temporarily solve #62 for the TGIK demo
+func hack62(input []byte) []byte {
+	str := string(input)
+	lines := strings.Split(str, `
+`)
+	newLines := lines
+	for i, line := range lines {
+		if strings.Contains(line, "int32") {
+			tline := strings.ReplaceAll(line, "valast.Addr(", "valast.Addr(int32(")
+			tline = strings.ReplaceAll(tline, ").(*int32)", ")).(*int32)")
+			newLines[i] = tline
+			continue
+		}
+		if strings.Contains(line, "int64") {
+			tline := strings.ReplaceAll(line, "valast.Addr(", "valast.Addr(int64(")
+			tline = strings.ReplaceAll(tline, ").(*int64)", ")).(*int64)")
+			newLines[i] = tline
+			continue
+		}
+		newLines[i] = line
+	}
+	ret := strings.Join(lines, `
+`)
+	return []byte(ret)
 }

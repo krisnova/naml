@@ -466,7 +466,8 @@ func Install(app Deployable) error {
 	if meta.Namespace == "" {
 		meta.Namespace = "default"
 	}
-	fmt.Printf("Installed %s in namespace [%s]\n", meta.Name, meta.Namespace)
+	fmt.Printf("Installed %s\n", meta.Name)
+	PrintObjects(app)
 	logger.Success("Successfully installed [%s]", app.Meta().Name)
 	return nil
 }
@@ -507,6 +508,15 @@ func Uninstall(app Deployable) error {
 	if meta.Namespace == "" {
 		meta.Namespace = "default"
 	}
-	fmt.Printf("Uninstalled %s in namespace [%s]\n", meta.Name, meta.Namespace)
+	fmt.Printf("Uninstalled %s\n", meta.Name)
+	PrintObjects(app)
 	return nil
+}
+
+func PrintObjects(app Deployable) {
+	for _, obj := range app.Objects() {
+		kind := obj.GetObjectKind()
+		s := kind.GroupVersionKind()
+		fmt.Printf("  %s %s\n", s.Kind, s.Version)
+	}
 }
