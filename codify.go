@@ -154,6 +154,7 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 		"k8s.io/api/batch/v1":                  "batchv1",
 		"k8s.io/api/core/v1":                   "corev1",
 		"k8s.io/apimachinery/pkg/apis/meta/v1": "metav1",
+		"k8s.io/api/rbac/v1": "rbacv1",
 		"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1": "apiextensionsv1",
 	}
 
@@ -308,10 +309,16 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		objects = append(objects, codify.NewRoleBinding(x))
 	case *rbacv1.ClusterRoleBinding:
 		objects = append(objects, codify.NewClusterRoleBinding(x))
+	case *corev1.ServiceAccount:
+		objects = append(objects, codify.NewServiceAccount(x))
+	case *corev1.Secret:
+		objects = append(objects, codify.NewSecret(x))
 	case *networkingv1.Ingress:
 		objects = append(objects, codify.NewIngress(x))
 	case *apiextensionsv1.CustomResourceDefinition:
 		objects = append(objects, codify.NewCustomResourceDefinition(x))
+	case *corev1.Namespace:
+		objects = append(objects, codify.NewNamespace(x))
 	case *appsv1.ReplicaSet:
 	case *corev1.Endpoints:
 		// Ignore ReplicaSet, Endpoints
