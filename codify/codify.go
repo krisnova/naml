@@ -147,5 +147,6 @@ func sanitizeK8sObjectName(name string) string {
 }
 
 func goName(name string) string {
+	name = strings.ReplaceAll(name, ".","")
 	return strings.ReplaceAll(name, "-", "_")
 }

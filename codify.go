@@ -28,6 +28,7 @@ import (
 	"fmt"
 	"go/format"
 	"io"
+	"k8s.io/apimachinery/pkg/runtime"
 	"sort"
 	"strconv"
 	"strings"
@@ -42,6 +43,7 @@ import (
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
 	rbacv1 "k8s.io/api/rbac/v1"
+	apiextensionsv1 "k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1"
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
@@ -152,6 +154,7 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 		"k8s.io/api/batch/v1":                  "batchv1",
 		"k8s.io/api/core/v1":                   "corev1",
 		"k8s.io/apimachinery/pkg/apis/meta/v1": "metav1",
+		"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1": "apiextensionsv1",
 	}
 
 	packagesCode := ""
@@ -243,9 +246,14 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 	var objects []CodifyObject
 
 	serializer := scheme.Codecs.UniversalDeserializer()
+	var decoded runtime.Object
 	decoded, _, err := serializer.Decode([]byte(raw), nil, nil)
 	if err != nil {
-		return nil, fmt.Errorf("unable to deserialize: %v", err)
+		// Here we try CRDs
+		decoded, _, err = serializer.Decode([]byte(raw), nil, &apiextensionsv1.CustomResourceDefinition{})
+		if err != nil {
+			return nil, fmt.Errorf("unable to deserialize in codify, even after trying CRD: %v", err)
+		}
 	}
 
 	// -------------------------------------------------------------------
@@ -302,6 +310,8 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		objects = append(objects, codify.NewClusterRoleBinding(x))
 	case *networkingv1.Ingress:
 		objects = append(objects, codify.NewIngress(x))
+	case *apiextensionsv1.CustomResourceDefinition:
+		objects = append(objects, codify.NewCustomResourceDefinition(x))
 	case *appsv1.ReplicaSet:
 	case *corev1.Endpoints:
 		// Ignore ReplicaSet, Endpoints
