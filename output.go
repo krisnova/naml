@@ -74,7 +74,17 @@ func PrintKubeYAML(app Deployable) error {
 `)
 		for _, line := range lines {
 
-			if strings.Contains(line, "creationTimestamp"){
+			// And we are back to the fucking alias hackery again
+			// I am going to open an issue to clean this up once
+			// we have figured out all the crap we need to do
+			line = strings.ReplaceAll(line, "corev1", "v1")
+			line = strings.ReplaceAll(line, "rbacv1", "v1")
+			line = strings.ReplaceAll(line, "metav1", "v1")
+			line = strings.ReplaceAll(line, "appsv1", "v1")
+			line = strings.ReplaceAll(line, "corev1", "v1")
+
+			// Remove creationTimestamp
+			if strings.Contains(line, "creationTimestamp") {
 				continue
 			}
 			// Ignore status for each object
@@ -83,14 +93,13 @@ func PrintKubeYAML(app Deployable) error {
 			}
 			fmt.Println(line)
 		}
-		if i < len(app.Objects()) - 1 {
+		if i < len(app.Objects())-1 {
 			fmt.Println(YAMLDelimiter)
 			fmt.Println()
 		}
 	}
 	return nil
 }
-
 
 func PrintJSON(app Deployable) error {
 	raw, err := json.MarshalIndent(app.Objects(), " ", "	")

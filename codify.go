@@ -28,11 +28,12 @@ import (
 	"fmt"
 	"go/format"
 	"io"
-	"k8s.io/apimachinery/pkg/runtime"
 	"sort"
 	"strconv"
 	"strings"
 	"text/template"
+
+	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/fatih/color"
 
@@ -102,8 +103,8 @@ type CodifyObject interface {
 func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 	var code []byte
 
-	// Setup template
-	tpl := template.New("main")
+	// Setup template with a unique name based on the input
+	tpl := template.New(fmt.Sprintf("%+v", input))
 
 	// Create the base file
 	tpl, err := tpl.Parse(FormatMainGo)
@@ -154,7 +155,7 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 		"k8s.io/api/batch/v1":                  "batchv1",
 		"k8s.io/api/core/v1":                   "corev1",
 		"k8s.io/apimachinery/pkg/apis/meta/v1": "metav1",
-		"k8s.io/api/rbac/v1": "rbacv1",
+		"k8s.io/api/rbac/v1":                   "rbacv1",
 		"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1": "apiextensionsv1",
 	}
 
@@ -199,7 +200,7 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 		fmt.Printf("\n")
 		fmt.Printf("%s\n", color.WhiteString(lines[line-1]))
 		fmt.Printf("%s   %s\n", color.RedString(lines[line]), color.YellowString("<---"))
-		fmt.Printf("%s\n", color.WhiteString(lines[line + 1]))
+		fmt.Printf("%s\n", color.WhiteString(lines[line+1]))
 		fmt.Printf("\n")
 		fmt.Printf("------------------------------------------\n")
 		fmt.Printf("\n")
@@ -317,8 +318,9 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		objects = append(objects, codify.NewSecret(x))
 	case *networkingv1.Ingress:
 		objects = append(objects, codify.NewIngress(x))
-	case *apiextensionsv1.CustomResourceDefinition:
-		objects = append(objects, codify.NewCustomResourceDefinition(x))
+	// CRDs is going to take some special care...
+	//case *apiextensionsv1.CustomResourceDefinition:
+	//	objects = append(objects, codify.NewCustomResourceDefinition(x))
 	case *corev1.Namespace:
 		objects = append(objects, codify.NewNamespace(x))
 	case *appsv1.ReplicaSet:
@@ -331,7 +333,6 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 	// -------------------------------------------------------------------
 	return objects, nil
 }
-
 
 // Sample line matching:
 //
