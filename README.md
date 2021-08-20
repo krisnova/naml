@@ -2,6 +2,8 @@
 
 # Not Another Markup Language.
 
+> NAML is a Go library and command line tool that can be used as a framework to develop and deploy Kubernetes applications.
+
 Replace Kubernetes YAML with raw Go!
 
 Say so long 👋 to YAML and start using the Go 🎉 programming language to represent and deploy applications with Kubernetes.
