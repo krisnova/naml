@@ -26,6 +26,7 @@ package naml
 import (
 	"encoding/json"
 	"fmt"
+	"strings"
 
 	"sigs.k8s.io/yaml"
 )
@@ -50,30 +51,61 @@ func RunOutput(appName string, o OutputEncoding) error {
 
 	// ---- [ JSON ] ----
 	case OutputJSON:
-		raw, err := json.MarshalIndent(app.Objects(), " ", "	")
-		if err != nil {
-			return fmt.Errorf("unable to JSON marshal: %v", err)
-		}
-		fmt.Println(string(raw))
-		return nil
+		return PrintJSON(app)
 
 	// ---- [ YAML ] ----
 	case OutputYAML:
-		raw, err := yaml.Marshal(app.Objects())
-		if err != nil {
-			return fmt.Errorf("unable to YAML marshal: %v", err)
-		}
-		fmt.Println(string(raw))
-		return nil
+		return PrintKubeYAML(app)
 
 	// ---- [ DEFAULT ] ----
 	default:
-		raw, err := yaml.Marshal(app.Objects())
+		return PrintKubeYAML(app)
+	}
+	return nil
+}
+
+func PrintKubeYAML(app Deployable) error {
+	for i, obj := range app.Objects() {
+		raw, err := yaml.Marshal(obj)
 		if err != nil {
 			return fmt.Errorf("unable to YAML marshal: %v", err)
 		}
-		fmt.Println(string(raw))
-		return nil
+		lines := strings.Split(string(raw), `
+`)
+		for _, line := range lines {
+
+			// And we are back to the fucking alias hackery again
+			// I am going to open an issue to clean this up once
+			// we have figured out all the crap we need to do
+			line = strings.ReplaceAll(line, "corev1", "v1")
+			line = strings.ReplaceAll(line, "rbacv1", "v1")
+			line = strings.ReplaceAll(line, "metav1", "v1")
+			line = strings.ReplaceAll(line, "appsv1", "v1")
+			line = strings.ReplaceAll(line, "corev1", "v1")
+
+			// Remove creationTimestamp
+			if strings.Contains(line, "creationTimestamp") {
+				continue
+			}
+			// Ignore status for each object
+			if strings.Contains(line, "status") {
+				break
+			}
+			fmt.Println(line)
+		}
+		if i < len(app.Objects())-1 {
+			fmt.Println(YAMLDelimiter)
+			fmt.Println()
+		}
 	}
+	return nil
+}
+
+func PrintJSON(app Deployable) error {
+	raw, err := json.MarshalIndent(app.Objects(), " ", "	")
+	if err != nil {
+		return fmt.Errorf("unable to JSON marshal: %v", err)
+	}
+	fmt.Println(string(raw))
 	return nil
 }
