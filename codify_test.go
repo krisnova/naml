@@ -29,6 +29,84 @@ import (
 	"testing"
 )
 
+// TestGoToYAML will generate source code from YAML, and then compile the source, and then run the new program
+func TestGoToYAML(t *testing.T) {
+	buf := bytes.Buffer{}
+	buf.Write([]byte(TestNginxDeploymentYAML))
+	v := &MainGoValues{
+		AppNameLower:  "testnginx",
+		AppNameTitle:  "TestNginx",
+		AuthorName:    "Björn Nóva",
+		AuthorEmail:   "barnaby@nivenly.com",
+		CopyrightYear: "1999",
+		Description:   "Test nginx deployment.",
+	}
+	code, err := Codify(&buf, v)
+	if err != nil {
+		t.Errorf("Unable to codify test YAML: %v", err)
+	}
+
+	// Compile the source code
+	program, err := Compile(code)
+	if err != nil {
+		t.Errorf("Unable to compile source code: %v", err)
+		t.FailNow()
+	}
+
+	// Output as YAML
+	stdout, stderr, err := program.Execute([]string{"output"})
+	if err != nil {
+		t.Errorf("Unable to execute newly compiled program: %v", err)
+	}
+	if len(stderr.Bytes()) > 0 {
+		t.Errorf("Unable to parse YAML: %v", err)
+	}
+
+	// Pass the previous output to Codify()
+	newCode, err := Codify(stdout, v)
+	if err != nil {
+		t.Errorf("Invalid YAML from output: %v", err)
+	}
+
+	if len(newCode) != len(code) {
+		t.Errorf("YAML Delta Original %d", len(code))
+		t.Errorf("YAML Delta New      %d", len(newCode))
+		t.Errorf("YAML conversion resulted in different programs. Non deterministic YAML!")
+		newSplit := strings.Split(string(newCode), `
+`)
+		oldSplit := strings.Split(string(code), `
+`)
+
+		var highSplit, lowSplit []string
+		if len(newSplit) > len(oldSplit) {
+			highSplit = newSplit
+			lowSplit = oldSplit
+		} else {
+			highSplit = oldSplit
+			lowSplit = newSplit
+		}
+		for i := 0; i < len(highSplit); i++ {
+			if len(lowSplit) <= i {
+				t.Logf("+ ---> %s\n", highSplit[i])
+				continue
+			}
+			if highSplit[i] != lowSplit[i] {
+				t.Logf("! ---> %s\n", highSplit[i])
+				t.Logf("! ---> %s\n", lowSplit[i])
+			} else {
+				t.Log(highSplit[i])
+			}
+		}
+	}
+
+	// Remove the new program from the filesystem
+	err = program.Remove()
+	if err != nil {
+		t.Errorf("Unable to remove newly compiled program: %v", err)
+	}
+
+}
+
 // TestYAMLToGo will generate source code from YAML, and then compile the source, and then run the new program
 func TestYAMLToGo(t *testing.T) {
 	buf := bytes.Buffer{}
