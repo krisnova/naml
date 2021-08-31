@@ -95,7 +95,7 @@ Then you can access the objects in memory.
 
 ## Nothing fancy
 
-Feel free to fork this repository and begin using it for your team. There isn't anything special here. 🤷‍♀ We use the same client the rest of Kubernetes does.
+There isn't anything special here. 🤷‍♀ We use the same client the rest of Kubernetes does.
 
  ❎ No new complex tools.
 
