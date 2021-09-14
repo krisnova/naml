@@ -36,12 +36,9 @@ cat deployment.yaml service.yaml | naml codify \
   --author-email="<charlie@nivenly.com>" > out/main.go
 ```
 
-Copy the generic [Makefile](https://github.com/kris-nova/naml/blob/main/out/Makefile) to the same directory as your `main.go`
-
 ```bash 
-wget https://raw.githubusercontent.com/kris-nova/naml/main/out/Makefile -o out/Makefile
 cd out
-make
+naml build -o app
 ./app -o yaml
 ./app install 
 ./app uninstall

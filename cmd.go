@@ -25,6 +25,7 @@ package naml
 
 import (
 	"fmt"
+	"io/ioutil"
 	"os"
 	"strings"
 	"time"
@@ -69,6 +70,7 @@ func RunCommandLineWithOptions() error {
 	var codifyAppNameRaw string
 
 	// output will be what output type for the output subcommand
+	// this is ALSO used in the "build" command
 	var output string
 
 	codifyValues := &MainGoValues{
@@ -311,6 +313,67 @@ func RunCommandLineWithOptions() error {
 			},
 
 			// ********************************************************
+			// [ BUILD ]
+			// ********************************************************
+
+			{
+				Name:      "build",
+				Aliases:   []string{"b"},
+				Usage:     "Build a NAML binary from valid Go source code.",
+				UsageText: "naml build",
+				Flags: []cli.Flag{
+					&cli.StringFlag{
+						Name:        "output",
+						Aliases:     []string{"o"},
+						Value:       "app.naml",
+						Usage:       "output binary",
+						Destination: &output,
+					},
+				},
+				Action: func(c *cli.Context) error {
+					arguments := c.Args()
+					var src []byte
+					var err error
+					if output == "" {
+						output = "app.naml"
+					}
+					if arguments.Len() == 0 {
+						// No arguments passed to "naml build" so assume main.go
+						src, err = Src("main.go")
+						if err != nil {
+							return err
+						}
+					} else if arguments.Len() == 1 {
+						src, err = Src(arguments.First())
+						if err != nil {
+							return err
+						}
+					} else {
+						return fmt.Errorf("invalid command line arguments")
+					}
+
+					// We get here we have a valid src
+					prog, err := Compile(src)
+					if err != nil {
+						return fmt.Errorf("unable to build NAML binary from source: %v", err)
+					}
+
+					// Move the compiled binary to the desired location
+					// Note: os.Rename will NOT work with cross-device links
+					bytes, err := ioutil.ReadFile(prog.File.Name())
+					if err != nil {
+						return err
+					}
+					err = ioutil.WriteFile(output, bytes, 0755)
+					if err != nil {
+						return err
+					}
+					fmt.Printf("Successful NAML Build: %s\n", output)
+					return nil
+				},
+			},
+
+			// ********************************************************
 			// [ OUTPUT ]
 			// ********************************************************
 
@@ -327,7 +390,7 @@ func RunCommandLineWithOptions() error {
 						Name:        "output",
 						Aliases:     []string{"o"},
 						Value:       "yaml",
-						Usage:       "Output encoding. (yaml, json)",
+						Usage:       "output format",
 						Destination: &output,
 					},
 				},
