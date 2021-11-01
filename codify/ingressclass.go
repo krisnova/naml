@@ -33,27 +33,27 @@ import (
 	networkingv1 "k8s.io/api/networking/v1"
 )
 
-type Ingress struct {
-	KubeObject *networkingv1.Ingress
+type IngressClass struct {
+	KubeObject *networkingv1.IngressClass
 	GoName     string
 }
 
-func NewIngress(obj *networkingv1.Ingress) *Ingress {
+func NewIngressClass(obj *networkingv1.IngressClass) *IngressClass {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
-	return &Ingress{
+	return &IngressClass{
 		KubeObject: obj,
 		GoName:     goName(obj.Name),
 	}
 }
 
-func (k Ingress) Install() (string, []string) {
+func (k IngressClass) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
-	{{ .GoName }}Ingress := %s
-	a.objects = append(a.objects, {{ .GoName }}Ingress)
+	{{ .GoName }}IngressClass := %s
+	a.objects = append(a.objects, {{ .GoName }}IngressClass)
 
 	if client != nil {
-		_, err = client.NetworkingV1().Ingresss("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Ingress, v1.CreateOptions{})
+		_, err = client.NetworkingV1().IngressClasss("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}IngressClass, v1.CreateOptions{})
 		if err != nil {
 			return err
 		}
@@ -71,10 +71,10 @@ func (k Ingress) Install() (string, []string) {
 	return alias(buf.String(), "networkingv1"), packages
 }
 
-func (k Ingress) Uninstall() string {
+func (k IngressClass) Uninstall() string {
 	uninstall := `
 	if client != nil {
-		err = client.NetworkingV1().Ingress("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		err = client.NetworkingV1().IngressClass("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}
