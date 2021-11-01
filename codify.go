@@ -33,6 +33,8 @@ import (
 	"strings"
 	"text/template"
 
+	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
+
 	"k8s.io/apimachinery/pkg/runtime"
 
 	"github.com/fatih/color"
@@ -316,8 +318,12 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		objects = append(objects, codify.NewServiceAccount(x))
 	case *corev1.Secret:
 		objects = append(objects, codify.NewSecret(x))
+	case *networkingv1.IngressClass:
+		objects = append(objects, codify.NewIngressClass(x))
 	case *networkingv1.Ingress:
 		objects = append(objects, codify.NewIngress(x))
+	case *admissionregistrationv1.ValidatingWebhookConfiguration:
+		objects = append(objects, codify.NewValidatingwebhookConfiguration(x))
 	// CRDs is going to take some special care...
 	//case *apiextensionsv1.CustomResourceDefinition:
 	//	objects = append(objects, codify.NewCustomResourceDefinition(x))

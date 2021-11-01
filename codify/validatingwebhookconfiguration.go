@@ -29,31 +29,32 @@ import (
 	"text/template"
 	"time"
 
+	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
+
 	"github.com/kris-nova/logger"
-	networkingv1 "k8s.io/api/networking/v1"
 )
 
-type Ingress struct {
-	KubeObject *networkingv1.Ingress
+type ValidatingwebhookConfiguration struct {
+	KubeObject *admissionregistrationv1.ValidatingWebhookConfiguration
 	GoName     string
 }
 
-func NewIngress(obj *networkingv1.Ingress) *Ingress {
+func NewValidatingwebhookConfiguration(obj *admissionregistrationv1.ValidatingWebhookConfiguration) *ValidatingwebhookConfiguration {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
-	return &Ingress{
+	return &ValidatingwebhookConfiguration{
 		KubeObject: obj,
 		GoName:     goName(obj.Name),
 	}
 }
 
-func (k Ingress) Install() (string, []string) {
+func (k ValidatingwebhookConfiguration) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
-	{{ .GoName }}Ingress := %s
-	a.objects = append(a.objects, {{ .GoName }}Ingress)
+	{{ .GoName }}ValidatingwebhookConfiguration := %s
+	a.objects = append(a.objects, {{ .GoName }}ValidatingwebhookConfiguration)
 
 	if client != nil {
-		_, err = client.NetworkingV1().Ingresss("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Ingress, v1.CreateOptions{})
+		_, err = client.admissionregistrationv1().ValidatingwebhookConfigurations("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}ValidatingwebhookConfiguration, v1.CreateOptions{})
 		if err != nil {
 			return err
 		}
@@ -68,13 +69,13 @@ func (k Ingress) Install() (string, []string) {
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return alias(buf.String(), "networkingv1"), packages
+	return alias(buf.String(), "admissionregistrationv1"), packages
 }
 
-func (k Ingress) Uninstall() string {
+func (k ValidatingwebhookConfiguration) Uninstall() string {
 	uninstall := `
 	if client != nil {
-		err = client.NetworkingV1().Ingress("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		err = client.admissionregistrationv1().ValidatingwebhookConfigurations("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}
