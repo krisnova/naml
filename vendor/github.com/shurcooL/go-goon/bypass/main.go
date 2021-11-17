@@ -1,3 +1,4 @@
+//go:build !js
 // +build !js
 
 // Package bypass allows bypassing reflect restrictions on accessing unexported struct fields.
