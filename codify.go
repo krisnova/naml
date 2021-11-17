@@ -230,8 +230,8 @@ func ReaderToCodifyObjects(input io.Reader) ([]CodifyObject, error) {
 	if err != nil {
 		return objects, err
 	}
-	rawStr := string(ibytes)
-	yamls := strings.Split(rawStr, YAMLDelimiter)
+	clean := string(cleanRaw(ibytes))
+	yamls := strings.Split(clean, YAMLDelimiter)
 	// We support more than one "YAML" per the delimiter
 	// So we need to deal in sets.
 	for _, yaml := range yamls {
@@ -248,8 +248,43 @@ func ReaderToCodifyObjects(input io.Reader) ([]CodifyObject, error) {
 	return objects, nil
 }
 
+func cleanRaw(raw []byte) []byte {
+	rawString := string(raw)
+	lines := strings.Split(rawString, `
+	`)
+	var cleanLines []string
+	for _, line := range lines {
+		// Check for comments
+		if strings.HasPrefix(line, "#") {
+			continue
+		}
+		// Ignore empty lines
+		if line == "" {
+			continue
+		}
+
+		trimmed := strings.TrimSpace(line)
+		if len(trimmed) == 0 {
+			continue
+		}
+		cleanLines = append(cleanLines, line)
+	}
+	cleanedRawString := strings.Join(cleanLines, `
+	`)
+	trimmed := strings.TrimSpace(cleanedRawString)
+	if len(trimmed) == 0 {
+		// Nothing to do here
+		return []byte("")
+	}
+
+	return []byte(cleanedRawString)
+}
+
 func toCodify(raw []byte) ([]CodifyObject, error) {
 	var objects []CodifyObject
+	if len(raw) <= 1 {
+		return objects, nil
+	}
 
 	serializer := scheme.Codecs.UniversalDeserializer()
 	var decoded runtime.Object
@@ -258,7 +293,7 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		// Here we try CRDs
 		decoded, _, err = serializer.Decode([]byte(raw), nil, &apiextensionsv1.CustomResourceDefinition{})
 		if err != nil {
-			return nil, fmt.Errorf("unable to deserialize in codify, even after trying CRD: %v", err)
+			return nil, fmt.Errorf("trying CRD: unable to deserialize in codify: %v", err)
 		}
 	}
 
@@ -326,7 +361,8 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		objects = append(objects, codify.NewValidatingwebhookConfiguration(x))
 	// CRDs is going to take some special care...
 	//case *apiextensionsv1.CustomResourceDefinition:
-	//	objects = append(objects, codify.NewCustomResourceDefinition(x))
+	// ignore CRDs for now!
+	//objects = append(objects, codify.NewCustomResourceDefinition(x))
 	case *corev1.Namespace:
 		objects = append(objects, codify.NewNamespace(x))
 	case *appsv1.ReplicaSet:
@@ -334,6 +370,13 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		// Ignore ReplicaSet, Endpoints
 		break
 	default:
+		fmt.Println("----")
+		//fmt.Println(x)
+		//fmt.Println(x.GetObjectKind())
+		//fmt.Println(x.GetObjectKind().GroupVersionKind())
+		//fmt.Println(raw)
+		fmt.Println(string(raw))
+		fmt.Println("----")
 		return nil, fmt.Errorf("missing NAML support for type: %s", x.GetObjectKind().GroupVersionKind().Kind)
 	}
 	// -------------------------------------------------------------------

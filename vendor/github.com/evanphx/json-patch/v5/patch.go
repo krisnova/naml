@@ -27,7 +27,7 @@ var (
 	startObject                    = json.Delim('{')
 	endObject                      = json.Delim('}')
 	startArray                     = json.Delim('[')
-	endArray                       = json.Delim(']')
+	endArray                     = json.Delim(']')
 )
 
 var (
@@ -57,7 +57,7 @@ type Patch []Operation
 
 type partialDoc struct {
 	keys []string
-	obj  map[string]*lazyNode
+	obj   map[string]*lazyNode
 }
 
 type partialArray []*lazyNode
