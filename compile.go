@@ -99,7 +99,7 @@ func Compile(src []byte) (*Program, error) {
 		e = fmt.Sprintf("%s+-------------------------+\n", e)
 		e = fmt.Sprintf("%s| \n", e)
 		e = fmt.Sprintf("%s| %s\n", e, stdout.String())
-		e = fmt.Sprintf("%s| %s\n", e, stderr.String())
+		e = fmt.Sprintf("%s| %s", e, stderr.String())
 		e = fmt.Sprintf("%s+----------------------------------------------------------\n", e)
 		return nil, fmt.Errorf("%s", e)
 	}

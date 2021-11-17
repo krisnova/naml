@@ -106,7 +106,7 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 	var code []byte
 
 	// Setup template with a unique name based on the input
-	tpl := template.New(fmt.Sprintf("%+v", input))
+	tpl := template.New(fmt.Sprintf("%+v%+v", input, v.AppNameLower))
 
 	// Create the base file
 	tpl, err := tpl.Parse(FormatMainGo)
@@ -119,7 +119,6 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 	if err != nil {
 		return code, fmt.Errorf("unable to parse objects: %v", err)
 	}
-	logger.Debug("Found %d objects to parse", len(objs))
 
 	// Create map of used packages
 	packages := make(map[string]bool)
@@ -181,9 +180,6 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 
 	// Grab the source code in []byte form
 	src := buf.Bytes()
-
-	// Hack issue #62 until we get a fix for 1.0.0
-	src = hack62(src)
 
 	// Go fmt!
 	fmtBytes, err := format.Source(src)
@@ -248,10 +244,11 @@ func ReaderToCodifyObjects(input io.Reader) ([]CodifyObject, error) {
 	return objects, nil
 }
 
+// cleanRaw will clean raw yaml
+// it will remove empty lines, empty lines with whitespace, and comments
 func cleanRaw(raw []byte) []byte {
 	rawString := string(raw)
-	lines := strings.Split(rawString, `
-	`)
+	lines := strings.Split(rawString, "\n")
 	var cleanLines []string
 	for _, line := range lines {
 		// Check for comments
@@ -269,14 +266,7 @@ func cleanRaw(raw []byte) []byte {
 		}
 		cleanLines = append(cleanLines, line)
 	}
-	cleanedRawString := strings.Join(cleanLines, `
-	`)
-	trimmed := strings.TrimSpace(cleanedRawString)
-	if len(trimmed) == 0 {
-		// Nothing to do here
-		return []byte("")
-	}
-
+	cleanedRawString := strings.Join(cleanLines, "\n")
 	return []byte(cleanedRawString)
 }
 
@@ -370,53 +360,8 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		// Ignore ReplicaSet, Endpoints
 		break
 	default:
-		fmt.Println("----")
-		//fmt.Println(x)
-		//fmt.Println(x.GetObjectKind())
-		//fmt.Println(x.GetObjectKind().GroupVersionKind())
-		//fmt.Println(raw)
-		fmt.Println(string(raw))
-		fmt.Println("----")
 		return nil, fmt.Errorf("missing NAML support for type: %s", x.GetObjectKind().GroupVersionKind().Kind)
 	}
 	// -------------------------------------------------------------------
 	return objects, nil
-}
-
-// Sample line matching:
-//
-//Replicas: valast.Addr(1).(*int32),
-//RunAsUser:                valast.Addr(1001).(*int64),
-//RunAsGroup:               valast.Addr(2001).(*int64),
-//RevisionHistoryLimit: valast.Addr(10).(*int32),
-//Replicas: valast.Addr(1).(*int32),
-//RunAsUser:                valast.Addr(1001).(*int64),
-//RunAsGroup:               valast.Addr(2001).(*int64),
-//RevisionHistoryLimit: valast.Addr(10).(*int32),
-
-// hack62 is a temporary function that is put in place a hacky solution
-// to temporarily solve #62 for the TGIK demo
-func hack62(input []byte) []byte {
-	str := string(input)
-	lines := strings.Split(str, `
-`)
-	newLines := lines
-	for i, line := range lines {
-		if strings.Contains(line, "int32") {
-			tline := strings.ReplaceAll(line, "valast.Addr(", "valast.Addr(int32(")
-			tline = strings.ReplaceAll(tline, ").(*int32)", ")).(*int32)")
-			newLines[i] = tline
-			continue
-		}
-		if strings.Contains(line, "int64") {
-			tline := strings.ReplaceAll(line, "valast.Addr(", "valast.Addr(int64(")
-			tline = strings.ReplaceAll(tline, ").(*int64)", ")).(*int64)")
-			newLines[i] = tline
-			continue
-		}
-		newLines[i] = line
-	}
-	ret := strings.Join(lines, `
-`)
-	return []byte(ret)
 }

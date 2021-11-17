@@ -20,39 +20,68 @@
 //   ██║ ╚████║██║  ██║██║ ╚═╝ ██║███████╗
 //   ╚═╝  ╚═══╝╚═╝  ╚═╝╚═╝     ╚═╝╚══════╝
 
-package codifytests
+package tests
 
 import (
 	"bytes"
+	"fmt"
 	"io/ioutil"
+	"strings"
 	"testing"
 
 	"github.com/kris-nova/naml"
 )
 
+func TestNginx(t *testing.T) {
+	err := generateCompileRunYAML("test_nginx.yaml")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+}
+
 func TestKubernetesDashboard_v2_0_0(t *testing.T) {
-	filename := "test_kubernetes_dashboard.yaml"
+	err := generateCompileRunYAML("test_kubernetes_dashboard.yaml")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+}
+
+func mainGoValues(name string) *naml.MainGoValues {
+	return &naml.MainGoValues{
+		AppNameLower:  strings.ToLower(name),
+		AppNameTitle:  strings.ToUpper(name),
+		AuthorName:    "Björn Nóva",
+		AuthorEmail:   "barnaby@nivenly.com",
+		CopyrightYear: "1999",
+		Description:   "Test Description.",
+	}
+}
+
+// generateCompileRunYAML will build a Go program from YAML and try to compile and run it :)
+func generateCompileRunYAML(filename string) error {
 	data, err := ioutil.ReadFile(filename)
 	if err != nil {
-		t.Errorf("unable to read file: %s: %v", filename, err)
+		return fmt.Errorf("unable to read file: %s: %v", filename, err)
 	}
 	buffer := bytes.Buffer{}
 	buffer.Write(data)
-	output, err := naml.Codify(&buffer, MainGoValues())
+	output, err := naml.Codify(&buffer, mainGoValues(filename))
 	if err != nil {
-		t.Errorf("unable to codify: %s: %v", filename, err)
+		return fmt.Errorf("unable to codify: %s: %v", filename, err)
 	}
 	program, err := naml.Compile(output)
-	if err != nil {
-		t.Errorf("unable to compile: %s: %v", filename, err)
+	if program != nil {
+		defer program.Remove()
 	}
-	stdout, stderr, err := program.Execute([]string{""})
+	if err != nil {
+		return fmt.Errorf("unable to compile: %s: %v", filename, err)
+	}
+	_, stderr, err := program.Execute([]string{""})
 	if stderr.Len() > 0 {
-		t.Errorf("failed executing binary: %s: %v", filename, err)
-		t.Errorf(stderr.String())
+		return fmt.Errorf("failed executing binary: %s: %v: %s", filename, err, stderr.String())
 	}
 	if err != nil {
-		t.Errorf("failed executing binary: %s: %v", filename, err)
+		return fmt.Errorf("failed executing binary: %s: %v", filename, err)
 	}
-	t.Logf(stdout.String())
+	return nil
 }

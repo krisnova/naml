@@ -34,9 +34,9 @@ compile: ## Compile for the local architecture ⚙
 
 install: ## Install your naml 🎉
 	@echo "Installing..."
-	cp naml /usr/local/bin/naml
+	sudo cp naml /usr/local/bin/naml
 
-test: ## 🤓 Test is used to test your naml
+test: compile install ## 🤓 Test is used to test your naml
 	@echo "Testing..."
 	go test -v ./...
 
