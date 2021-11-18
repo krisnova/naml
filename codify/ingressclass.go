@@ -74,7 +74,7 @@ func (k IngressClass) Install() (string, []string) {
 func (k IngressClass) Uninstall() string {
 	uninstall := `
 	if client != nil {
-		err = client.NetworkingV1().IngressClass("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		err = client.NetworkingV1().IngressClasses().Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}

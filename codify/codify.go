@@ -133,7 +133,11 @@ func alias(generated, defaultalias string) string {
 		"PullPolicy",
 		"RestartPolicy",
 		"DNSPolicy",
+		"ObjectFieldSelector",
 		"PodSecurityContext",
+		"ResourceName",
+		"Capabilities",
+		"Capability",
 	}
 	// ------------------------------
 

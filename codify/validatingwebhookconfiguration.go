@@ -75,7 +75,7 @@ func (k ValidatingwebhookConfiguration) Install() (string, []string) {
 func (k ValidatingwebhookConfiguration) Uninstall() string {
 	uninstall := `
 	if client != nil {
-		err = client.admissionregistrationv1().ValidatingwebhookConfigurations("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		err = client.AdmissionregistrationV1().ValidatingWebhookConfigurations().Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}
