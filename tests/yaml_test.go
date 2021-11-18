@@ -39,6 +39,13 @@ func TestNginx(t *testing.T) {
 	}
 }
 
+func TestNginxIngressController(t *testing.T) {
+	err := generateCompileRunYAML("test_nginx_ingress_controller.yaml")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+}
+
 func TestKubernetesDashboard_v2_0_0(t *testing.T) {
 	err := generateCompileRunYAML("test_kubernetes_dashboard.yaml")
 	if err != nil {
