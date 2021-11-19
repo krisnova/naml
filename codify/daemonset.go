@@ -54,7 +54,7 @@ func (k DaemonSet) Install() (string, []string) {
 	a.objects = append(a.objects, {{ .GoName }}DaemonSet)
 
 	if client != nil {
-		_, err = client.AppsV1().DaemonSets("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Deployment, v1.CreateOptions{})
+		_, err = client.AppsV1().DaemonSets("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}DaemonSet, v1.CreateOptions{})
 		if err != nil {
 			return err
 		}

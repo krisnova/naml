@@ -139,6 +139,11 @@ func alias(generated, defaultalias string) string {
 		"Capabilities",
 		"Capability",
 		"ExecAction",
+		"HostPathVolumeSource",
+		"MountPropagationMode",
+		"ConfigMapVolumeSource",
+		"ClaimName",
+		"PersistentVolumeClaimVolumeSource",
 	}
 	// ------------------------------
 

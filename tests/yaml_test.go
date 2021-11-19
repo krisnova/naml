@@ -32,6 +32,13 @@ import (
 	"github.com/kris-nova/naml"
 )
 
+func TestPrometheusHelmChart(t *testing.T) {
+	err := generateCompileRunYAML("test_prometheus_helm_chart.yaml")
+	if err != nil {
+		t.Errorf(err.Error())
+	}
+}
+
 func TestNginx(t *testing.T) {
 	err := generateCompileRunYAML("test_nginx.yaml")
 	if err != nil {

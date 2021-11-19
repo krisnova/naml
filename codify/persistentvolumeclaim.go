@@ -48,6 +48,10 @@ func NewPersistentVolumeClaim(obj *corev1.PersistentVolumeClaim) *PersistentVolu
 }
 
 func (k PersistentVolumeClaim) Install() (string, []string) {
+
+	// Ignore resource requirements
+	k.KubeObject.Spec.Resources = corev1.ResourceRequirements{}
+
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}PersistentVolumeClaim := %s
