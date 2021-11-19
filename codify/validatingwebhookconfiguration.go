@@ -54,7 +54,7 @@ func (k ValidatingwebhookConfiguration) Install() (string, []string) {
 	a.objects = append(a.objects, {{ .GoName }}ValidatingwebhookConfiguration)
 
 	if client != nil {
-		_, err = client.admissionregistrationv1().ValidatingwebhookConfigurations("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}ValidatingwebhookConfiguration, v1.CreateOptions{})
+		_, err = client.AdmissionregistrationV1().ValidatingWebhookConfigurations().Create(context.TODO(), {{ .GoName }}ValidatingwebhookConfiguration, v1.CreateOptions{})
 		if err != nil {
 			return err
 		}

@@ -53,7 +53,7 @@ func (k IngressClass) Install() (string, []string) {
 	a.objects = append(a.objects, {{ .GoName }}IngressClass)
 
 	if client != nil {
-		_, err = client.NetworkingV1().IngressClasss("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}IngressClass, v1.CreateOptions{})
+		_, err = client.NetworkingV1().IngressClasses().Create(context.TODO(), {{ .GoName }}IngressClass, v1.CreateOptions{})
 		if err != nil {
 			return err
 		}

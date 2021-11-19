@@ -29,6 +29,8 @@ import (
 	"text/template"
 	"time"
 
+	v1 "k8s.io/api/core/v1"
+
 	"github.com/kris-nova/logger"
 	appsv1 "k8s.io/api/apps/v1"
 )
@@ -48,6 +50,18 @@ func NewDeployment(obj *appsv1.Deployment) *Deployment {
 }
 
 func (k Deployment) Install() (string, []string) {
+
+	// We do not guarantee the NAML is perfect.
+	//
+	// Because Pod resources are a factory, we cannot literally set the values.
+	// This turns out to be somewhat reasonable as we are defining resource parameters
+	// that could possibly be looked up at runtime anyway.
+	//
+	// For now, we ignore the resource requirements.
+	for i, _ := range k.KubeObject.Spec.Template.Spec.Containers {
+		k.KubeObject.Spec.Template.Spec.Containers[i].Resources = v1.ResourceRequirements{}
+	}
+
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	// Adding a deployment: "{{ .KubeObject.Name }}"

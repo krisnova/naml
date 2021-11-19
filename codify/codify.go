@@ -138,6 +138,7 @@ func alias(generated, defaultalias string) string {
 		"ResourceName",
 		"Capabilities",
 		"Capability",
+		"ExecAction",
 	}
 	// ------------------------------
 
