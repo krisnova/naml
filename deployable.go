@@ -34,10 +34,10 @@ import (
 type Deployable interface {
 
 	// Install will attempt to install in Kubernetes
-	Install(client *kubernetes.Clientset) error
+	Install(client kubernetes.Interface) error
 
 	// Uninstall will attempt to uninstall in Kubernetes
-	Uninstall(client *kubernetes.Clientset) error
+	Uninstall(client kubernetes.Interface) error
 
 	// Meta returns the Kubernetes native ObjectMeta which is used to manage applications with naml.
 	Meta() *metav1.ObjectMeta
