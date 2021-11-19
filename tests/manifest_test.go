@@ -55,42 +55,6 @@ func TestManifests(t *testing.T) {
 	t.Logf("Manifest tests complete")
 }
 
-//
-//func TestPrometheusNodeExportHelmChart(t *testing.T) {
-//	err := generateCompileRunYAML("test_prometheus_helm_node_exporter.yaml")
-//	if err != nil {
-//		t.Errorf(err.Error())
-//	}
-//}
-//
-//func TestPrometheusHelmChart(t *testing.T) {
-//	err := generateCompileRunYAML("test_prometheus_helm_chart.yaml")
-//	if err != nil {
-//		t.Errorf(err.Error())
-//	}
-//}
-//
-//func TestNginx(t *testing.T) {
-//	err := generateCompileRunYAML("test_nginx.yaml")
-//	if err != nil {
-//		t.Errorf(err.Error())
-//	}
-//}
-//
-//func TestNginxIngressController(t *testing.T) {
-//	err := generateCompileRunYAML("test_nginx_ingress_controller.yaml")
-//	if err != nil {
-//		t.Errorf(err.Error())
-//	}
-//}
-//
-//func TestKubernetesDashboard_v2_0_0(t *testing.T) {
-//	err := generateCompileRunYAML("test_kubernetes_dashboard.yaml")
-//	if err != nil {
-//		t.Errorf(err.Error())
-//	}
-//}
-
 func mainGoValues(name string) *naml.MainGoValues {
 	return &naml.MainGoValues{
 		AppNameLower:  strings.ToLower(name),
