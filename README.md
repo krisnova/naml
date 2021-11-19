@@ -60,15 +60,17 @@ There is a "repository" of examples to borrow/fork:
 As long as there is a Go system that implements this interface it can be used with `naml`. See examples for how to include an implementation in your project.
 
 ```go
+//  changelog: naml v1.0.0 breaks Deployable and replaces *kubernetes.Clienset with kubernetes.Interface
+
 // Deployable is an interface that can be implemented
 // for deployable applications.
 type Deployable interface {
 
     // Install will attempt to install in Kubernetes
-    Install(client *kubernetes.Clientset) error
+    Install(client kubernetes.Interface) error
 
     // Uninstall will attempt to uninstall in Kubernetes
-    Uninstall(client *kubernetes.Clientset) error
+    Uninstall(client kubernetes.Interface) error
 
     // Meta returns the Kubernetes native ObjectMeta which is used to manage applications with naml.
     Meta() *metav1.ObjectMeta
@@ -107,8 +109,6 @@ There isn't anything special here. 🤷‍♀ We use the same client the rest of
  ✅ Just Go. 🎉
 
 ## Features
-
-✨ There is not a single `.yaml` file in this entire repository. ✨
 
  - Express applications in 🎉 Go instead of YAML.
  - Use the Go compiler to check your syntax.
