@@ -53,7 +53,7 @@ func (k IngressClass) Install() (string, []string) {
 	a.objects = append(a.objects, {{ .GoName }}IngressClass)
 
 	if client != nil {
-		_, err = client.NetworkingV1().IngressClasss("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}IngressClass, v1.CreateOptions{})
+		_, err = client.NetworkingV1().IngressClasses().Create(context.TODO(), {{ .GoName }}IngressClass, v1.CreateOptions{})
 		if err != nil {
 			return err
 		}
@@ -74,7 +74,7 @@ func (k IngressClass) Install() (string, []string) {
 func (k IngressClass) Uninstall() string {
 	uninstall := `
 	if client != nil {
-		err = client.NetworkingV1().IngressClass("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		err = client.NetworkingV1().IngressClasses().Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}

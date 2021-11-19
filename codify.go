@@ -33,6 +33,8 @@ import (
 	"strings"
 	"text/template"
 
+	policyv1 "k8s.io/api/policy/v1beta1"
+
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -106,7 +108,7 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 	var code []byte
 
 	// Setup template with a unique name based on the input
-	tpl := template.New(fmt.Sprintf("%+v", input))
+	tpl := template.New(fmt.Sprintf("%+v%+v", input, v.AppNameLower))
 
 	// Create the base file
 	tpl, err := tpl.Parse(FormatMainGo)
@@ -119,7 +121,6 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 	if err != nil {
 		return code, fmt.Errorf("unable to parse objects: %v", err)
 	}
-	logger.Debug("Found %d objects to parse", len(objs))
 
 	// Create map of used packages
 	packages := make(map[string]bool)
@@ -153,11 +154,14 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 
 	// define list of import aliases
 	packageAliases := map[string]string{
-		"k8s.io/api/apps/v1":                   "appsv1",
-		"k8s.io/api/batch/v1":                  "batchv1",
-		"k8s.io/api/core/v1":                   "corev1",
-		"k8s.io/apimachinery/pkg/apis/meta/v1": "metav1",
-		"k8s.io/api/rbac/v1":                   "rbacv1",
+		"k8s.io/api/apps/v1":                                       "appsv1",
+		"k8s.io/api/batch/v1":                                      "batchv1",
+		"k8s.io/api/core/v1":                                       "corev1",
+		"k8s.io/apimachinery/pkg/apis/meta/v1":                     "metav1",
+		"k8s.io/api/rbac/v1":                                       "rbacv1",
+		"k8s.io/api/networking/v1":                                 "networkingv1",
+		"k8s.io/api/admissionregistration/v1":                      "admissionregistrationv1",
+		"k8s.io/api/policy/v1beta1":                                "policyv1beta1",
 		"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1": "apiextensionsv1",
 	}
 
@@ -181,9 +185,6 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 
 	// Grab the source code in []byte form
 	src := buf.Bytes()
-
-	// Hack issue #62 until we get a fix for 1.0.0
-	src = hack62(src)
 
 	// Go fmt!
 	fmtBytes, err := format.Source(src)
@@ -230,8 +231,8 @@ func ReaderToCodifyObjects(input io.Reader) ([]CodifyObject, error) {
 	if err != nil {
 		return objects, err
 	}
-	rawStr := string(ibytes)
-	yamls := strings.Split(rawStr, YAMLDelimiter)
+	clean := string(cleanRaw(ibytes))
+	yamls := strings.Split(clean, YAMLDelimiter)
 	// We support more than one "YAML" per the delimiter
 	// So we need to deal in sets.
 	for _, yaml := range yamls {
@@ -248,8 +249,37 @@ func ReaderToCodifyObjects(input io.Reader) ([]CodifyObject, error) {
 	return objects, nil
 }
 
+// cleanRaw will clean raw yaml
+// it will remove empty lines, empty lines with whitespace, and comments
+func cleanRaw(raw []byte) []byte {
+	rawString := string(raw)
+	lines := strings.Split(rawString, "\n")
+	var cleanLines []string
+	for _, line := range lines {
+		// Check for comments
+		if strings.HasPrefix(line, "#") {
+			continue
+		}
+		// Ignore empty lines
+		if line == "" {
+			continue
+		}
+
+		trimmed := strings.TrimSpace(line)
+		if len(trimmed) == 0 {
+			continue
+		}
+		cleanLines = append(cleanLines, line)
+	}
+	cleanedRawString := strings.Join(cleanLines, "\n")
+	return []byte(cleanedRawString)
+}
+
 func toCodify(raw []byte) ([]CodifyObject, error) {
 	var objects []CodifyObject
+	if len(raw) <= 1 {
+		return objects, nil
+	}
 
 	serializer := scheme.Codecs.UniversalDeserializer()
 	var decoded runtime.Object
@@ -258,7 +288,7 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		// Here we try CRDs
 		decoded, _, err = serializer.Decode([]byte(raw), nil, &apiextensionsv1.CustomResourceDefinition{})
 		if err != nil {
-			return nil, fmt.Errorf("unable to deserialize in codify, even after trying CRD: %v", err)
+			return nil, fmt.Errorf("trying CRD: unable to deserialize in codify: %v", err)
 		}
 	}
 
@@ -286,6 +316,7 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 				objects = append(objects, c)
 			}
 		}
+
 	case *corev1.Pod:
 		objects = append(objects, codify.NewPod(x))
 	case *appsv1.Deployment:
@@ -322,11 +353,14 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		objects = append(objects, codify.NewIngressClass(x))
 	case *networkingv1.Ingress:
 		objects = append(objects, codify.NewIngress(x))
+	case *policyv1.PodSecurityPolicy:
+		objects = append(objects, codify.NewPodSecurityPolicy(x))
 	case *admissionregistrationv1.ValidatingWebhookConfiguration:
 		objects = append(objects, codify.NewValidatingwebhookConfiguration(x))
 	// CRDs is going to take some special care...
 	//case *apiextensionsv1.CustomResourceDefinition:
-	//	objects = append(objects, codify.NewCustomResourceDefinition(x))
+	// ignore CRDs for now!
+	//objects = append(objects, codify.NewCustomResourceDefinition(x))
 	case *corev1.Namespace:
 		objects = append(objects, codify.NewNamespace(x))
 	case *appsv1.ReplicaSet:
@@ -338,42 +372,4 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 	}
 	// -------------------------------------------------------------------
 	return objects, nil
-}
-
-// Sample line matching:
-//
-//Replicas: valast.Addr(1).(*int32),
-//RunAsUser:                valast.Addr(1001).(*int64),
-//RunAsGroup:               valast.Addr(2001).(*int64),
-//RevisionHistoryLimit: valast.Addr(10).(*int32),
-//Replicas: valast.Addr(1).(*int32),
-//RunAsUser:                valast.Addr(1001).(*int64),
-//RunAsGroup:               valast.Addr(2001).(*int64),
-//RevisionHistoryLimit: valast.Addr(10).(*int32),
-
-// hack62 is a temporary function that is put in place a hacky solution
-// to temporarily solve #62 for the TGIK demo
-func hack62(input []byte) []byte {
-	str := string(input)
-	lines := strings.Split(str, `
-`)
-	newLines := lines
-	for i, line := range lines {
-		if strings.Contains(line, "int32") {
-			tline := strings.ReplaceAll(line, "valast.Addr(", "valast.Addr(int32(")
-			tline = strings.ReplaceAll(tline, ").(*int32)", ")).(*int32)")
-			newLines[i] = tline
-			continue
-		}
-		if strings.Contains(line, "int64") {
-			tline := strings.ReplaceAll(line, "valast.Addr(", "valast.Addr(int64(")
-			tline = strings.ReplaceAll(tline, ").(*int64)", ")).(*int64)")
-			newLines[i] = tline
-			continue
-		}
-		newLines[i] = line
-	}
-	ret := strings.Join(lines, `
-`)
-	return []byte(ret)
 }

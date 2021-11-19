@@ -29,42 +29,37 @@ import (
 	"text/template"
 	"time"
 
+	policyv1 "k8s.io/api/policy/v1beta1"
+
 	"github.com/kris-nova/logger"
-	corev1 "k8s.io/api/core/v1"
 )
 
-type PersistentVolumeClaim struct {
-	KubeObject *corev1.PersistentVolumeClaim
+type PodSecurityPolicy struct {
+	KubeObject *policyv1.PodSecurityPolicy
 	GoName     string
 }
 
-func NewPersistentVolumeClaim(obj *corev1.PersistentVolumeClaim) *PersistentVolumeClaim {
+func NewPodSecurityPolicy(obj *policyv1.PodSecurityPolicy) *PodSecurityPolicy {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
-	obj.Status = corev1.PersistentVolumeClaimStatus{}
-	return &PersistentVolumeClaim{
+	return &PodSecurityPolicy{
 		KubeObject: obj,
 		GoName:     goName(obj.Name),
 	}
 }
 
-func (k PersistentVolumeClaim) Install() (string, []string) {
-
-	// Ignore resource requirements
-	k.KubeObject.Spec.Resources = corev1.ResourceRequirements{}
-
+func (k PodSecurityPolicy) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
-	{{ .GoName }}PersistentVolumeClaim := %s
-	a.objects = append(a.objects, {{ .GoName }}PersistentVolumeClaim)
+	{{ .GoName }}PodSecurityPolicy := %s
+	a.objects = append(a.objects, {{ .GoName }}PodSecurityPolicy)
 
 	if client != nil {
-		_, err = client.CoreV1().PersistentVolumeClaims("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}PersistentVolumeClaim, v1.CreateOptions{})
+		_, err = client.PolicyV1beta1().PodSecurityPolicies().Create(context.TODO(), {{ .GoName }}PodSecurityPolicy, v1.CreateOptions{})
 		if err != nil {
 			return err
 		}
 	}
 `, l)
-
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
@@ -73,13 +68,13 @@ func (k PersistentVolumeClaim) Install() (string, []string) {
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return alias(buf.String(), "corev1"), packages
+	return alias(buf.String(), "policyv1"), packages
 }
 
-func (k PersistentVolumeClaim) Uninstall() string {
+func (k PodSecurityPolicy) Uninstall() string {
 	uninstall := `
 	if client != nil {
-		err = client.CoreV1().PersistentVolumeClaims("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		err = client.PolicyV1beta1().PodSecurityPolicies().Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}

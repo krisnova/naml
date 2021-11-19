@@ -101,6 +101,13 @@ func alias(generated, defaultalias string) string {
 	// [ corev1 ]
 	corev1types := []string{
 		"Volume",
+		"SecretProjection",
+		"ConfigMapKeySelector",
+		"ConfigMapProjection",
+		"HTTPHeader",
+		"PodAntiAffinity",
+		"PodAffinityTerm",
+		"KeyToPath",
 		"SecretVolumeSource",
 		"EmptyDirVolumeSource",
 		"Handler",
@@ -133,7 +140,19 @@ func alias(generated, defaultalias string) string {
 		"PullPolicy",
 		"RestartPolicy",
 		"DNSPolicy",
+		"ObjectFieldSelector",
 		"PodSecurityContext",
+		"ResourceName",
+		"Capabilities",
+		"Capability",
+		"ExecAction",
+		"HostPathVolumeSource",
+		"HostPathType",
+		"ProjectedVolumeSource",
+		"MountPropagationMode",
+		"ConfigMapVolumeSource",
+		"ClaimName",
+		"PersistentVolumeClaimVolumeSource",
 	}
 	// ------------------------------
 
@@ -141,6 +160,19 @@ func alias(generated, defaultalias string) string {
 		aliased = strings.Replace(aliased,
 			fmt.Sprintf("%s.%s", defaultalias, t),
 			fmt.Sprintf("corev1.%s", t),
+			-1)
+	}
+
+	// ------------------------------
+	// [ policyv1 ]
+	policyv1types := []string{
+		"PolicyV1Interface",
+	}
+
+	for _, t := range policyv1types {
+		aliased = strings.Replace(aliased,
+			fmt.Sprintf("%s.%s", defaultalias, t),
+			fmt.Sprintf("policyv1beta1.%s", t),
 			-1)
 	}
 
@@ -153,6 +185,6 @@ func sanitizeK8sObjectName(name string) string {
 }
 
 func goName(name string) string {
-	name = strings.ReplaceAll(name, ".","")
+	name = strings.ReplaceAll(name, ".", "")
 	return strings.ReplaceAll(name, "-", "_")
 }

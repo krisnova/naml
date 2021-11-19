@@ -54,7 +54,7 @@ func (k ValidatingwebhookConfiguration) Install() (string, []string) {
 	a.objects = append(a.objects, {{ .GoName }}ValidatingwebhookConfiguration)
 
 	if client != nil {
-		_, err = client.admissionregistrationv1().ValidatingwebhookConfigurations("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}ValidatingwebhookConfiguration, v1.CreateOptions{})
+		_, err = client.AdmissionregistrationV1().ValidatingWebhookConfigurations().Create(context.TODO(), {{ .GoName }}ValidatingwebhookConfiguration, v1.CreateOptions{})
 		if err != nil {
 			return err
 		}
@@ -75,7 +75,7 @@ func (k ValidatingwebhookConfiguration) Install() (string, []string) {
 func (k ValidatingwebhookConfiguration) Uninstall() string {
 	uninstall := `
 	if client != nil {
-		err = client.admissionregistrationv1().ValidatingwebhookConfigurations("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		err = client.AdmissionregistrationV1().ValidatingWebhookConfigurations().Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}

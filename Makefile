@@ -34,9 +34,9 @@ compile: ## Compile for the local architecture ⚙
 
 install: ## Install your naml 🎉
 	@echo "Installing..."
-	cp naml /usr/local/bin/naml
+	sudo cp naml /usr/local/bin/naml
 
-test: ## 🤓 Test is used to test your naml
+test: clean compile install ## 🤓 Test is used to test your naml
 	@echo "Testing..."
 	go test -v ./...
 
@@ -47,6 +47,7 @@ clean: ## Clean your artifacts 🧼
 	rm -rf naml
 	rm -rf app
 	rm -rf out/*
+	rm -rf tmp/*
 
 release: ## Make the binaries for a GitHub release 📦
 	mkdir -p release

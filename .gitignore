@@ -3,4 +3,4 @@ release*
 out*
 out/*
 naml
-**/*.yaml
+#**/*.yaml

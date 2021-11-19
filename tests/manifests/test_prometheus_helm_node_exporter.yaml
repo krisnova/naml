@@ -1,0 +1,220 @@
+---
+# Source: prometheus-node-exporter/templates/psp.yaml
+apiVersion: policy/v1beta1
+kind: PodSecurityPolicy
+metadata:
+  name: RELEASE-NAME-prometheus-node-exporter
+  namespace: default
+  labels:     
+    app: prometheus-node-exporter
+    heritage: Helm
+    release: RELEASE-NAME
+    chart: prometheus-node-exporter-2.2.0
+spec:
+  privileged: false
+  # Required to prevent escalations to root.
+  # allowPrivilegeEscalation: false
+  # This is redundant with non-root + disallow privilege escalation,
+  # but we can provide it for defense in depth.
+  #requiredDropCapabilities:
+  #  - ALL
+  # Allow core volume types.
+  volumes:
+    - 'configMap'
+    - 'emptyDir'
+    - 'projected'
+    - 'secret'
+    - 'downwardAPI'
+    - 'persistentVolumeClaim'
+    - 'hostPath'
+  hostNetwork: true
+  hostIPC: false
+  hostPID: true
+  hostPorts:
+    - min: 0
+      max: 65535
+  runAsUser:
+    # Permits the container to run with root privileges as well.
+    rule: 'RunAsAny'
+  seLinux:
+    # This policy assumes the nodes are using AppArmor rather than SELinux.
+    rule: 'RunAsAny'
+  supplementalGroups:
+    rule: 'MustRunAs'
+    ranges:
+      # Forbid adding the root group.
+      - min: 0
+        max: 65535
+  fsGroup:
+    rule: 'MustRunAs'
+    ranges:
+      # Forbid adding the root group.
+      - min: 0
+        max: 65535
+  readOnlyRootFilesystem: false
+---
+# Source: prometheus-node-exporter/templates/serviceaccount.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: RELEASE-NAME-prometheus-node-exporter
+  namespace: default
+  labels:
+    app: prometheus-node-exporter
+    chart: prometheus-node-exporter-2.2.0
+    release: "RELEASE-NAME"
+    heritage: "Helm"
+  annotations:
+    {}
+imagePullSecrets:
+  []
+---
+# Source: prometheus-node-exporter/templates/psp-clusterrole.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: psp-RELEASE-NAME-prometheus-node-exporter
+  labels:     
+    app: prometheus-node-exporter
+    heritage: Helm
+    release: RELEASE-NAME
+    chart: prometheus-node-exporter-2.2.0
+rules:
+- apiGroups: ['extensions']
+  resources: ['podsecuritypolicies']
+  verbs:     ['use']
+  resourceNames:
+  - RELEASE-NAME-prometheus-node-exporter
+---
+# Source: prometheus-node-exporter/templates/psp-clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: psp-RELEASE-NAME-prometheus-node-exporter
+  labels:     
+    app: prometheus-node-exporter
+    heritage: Helm
+    release: RELEASE-NAME
+    chart: prometheus-node-exporter-2.2.0
+roleRef:
+  apiGroup: rbac.authorization.k8s.io
+  kind: ClusterRole
+  name: psp-RELEASE-NAME-prometheus-node-exporter
+subjects:
+  - kind: ServiceAccount
+    name: RELEASE-NAME-prometheus-node-exporter
+    namespace: default
+---
+# Source: prometheus-node-exporter/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: RELEASE-NAME-prometheus-node-exporter
+  namespace: default
+  annotations:
+    prometheus.io/scrape: "true"
+  labels:     
+    app: prometheus-node-exporter
+    heritage: Helm
+    release: RELEASE-NAME
+    chart: prometheus-node-exporter-2.2.0
+spec:
+  type: ClusterIP
+  ports:
+    - port: 9100
+      targetPort: 9100
+      protocol: TCP
+      name: metrics
+  selector:
+    app: prometheus-node-exporter
+    release: RELEASE-NAME
+---
+# Source: prometheus-node-exporter/templates/daemonset.yaml
+apiVersion: apps/v1
+kind: DaemonSet
+metadata:
+  name: RELEASE-NAME-prometheus-node-exporter
+  namespace: default
+  labels:     
+    app: prometheus-node-exporter
+    heritage: Helm
+    release: RELEASE-NAME
+    chart: prometheus-node-exporter-2.2.0
+spec:
+  selector:
+    matchLabels:
+      app: prometheus-node-exporter
+      release: RELEASE-NAME
+  updateStrategy:
+    rollingUpdate:
+      maxUnavailable: 1
+    type: RollingUpdate
+  template:
+    metadata:
+      labels:         
+        app: prometheus-node-exporter
+        heritage: Helm
+        release: RELEASE-NAME
+        chart: prometheus-node-exporter-2.2.0
+      annotations:
+        cluster-autoscaler.kubernetes.io/safe-to-evict: "true"
+    spec:
+      automountServiceAccountToken: false
+      serviceAccountName: RELEASE-NAME-prometheus-node-exporter
+      securityContext:
+        fsGroup: 65534
+        runAsGroup: 65534
+        runAsNonRoot: true
+        runAsUser: 65534
+      containers:
+        - name: node-exporter
+          image: "quay.io/prometheus/node-exporter:v1.2.2"
+          imagePullPolicy: IfNotPresent
+          args:
+            - --path.procfs=/host/proc
+            - --path.sysfs=/host/sys
+            - --path.rootfs=/host/root
+            - --web.listen-address=$(HOST_IP):9100
+          env:
+          - name: HOST_IP
+            value: 0.0.0.0
+          ports:
+            - name: metrics
+              containerPort: 9100
+              protocol: TCP
+          livenessProbe:
+            httpGet:
+              path: /
+              port: 9100
+          readinessProbe:
+            httpGet:
+              path: /
+              port: 9100
+          resources:
+            {}
+          volumeMounts:
+            - name: proc
+              mountPath: /host/proc
+              readOnly:  true
+            - name: sys
+              mountPath: /host/sys
+              readOnly: true
+            - name: root
+              mountPath: /host/root
+              mountPropagation: HostToContainer
+              readOnly: true
+      hostNetwork: true
+      hostPID: true
+      tolerations:
+        - effect: NoSchedule
+          operator: Exists
+      volumes:
+        - name: proc
+          hostPath:
+            path: /proc
+        - name: sys
+          hostPath:
+            path: /sys
+        - name: root
+          hostPath:
+            path: /

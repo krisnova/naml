@@ -41,6 +41,7 @@ type Program struct {
 }
 
 // Execute will execute a compiled NAML program
+// stdout, stderr, err := program.Execute([]string{""})
 func (p *Program) Execute(flags []string) (*bytes.Buffer, *bytes.Buffer, error) {
 	cmd := exec.Command(p.File.Name(), flags...)
 	stdout := &bytes.Buffer{}
@@ -98,7 +99,7 @@ func Compile(src []byte) (*Program, error) {
 		e = fmt.Sprintf("%s+-------------------------+\n", e)
 		e = fmt.Sprintf("%s| \n", e)
 		e = fmt.Sprintf("%s| %s\n", e, stdout.String())
-		e = fmt.Sprintf("%s| %s\n", e, stderr.String())
+		e = fmt.Sprintf("%s| %s", e, stderr.String())
 		e = fmt.Sprintf("%s+----------------------------------------------------------\n", e)
 		return nil, fmt.Errorf("%s", e)
 	}
