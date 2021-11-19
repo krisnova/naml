@@ -29,6 +29,8 @@ import (
 	"text/template"
 	"time"
 
+	v1 "k8s.io/api/core/v1"
+
 	"github.com/kris-nova/logger"
 	appsv1 "k8s.io/api/apps/v1"
 )
@@ -48,6 +50,15 @@ func NewStatefulSet(obj *appsv1.StatefulSet) *StatefulSet {
 }
 
 func (k StatefulSet) Install() (string, []string) {
+
+	// Ignore resource requirements
+	for i, _ := range k.KubeObject.Spec.Template.Spec.InitContainers {
+		k.KubeObject.Spec.Template.Spec.InitContainers[i].Resources = v1.ResourceRequirements{}
+	}
+	for i, _ := range k.KubeObject.Spec.Template.Spec.Containers {
+		k.KubeObject.Spec.Template.Spec.Containers[i].Resources = v1.ResourceRequirements{}
+	}
+
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}StatefulSet := %s

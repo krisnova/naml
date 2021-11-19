@@ -58,6 +58,9 @@ func (k Deployment) Install() (string, []string) {
 	// that could possibly be looked up at runtime anyway.
 	//
 	// For now, we ignore the resource requirements.
+	for i, _ := range k.KubeObject.Spec.Template.Spec.InitContainers {
+		k.KubeObject.Spec.Template.Spec.InitContainers[i].Resources = v1.ResourceRequirements{}
+	}
 	for i, _ := range k.KubeObject.Spec.Template.Spec.Containers {
 		k.KubeObject.Spec.Template.Spec.Containers[i].Resources = v1.ResourceRequirements{}
 	}

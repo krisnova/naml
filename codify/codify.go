@@ -101,6 +101,13 @@ func alias(generated, defaultalias string) string {
 	// [ corev1 ]
 	corev1types := []string{
 		"Volume",
+		"SecretProjection",
+		"ConfigMapKeySelector",
+		"ConfigMapProjection",
+		"HTTPHeader",
+		"PodAntiAffinity",
+		"PodAffinityTerm",
+		"KeyToPath",
 		"SecretVolumeSource",
 		"EmptyDirVolumeSource",
 		"Handler",
@@ -140,6 +147,8 @@ func alias(generated, defaultalias string) string {
 		"Capability",
 		"ExecAction",
 		"HostPathVolumeSource",
+		"HostPathType",
+		"ProjectedVolumeSource",
 		"MountPropagationMode",
 		"ConfigMapVolumeSource",
 		"ClaimName",

@@ -26,46 +26,70 @@ import (
 	"bytes"
 	"fmt"
 	"io/ioutil"
+	"path/filepath"
 	"strings"
+	"sync"
 	"testing"
 
 	"github.com/kris-nova/naml"
 )
 
-func TestPrometheusNodeExportHelmChart(t *testing.T) {
-	err := generateCompileRunYAML("test_prometheus_helm_node_exporter.yaml")
+func TestManifests(t *testing.T) {
+	files, err := ioutil.ReadDir("manifests")
 	if err != nil {
-		t.Errorf(err.Error())
+		t.Errorf("unable to list manifest directory: %v", err)
 	}
+	wg := sync.WaitGroup{}
+	for _, file := range files {
+		wg.Add(1)
+		go func(name string) {
+			defer wg.Done()
+			t.Logf("testing [%s]", name)
+			err := generateCompileRunYAML(filepath.Join("manifests", file.Name()))
+			if err != nil {
+				t.Errorf(err.Error())
+			}
+		}(file.Name())
+	}
+	wg.Wait()
+	t.Logf("Manifest tests complete")
 }
 
-func TestPrometheusHelmChart(t *testing.T) {
-	err := generateCompileRunYAML("test_prometheus_helm_chart.yaml")
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-}
-
-func TestNginx(t *testing.T) {
-	err := generateCompileRunYAML("test_nginx.yaml")
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-}
-
-func TestNginxIngressController(t *testing.T) {
-	err := generateCompileRunYAML("test_nginx_ingress_controller.yaml")
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-}
-
-func TestKubernetesDashboard_v2_0_0(t *testing.T) {
-	err := generateCompileRunYAML("test_kubernetes_dashboard.yaml")
-	if err != nil {
-		t.Errorf(err.Error())
-	}
-}
+//
+//func TestPrometheusNodeExportHelmChart(t *testing.T) {
+//	err := generateCompileRunYAML("test_prometheus_helm_node_exporter.yaml")
+//	if err != nil {
+//		t.Errorf(err.Error())
+//	}
+//}
+//
+//func TestPrometheusHelmChart(t *testing.T) {
+//	err := generateCompileRunYAML("test_prometheus_helm_chart.yaml")
+//	if err != nil {
+//		t.Errorf(err.Error())
+//	}
+//}
+//
+//func TestNginx(t *testing.T) {
+//	err := generateCompileRunYAML("test_nginx.yaml")
+//	if err != nil {
+//		t.Errorf(err.Error())
+//	}
+//}
+//
+//func TestNginxIngressController(t *testing.T) {
+//	err := generateCompileRunYAML("test_nginx_ingress_controller.yaml")
+//	if err != nil {
+//		t.Errorf(err.Error())
+//	}
+//}
+//
+//func TestKubernetesDashboard_v2_0_0(t *testing.T) {
+//	err := generateCompileRunYAML("test_kubernetes_dashboard.yaml")
+//	if err != nil {
+//		t.Errorf(err.Error())
+//	}
+//}
 
 func mainGoValues(name string) *naml.MainGoValues {
 	return &naml.MainGoValues{
