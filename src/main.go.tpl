@@ -81,13 +81,13 @@ func NewApp(name, description string) *App {
 	}
 }
 
-func (a *App) Install(client *kubernetes.Clientset) error {
+func (a *App) Install(client kubernetes.Interface) error {
 	var err error
 	{{ .Install }}
 	return err
 }
 
-func (a *App) Uninstall(client *kubernetes.Clientset) error {
+func (a *App) Uninstall(client kubernetes.Interface) error {
 	var err error
 	{{ .Uninstall }}
 	return err

@@ -69,7 +69,7 @@ func (c *RPCApplication) Objects() []runtime.Object {
 }
 
 // Install is the remote application install wrapper.
-func (c *RPCApplication) Install(clientset *kubernetes.Clientset) error {
+func (c *RPCApplication) Install(clientset kubernetes.Interface) error {
 	if clientset != nil {
 		return fmt.Errorf("*** security concern: clientset != nil ***")
 	}
@@ -99,7 +99,7 @@ func (c *RPCApplication) Install(clientset *kubernetes.Clientset) error {
 }
 
 // Uninstall is the remote application uninstall wrapper.
-func (c *RPCApplication) Uninstall(clientset *kubernetes.Clientset) error {
+func (c *RPCApplication) Uninstall(clientset kubernetes.Interface) error {
 	if clientset != nil {
 		return fmt.Errorf("*** security concern: clientset != nil ***")
 	}
