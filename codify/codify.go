@@ -154,6 +154,19 @@ func alias(generated, defaultalias string) string {
 			-1)
 	}
 
+	// ------------------------------
+	// [ policyv1 ]
+	policyv1types := []string{
+		"PolicyV1Interface",
+	}
+
+	for _, t := range policyv1types {
+		aliased = strings.Replace(aliased,
+			fmt.Sprintf("%s.%s", defaultalias, t),
+			fmt.Sprintf("policyv1beta1.%s", t),
+			-1)
+	}
+
 	return aliased
 }
 

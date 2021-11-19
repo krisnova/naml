@@ -33,6 +33,8 @@ import (
 	"strings"
 	"text/template"
 
+	policyv1 "k8s.io/api/policy/v1beta1"
+
 	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
 
 	"k8s.io/apimachinery/pkg/runtime"
@@ -159,6 +161,7 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 		"k8s.io/api/rbac/v1":                                       "rbacv1",
 		"k8s.io/api/networking/v1":                                 "networkingv1",
 		"k8s.io/api/admissionregistration/v1":                      "admissionregistrationv1",
+		"k8s.io/api/policy/v1beta1":                                "policyv1beta1",
 		"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1": "apiextensionsv1",
 	}
 
@@ -313,6 +316,7 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 				objects = append(objects, c)
 			}
 		}
+
 	case *corev1.Pod:
 		objects = append(objects, codify.NewPod(x))
 	case *appsv1.Deployment:
@@ -349,6 +353,8 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		objects = append(objects, codify.NewIngressClass(x))
 	case *networkingv1.Ingress:
 		objects = append(objects, codify.NewIngress(x))
+	case *policyv1.PodSecurityPolicy:
+		objects = append(objects, codify.NewPodSecurityPolicy(x))
 	case *admissionregistrationv1.ValidatingWebhookConfiguration:
 		objects = append(objects, codify.NewValidatingwebhookConfiguration(x))
 	// CRDs is going to take some special care...
