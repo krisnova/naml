@@ -153,17 +153,7 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 	sort.Strings(packagesSlice)
 
 	// define list of import aliases
-	packageAliases := map[string]string{
-		"k8s.io/api/apps/v1":                                       "appsv1",
-		"k8s.io/api/batch/v1":                                      "batchv1",
-		"k8s.io/api/core/v1":                                       "corev1",
-		"k8s.io/apimachinery/pkg/apis/meta/v1":                     "metav1",
-		"k8s.io/api/rbac/v1":                                       "rbacv1",
-		"k8s.io/api/networking/v1":                                 "networkingv1",
-		"k8s.io/api/admissionregistration/v1":                      "admissionregistrationv1",
-		"k8s.io/api/policy/v1beta1":                                "policyv1beta1",
-		"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1": "apiextensionsv1",
-	}
+	packageAliases := codify.KubernetesImportPackageMap
 
 	packagesCode := ""
 	for _, pkg := range packagesSlice {
@@ -225,6 +215,7 @@ func ReaderToBytes(input io.Reader) ([]byte, error) {
 	return ibytes, nil
 }
 
+// ReaderToCodifyObjects will convert an io.Reader to naml compatible Go objects
 func ReaderToCodifyObjects(input io.Reader) ([]CodifyObject, error) {
 	var objects []CodifyObject
 	ibytes, err := ReaderToBytes(input)

@@ -30,55 +30,30 @@ import (
 	"strings"
 
 	"github.com/hexops/valast"
+
 	metav1 "k8s.io/apimachinery/pkg/apis/meta/v1"
 )
 
-func Literal(kubeobject interface{}) (string, []string) {
-	l := valast.String(kubeobject)
-	_, packages, _ := valast.ASTWithPackages(reflect.ValueOf(kubeobject), nil)
-	return l, packages
-}
-
-// cleanObjectMeta helps us get rid of things like timestamps
-// by only "opting in" to certain fields.
-func cleanObjectMeta(m metav1.ObjectMeta) metav1.ObjectMeta {
-	return metav1.ObjectMeta{
-		Name:                       m.Name,
-		Namespace:                  m.Namespace,
-		Labels:                     m.Labels,
-		Annotations:                m.Annotations,
-		ClusterName:                m.ClusterName,
-		ResourceVersion:            m.ResourceVersion,
-		Finalizers:                 m.Finalizers,
-		Generation:                 m.Generation,
-		GenerateName:               m.GenerateName,
-		UID:                        m.UID,
-		ManagedFields:              m.ManagedFields,
-		OwnerReferences:            m.OwnerReferences,
-		DeletionGracePeriodSeconds: m.DeletionGracePeriodSeconds,
-	}
-}
-
-func alias(generated, defaultalias string) string {
-	aliased := generated
-
-	// default "corev1"
-	aliased = strings.Replace(aliased, "v1", defaultalias, -1)
-
-	// ------------------------------
-	// [ appsv1 ]
-	appsv1types := []string{}
-
-	for _, t := range appsv1types {
-		aliased = strings.Replace(aliased,
-			fmt.Sprintf("%s.%s", defaultalias, t),
-			fmt.Sprintf("appsv1.%s", t),
-			-1)
+var (
+	KubernetesImportPackageMap = map[string]string{
+		"k8s.io/api/apps/v1":                                       "appsv1",
+		"k8s.io/api/batch/v1":                                      "batchv1",
+		"k8s.io/api/core/v1":                                       "corev1",
+		"k8s.io/apimachinery/pkg/apis/meta/v1":                     "metav1",
+		"k8s.io/api/rbac/v1":                                       "rbacv1",
+		"k8s.io/api/networking/v1":                                 "networkingv1",
+		"k8s.io/api/admissionregistration/v1":                      "admissionregistrationv1",
+		"k8s.io/api/policy/v1beta1":                                "policyv1beta1",
+		"k8s.io/apiextensions-apiserver/pkg/apis/apiextensions/v1": "apiextensionsv1",
 	}
 
-	// ------------------------------
-	// [ metav1 ]
-	metav1Types := []string{
+	PolicyV1Types = []string{
+		"PolicyV1Interface",
+	}
+
+	AppsV1Types = []string{""}
+
+	MetaV1Types = []string{
 		"APIGroup",
 		"ObjectMeta",
 		"Time",
@@ -90,16 +65,7 @@ func alias(generated, defaultalias string) string {
 		"LabelSelector",
 	}
 
-	for _, t := range metav1Types {
-		aliased = strings.Replace(aliased,
-			fmt.Sprintf("%s.%s", defaultalias, t),
-			fmt.Sprintf("metav1.%s", t),
-			-1)
-	}
-
-	// ------------------------------
-	// [ corev1 ]
-	corev1types := []string{
+	CoreV1Types = []string{
 		"Volume",
 		"SecretProjection",
 		"ConfigMapKeySelector",
@@ -154,28 +120,58 @@ func alias(generated, defaultalias string) string {
 		"ClaimName",
 		"PersistentVolumeClaimVolumeSource",
 	}
-	// ------------------------------
+)
 
-	for _, t := range corev1types {
+// cleanObjectMeta helps us get rid of things like timestamps
+// by only "opting in" to certain fields.
+func cleanObjectMeta(m metav1.ObjectMeta) metav1.ObjectMeta {
+	return metav1.ObjectMeta{
+		Name:                       m.Name,
+		Namespace:                  m.Namespace,
+		Labels:                     m.Labels,
+		Annotations:                m.Annotations,
+		ClusterName:                m.ClusterName,
+		ResourceVersion:            m.ResourceVersion,
+		Finalizers:                 m.Finalizers,
+		Generation:                 m.Generation,
+		GenerateName:               m.GenerateName,
+		UID:                        m.UID,
+		ManagedFields:              m.ManagedFields,
+		OwnerReferences:            m.OwnerReferences,
+		DeletionGracePeriodSeconds: m.DeletionGracePeriodSeconds,
+	}
+}
+
+// alias will do it's best to manage package aliases in the source code
+func alias(generated, defaultalias string) string {
+	aliased := generated
+
+	// Each object can pass in a "default" to use if we do not have it defined above.
+	aliased = strings.Replace(aliased, "v1", defaultalias, -1)
+	for _, t := range AppsV1Types {
+		aliased = strings.Replace(aliased,
+			fmt.Sprintf("%s.%s", defaultalias, t),
+			fmt.Sprintf("appsv1.%s", t),
+			-1)
+	}
+	for _, t := range MetaV1Types {
+		aliased = strings.Replace(aliased,
+			fmt.Sprintf("%s.%s", defaultalias, t),
+			fmt.Sprintf("metav1.%s", t),
+			-1)
+	}
+	for _, t := range CoreV1Types {
 		aliased = strings.Replace(aliased,
 			fmt.Sprintf("%s.%s", defaultalias, t),
 			fmt.Sprintf("corev1.%s", t),
 			-1)
 	}
-
-	// ------------------------------
-	// [ policyv1 ]
-	policyv1types := []string{
-		"PolicyV1Interface",
-	}
-
-	for _, t := range policyv1types {
+	for _, t := range PolicyV1Types {
 		aliased = strings.Replace(aliased,
 			fmt.Sprintf("%s.%s", defaultalias, t),
-			fmt.Sprintf("policyv1beta1.%s", t),
+			fmt.Sprintf("policyv1beta1.%s", t), // Note this is different from the others!
 			-1)
 	}
-
 	return aliased
 }
 
@@ -187,4 +183,13 @@ func sanitizeK8sObjectName(name string) string {
 func goName(name string) string {
 	name = strings.ReplaceAll(name, ".", "")
 	return strings.ReplaceAll(name, "-", "_")
+}
+
+// Literal will convert an abstract kubeobject interface{} to Go code.
+//
+// This is the function that does the magic.
+func Literal(kubeobject interface{}) (string, []string) {
+	l := valast.String(kubeobject)
+	_, packages, _ := valast.ASTWithPackages(reflect.ValueOf(kubeobject), nil)
+	return l, packages
 }
