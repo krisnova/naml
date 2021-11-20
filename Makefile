@@ -25,7 +25,7 @@ version=$(shell git rev-parse HEAD)
 
 # Global release version.
 # Change this to bump the build version!
-version="1.0.0"
+version="0.4.0"
 
 compile: ## Compile for the local architecture ⚙
 	@echo "Compiling..."
@@ -59,7 +59,7 @@ release: ## Make the binaries for a GitHub release 📦
 
 aur: ## Publish to AUR using my SSH key
 	@echo "Publishing to AUR using Kris Nóva's key (if exists)..."
-	./release/aur/publish
+	./aur/publish
 
 .PHONY: help
 help:  ## 🤔 Show help messages for make targets
