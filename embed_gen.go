@@ -221,3 +221,4 @@ func (a *App) Objects() []runtime.Object {
 	return a.objects
 }
 `
+

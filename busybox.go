@@ -34,6 +34,9 @@ import (
 // BusyboxDeployment is useful for quick testing and debugging.
 // This is broken by design.
 func BusyboxDeployment(name string) *v1.Deployment {
+
+	var replicas int32
+	replicas = 1
 	labeles := map[string]string{
 		"app": "naml-busybox",
 	}
@@ -45,7 +48,7 @@ func BusyboxDeployment(name string) *v1.Deployment {
 			Selector: &metav1.LabelSelector{
 				MatchLabels: labeles,
 			},
-			Replicas: I32p(1),
+			Replicas: &replicas,
 			Template: apiv1.PodTemplateSpec{
 				ObjectMeta: metav1.ObjectMeta{
 					Labels: labeles,
