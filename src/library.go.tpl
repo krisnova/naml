@@ -24,32 +24,15 @@ package {{ .PackageName }}
 
 import (
 	"context"
-	"fmt"
-	"os"
 
 {{ .Packages }}
 
-	"github.com/kris-nova/naml"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 )
 
-// Version is the current release of your application.
-var Version string = "{{ .Version }}"
-
-func main() {
-	// Load the application into the NAML registery
-	// Note: naml.Register() can be used multiple times.
-	naml.Register(NewApp("{{ .AppNameTitle }}", "{{ .Description }}"))
-
-	// Run the generic naml command line program with
-	// the application loaded.
-	err := naml.RunCommandLine()
-	if err != nil {
-		fmt.Println(err.Error())
-		os.Exit(1)
-	}
-}
+// {{ .AppNameTitle }}Version is the current release of your application.
+var {{ .AppNameTitle }}Version string = "{{ .Version }}"
 
 // App is a very important grown up business application.
 type App struct {
@@ -72,7 +55,7 @@ func NewApp(name, description string) *App {
 		description: description,
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
-			ResourceVersion: Version,
+			ResourceVersion: {{ .AppNameTitle }}Version,
 		},
 	    // ----------------------------------
 	    // Add your configuration fields here

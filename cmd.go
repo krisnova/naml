@@ -73,14 +73,23 @@ func RunCommandLineWithOptions() error {
 	// this is ALSO used in the "build" command
 	var output string
 
-	codifyValues := &MainGoValues{
+	// library will toggle library mode for codify. When
+	// set to true library will generate library code instead
+	// of a program with a main function.
+	var library bool
+
+	// packageName can be used to override the packageName for codify.
+	var packageName string
+
+	codifyValues := &CodifyValues{
 		AuthorEmail:   "<kris@nivenly.com>",
 		AuthorName:    "Kris Nóva",
 		CopyrightYear: fmt.Sprintf("%d", time.Now().Year()),
 		AppNameLower:  "app",
 		AppNameTitle:  "App",
 		Version:       "0.0.1",
-		Description:   "very serious grown up business application does important beep boops",
+		Description:   "Auto generated with NAML",
+		PackageName:   "main",
 	}
 
 	// cli assumes "-v" for version.
@@ -243,6 +252,18 @@ func RunCommandLineWithOptions() error {
 				Usage:     "Convert YAML to syntactically correct Go code",
 				UsageText: "cat deploy.yaml | naml codify > main.go",
 				Flags: []cli.Flag{
+					&cli.BoolFlag{
+						Name:        "library",
+						Value:       false,
+						Usage:       "Toggle library mode for codify output Go code. When true will output library code instead of a main package.",
+						Destination: &library,
+					},
+					&cli.StringFlag{
+						Name:        "package-name",
+						Value:       "library",
+						Usage:       "Name of the package for library mode.",
+						Destination: &packageName,
+					},
 					&cli.StringFlag{
 						Name:        "author-name",
 						Value:       "Kris Nóva",
@@ -278,6 +299,10 @@ func RunCommandLineWithOptions() error {
 
 					codifyValues.AppNameLower = strings.ToLower(codifyAppNameRaw)
 					codifyValues.AppNameTitle = strings.Title(codifyValues.AppNameLower)
+					codifyValues.LibraryMode = library
+					if codifyValues.LibraryMode {
+						codifyValues.PackageName = packageName
+					}
 
 					cbytes, err := Codify(os.Stdin, codifyValues)
 					if err != nil {

@@ -22,11 +22,12 @@
 #
 
 main=$(cat ./src/main.go.tpl)
+library=$(cat ./src/library.go.tpl)
 
-rm -f embed_main.go
-touch embed_main.go
+rm -f embed_gen.go
+touch embed_gen.go
 
-cat > embed_main.go << EOL
+cat > embed_gen.go << EOL
 //
 // Copyright © 2021 Kris Nóva <kris@nivenly.com>
 //
@@ -52,8 +53,14 @@ cat > embed_main.go << EOL
 
 EOL
 
-echo "package naml" >> embed_main.go
-echo "" >> embed_main.go
-echo "const FormatMainGo string = \`" >> embed_main.go
-echo "$main" >> embed_main.go
-echo "\`" >> embed_main.go
+echo "package naml" >> embed_gen.go
+echo "" >> embed_gen.go
+echo "const FormatMainGo string = \`" >> embed_gen.go
+echo "$main" >> embed_gen.go
+echo "\`" >> embed_gen.go
+echo "" >> embed_gen.go
+echo "const FormatLibraryGo string = \`" >> embed_gen.go
+echo "$library" >> embed_gen.go
+echo "\`" >> embed_gen.go
+echo "" >> embed_gen.go
+

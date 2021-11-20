@@ -52,6 +52,12 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
+const (
+
+	// codifyGoFormat will toggle if Codify() will also "go fmt" the generated code.
+	codifyGoFormat bool = true
+)
+
 // YAMLDelimiter is the official delimiter used to append multiple
 // YAML files together into the same file.
 //
@@ -70,10 +76,11 @@ const YAMLDelimiter string = "---"
 // We ARE in fact doing a lot of string handling here
 // So we use strings as often as possible.
 
-// MainGoValues are ultimately what is rendered
+// CodifyValues are ultimately what is rendered
 // into the .naml files in /src. These values
 // are what will be created in the output.
-type MainGoValues struct {
+type CodifyValues struct {
+	LibraryMode   bool
 	AuthorName    string
 	AuthorEmail   string
 	CopyrightYear string
@@ -84,11 +91,13 @@ type MainGoValues struct {
 	Install       string
 	Uninstall     string
 	Packages      string
+	PackageName   string
 }
 
 type CodifyObject interface {
+
 	// Install returns the snippet of code that would
-	// traditionall live INSIDE of a function. This
+	// traditionally live inside a function. This
 	// will define literally (what it can) a struct
 	// for the object, and pass it to the corresponding
 	// kubernetes library.
@@ -104,14 +113,23 @@ type CodifyObject interface {
 //
 // The NAML codebase is Apache 2.0 licensed, so we assume that
 // any calling code will adopt the same Apache license.
-func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
+func Codify(input io.Reader, v *CodifyValues) ([]byte, error) {
+
+	if v.PackageName == "" {
+		return []byte(""), fmt.Errorf("missing packageName")
+	}
+
 	var code []byte
 
 	// Setup template with a unique name based on the input
 	tpl := template.New(fmt.Sprintf("%+v%+v", input, v.AppNameLower))
 
 	// Create the base file
-	tpl, err := tpl.Parse(FormatMainGo)
+	templateString := FormatMainGo
+	if v.LibraryMode {
+		templateString = FormatLibraryGo
+	}
+	tpl, err := tpl.Parse(templateString)
 	if err != nil {
 		return code, fmt.Errorf("unable to create main go tempalte: %v", err)
 	}
@@ -177,11 +195,15 @@ func Codify(input io.Reader, v *MainGoValues) ([]byte, error) {
 	src := buf.Bytes()
 
 	// Go fmt!
-	fmtBytes, err := format.Source(src)
+	var fmtBytes []byte
+	if codifyGoFormat {
+		fmtBytes, err = format.Source(src)
+	} else {
+		fmtBytes = src
+	}
 	if err != nil {
 		// Unable to auto format the code so let's debug!
-		lines := strings.Split(string(src), `
-`)
+		lines := strings.Split(string(src), "\n")
 		lns := strings.Split(err.Error(), ":")
 		line, err := strconv.Atoi(lns[0])
 		if err != nil || len(lines) < line {
