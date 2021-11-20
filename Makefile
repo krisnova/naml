@@ -36,6 +36,15 @@ install: ## Install your naml 🎉
 	@echo "Installing..."
 	sudo cp naml /usr/local/bin/naml
 
+generate: ## Will generate Go code from deployable/*.proto files in /remote
+	@echo "Generating..."
+	protoc \
+		--go_out=. \
+		--go_opt=paths=source_relative \
+        --go-grpc_out=. \
+        --go-grpc_opt=paths=source_relative \
+        deployable/deployable.proto
+
 test: clean compile install ## 🤓 Test is used to test your naml
 	@echo "Testing..."
 	go test -v ./...
