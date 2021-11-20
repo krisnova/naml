@@ -57,6 +57,7 @@ func New{{ .AppNameTitle }}(name, description string) *{{ .AppNameTitle }} {
 			Description: description,
 			ObjectMeta: metav1.ObjectMeta{
 				Name: name,
+				ResourceVersion: Version,
 			},
 		},
 	}

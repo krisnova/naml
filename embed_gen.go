@@ -83,6 +83,7 @@ func New{{ .AppNameTitle }}(name, description string) *{{ .AppNameTitle }} {
 			Description: description,
 			ObjectMeta: metav1.ObjectMeta{
 				Name: name,
+				ResourceVersion: Version,
 			},
 		},
 	}
@@ -137,65 +138,49 @@ package {{ .PackageName }}
 import (
 	"context"
 
-{{ .Packages }}
+	{{ .Packages }}
 
+	"github.com/kris-nova/naml"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
 )
 
-// {{ .AppNameTitle }}Version is the current release of your application.
 var {{ .AppNameTitle }}Version string = "{{ .Version }}"
 
-// App is a very important grown up business application.
-type App struct {
-	metav1.ObjectMeta
-	description string
+type {{ .AppNameTitle }} struct {
+	naml.AppMeta
 	objects []runtime.Object
-	// ----------------------------------
-	// Add your configuration fields here
-	// ----------------------------------
 }
 
-// NewApp will create a new instance of App.
-//
-// See https://github.com/naml-examples for more examples.
-//
-// This is where you pass in fields to your application (similar to Values.yaml)
-// Example: func NewApp(name string, example string, something int) *App
-func NewApp(name, description string) *App {
-	return &App{
-		description: description,
-		ObjectMeta: metav1.ObjectMeta{
-			Name: name,
-			ResourceVersion: {{ .AppNameTitle }}Version,
+func New{{ .AppNameTitle }}(name, description string) *{{ .AppNameTitle }} {
+	return &{{ .AppNameTitle }}{
+		AppMeta: naml.AppMeta{
+			Description: description,
+			ObjectMeta: metav1.ObjectMeta{
+				Name: name,
+				ResourceVersion: {{ .AppNameTitle }}Version,
+			},
 		},
-	    // ----------------------------------
-	    // Add your configuration fields here
-	    // ----------------------------------
 	}
 }
 
-func (a *App) Install(client kubernetes.Interface) error {
+func (x *{{ .AppNameTitle }}) Install(client kubernetes.Interface) error {
 	var err error
 	{{ .Install }}
 	return err
 }
 
-func (a *App) Uninstall(client kubernetes.Interface) error {
+func (x *{{ .AppNameTitle }}) Uninstall(client kubernetes.Interface) error {
 	var err error
 	{{ .Uninstall }}
 	return err
 }
 
-func (a *App) Description() string {
-	return a.description
+func (x *{{ .AppNameTitle }}) Meta() *naml.AppMeta {
+	return &x.AppMeta
 }
 
-func (a *App) Meta() *metav1.ObjectMeta {
-	return &a.ObjectMeta
-}
-
-func (a *App) Objects() []runtime.Object {
-	return a.objects
+func (x *{{ .AppNameTitle }}) Objects() []runtime.Object {
+	return x.objects
 }
 `
