@@ -4038,7 +4038,7 @@ subjects:
 
 ---
 # Source: calico/templates/calico-node.yaml
-# This manifest installs the calico-node container, as well
+# This test_nivenly.yaml installs the calico-node container, as well
 # as the CNI plugins and network config on
 # each master and worker node in a Kubernetes cluster.
 kind: DaemonSet
@@ -4414,7 +4414,7 @@ metadata:
 
 ---
 
-# This manifest creates a Pod Disruption Budget for Controller to allow K8s Cluster Autoscaler to evict
+# This test_nivenly.yaml creates a Pod Disruption Budget for Controller to allow K8s Cluster Autoscaler to evict
 
 apiVersion: policy/v1beta1
 kind: PodDisruptionBudget

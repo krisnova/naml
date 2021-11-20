@@ -51,7 +51,7 @@ func (k Job) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}Job := %s
-	a.objects = append(a.objects, {{ .GoName }}Job)
+	x.objects = append(x.objects, {{ .GoName }}Job)
 
 	if client != nil {
 		_, err = client.BatchV1().Jobs("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Job, v1.CreateOptions{})

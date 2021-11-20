@@ -420,24 +420,6 @@ func RunCommandLineWithOptions() error {
 					},
 				},
 			},
-
-			// ********************************************************
-			// [ RPC ]
-			// ********************************************************
-
-			{
-				Name:      "rpc",
-				Aliases:   []string{"r"},
-				Usage:     "Run in RPC mode. Only run this if you know what you are doing",
-				UsageText: "naml rpc",
-				Action: func(c *cli.Context) error {
-					err := RunRPC()
-					if err != nil {
-						return fmt.Errorf("unable to run in runtime mode: %v", err)
-					}
-					return nil
-				},
-			},
 		},
 	}
 	return app.Run(os.Args)
@@ -504,41 +486,11 @@ func AllInit(kubeConfigPath string, verbose bool, with []string) error {
 	}
 	logger.Debug("Kubeconfig Value: %s", kubeConfigPathValue)
 
-	// [ Child Runtime System ]
-	if len(with) > 0 {
-		for _, childPath := range with {
-			for i := 0; i < 3; i++ {
-				err := AddRPC(childPath)
-				if err != nil {
-					logger.Warning("Unable to add child naml %s: %v", childPath, err)
-					time.Sleep(time.Millisecond * 20)
-				} else {
-					break
-				}
-			}
-
-		}
-	}
-
-	// If running naml with children, register them with the registry
-	if len(remotes) > 0 {
-		err := RegisterRemoteApplications()
-		if err != nil {
-			return fmt.Errorf("unable to register children: %v", err)
-		}
-	}
 	return nil
 }
 
 // Install is used to install an application in Kubernetes
 func Install(app Deployable) error {
-
-	// Check if app is a remote app
-	if remoteApp, ok := app.(*RPCApplication); ok {
-		// Do NOT pass in this local kubernetes client!
-		return remoteApp.Install(nil)
-	}
-
 	// Only grab a client if we are running in this instance!
 	client, err := Client()
 	if err != nil {
@@ -565,23 +517,19 @@ func List() {
 	fmt.Println("")
 	for _, app := range Registry() {
 		fmt.Printf("[%s]\n", app.Meta().Name)
-		fmt.Printf("  description : %s\n", app.Description())
-		fmt.Printf("  version     : %s\n", app.Meta().ResourceVersion)
+		fmt.Printf("  Description : %s\n", app.Meta().Description)
+		fmt.Printf("  Version     : %s\n", app.Meta().ResourceVersion)
+		app.Install(nil)
+		for _, obj := range app.Objects() {
+			_, kind := obj.GetObjectKind().GroupVersionKind().ToAPIVersionAndKind()
+			fmt.Printf("    > %s\n", kind)
+		}
 		fmt.Printf("\n")
 	}
 }
 
 // Uninstall is used to uninstall an application in Kubernetes
 func Uninstall(app Deployable) error {
-
-	// Check if app is a remote app
-	if remoteApp, ok := app.(*RPCApplication); ok {
-		// Do NOT pass in this local kubernetes client!
-		return remoteApp.Uninstall(nil)
-	}
-
-	// Only grab a client if we are running in this instance!
-
 	client, err := Client()
 	if err != nil {
 		return err

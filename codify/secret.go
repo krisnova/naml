@@ -50,7 +50,7 @@ func (k Secret) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}Secret := %s
-	a.objects = append(a.objects, {{ .GoName }}Secret)
+	x.objects = append(x.objects, {{ .GoName }}Secret)
 
 	if client != nil {
 		_, err = client.CoreV1().Secrets("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Secret, v1.CreateOptions{})

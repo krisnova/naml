@@ -55,7 +55,7 @@ func (k PersistentVolumeClaim) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}PersistentVolumeClaim := %s
-	a.objects = append(a.objects, {{ .GoName }}PersistentVolumeClaim)
+	x.objects = append(x.objects, {{ .GoName }}PersistentVolumeClaim)
 
 	if client != nil {
 		_, err = client.CoreV1().PersistentVolumeClaims("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}PersistentVolumeClaim, v1.CreateOptions{})

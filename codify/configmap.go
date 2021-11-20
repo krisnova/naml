@@ -50,7 +50,7 @@ func (k ConfigMap) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}ConfigMap := %s
-	a.objects = append(a.objects, {{ .GoName }}ConfigMap)
+	x.objects = append(x.objects, {{ .GoName }}ConfigMap)
 
 	if client != nil {
 		_, err = client.CoreV1().ConfigMaps("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}ConfigMap, v1.CreateOptions{})

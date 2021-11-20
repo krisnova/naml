@@ -27,7 +27,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
-	"strings"
 	"sync"
 	"testing"
 
@@ -37,7 +36,7 @@ import (
 func TestManifests(t *testing.T) {
 	files, err := ioutil.ReadDir("manifests")
 	if err != nil {
-		t.Errorf("unable to list manifest directory: %v", err)
+		t.Errorf("unable to list test_nivenly.yaml directory: %v", err)
 	}
 	wg := sync.WaitGroup{}
 	for _, file := range files {
@@ -57,8 +56,8 @@ func TestManifests(t *testing.T) {
 
 func CodifyValues(name string) *naml.CodifyValues {
 	return &naml.CodifyValues{
-		AppNameLower:  strings.ToLower(name),
-		AppNameTitle:  strings.ToUpper(name),
+		AppNameLower:  "app",
+		AppNameTitle:  "App",
 		AuthorName:    "Björn Nóva",
 		AuthorEmail:   "barnaby@nivenly.com",
 		CopyrightYear: "1999",
