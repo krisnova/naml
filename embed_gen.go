@@ -49,15 +49,15 @@ const FormatMainGo string = `
 package {{ .PackageName }}
 
 import (
+	"context"
 	"fmt"
 	"os"
 
-	{{ .Packages }}
+{{ .Packages }}
 
 	"github.com/kris-nova/naml"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
-
 )
 
 // Version is the current release of your application.
@@ -157,12 +157,12 @@ const FormatLibraryGo string = `
 package {{ .PackageName }}
 
 import (
+	"context"
 
-	{{ .Packages }}
+{{ .Packages }}
 
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
-
 )
 
 // {{ .AppNameTitle }}Version is the current release of your application.
@@ -189,7 +189,7 @@ func NewApp(name, description string) *App {
 		description: description,
 		ObjectMeta: metav1.ObjectMeta{
 			Name: name,
-			ResourceVersion: Version,
+			ResourceVersion: {{ .AppNameTitle }}Version,
 		},
 	    // ----------------------------------
 	    // Add your configuration fields here
@@ -221,3 +221,4 @@ func (a *App) Objects() []runtime.Object {
 	return a.objects
 }
 `
+

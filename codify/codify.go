@@ -147,30 +147,39 @@ func alias(generated, defaultalias string) string {
 	aliased := generated
 
 	// Each object can pass in a "default" to use if we do not have it defined above.
-	aliased = strings.Replace(aliased, "v1", defaultalias, -1)
+	aliased = strings.ReplaceAll(aliased, "v1", defaultalias)
 	for _, t := range AppsV1Types {
-		aliased = strings.Replace(aliased,
+		if t == "" {
+			continue
+		}
+		aliased = strings.ReplaceAll(aliased,
 			fmt.Sprintf("%s.%s", defaultalias, t),
-			fmt.Sprintf("appsv1.%s", t),
-			-1)
+			fmt.Sprintf("appsv1.%s", t))
 	}
 	for _, t := range MetaV1Types {
-		aliased = strings.Replace(aliased,
+		if t == "" {
+			continue
+		}
+		aliased = strings.ReplaceAll(aliased,
 			fmt.Sprintf("%s.%s", defaultalias, t),
-			fmt.Sprintf("metav1.%s", t),
-			-1)
+			fmt.Sprintf("metav1.%s", t))
 	}
 	for _, t := range CoreV1Types {
-		aliased = strings.Replace(aliased,
+		if t == "" {
+			continue
+		}
+		aliased = strings.ReplaceAll(aliased,
 			fmt.Sprintf("%s.%s", defaultalias, t),
-			fmt.Sprintf("corev1.%s", t),
-			-1)
+			fmt.Sprintf("corev1.%s", t))
 	}
 	for _, t := range PolicyV1Types {
-		aliased = strings.Replace(aliased,
+		if t == "" {
+			continue
+		}
+		aliased = strings.ReplaceAll(aliased,
 			fmt.Sprintf("%s.%s", defaultalias, t),
-			fmt.Sprintf("policyv1beta1.%s", t), // Note this is different from the others!
-			-1)
+			fmt.Sprintf("policyv1beta1.%s", t)) // Note this is different from the others!
+
 	}
 	return aliased
 }

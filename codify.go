@@ -52,6 +52,12 @@ import (
 	"k8s.io/client-go/kubernetes/scheme"
 )
 
+const (
+
+	// codifyGoFormat will toggle if Codify() will also "go fmt" the generated code.
+	codifyGoFormat bool = true
+)
+
 // YAMLDelimiter is the official delimiter used to append multiple
 // YAML files together into the same file.
 //
@@ -108,6 +114,11 @@ type CodifyObject interface {
 // The NAML codebase is Apache 2.0 licensed, so we assume that
 // any calling code will adopt the same Apache license.
 func Codify(input io.Reader, v *CodifyValues) ([]byte, error) {
+
+	if v.PackageName == "" {
+		return []byte(""), fmt.Errorf("missing packageName")
+	}
+
 	var code []byte
 
 	// Setup template with a unique name based on the input
@@ -184,7 +195,12 @@ func Codify(input io.Reader, v *CodifyValues) ([]byte, error) {
 	src := buf.Bytes()
 
 	// Go fmt!
-	fmtBytes, err := format.Source(src)
+	var fmtBytes []byte
+	if codifyGoFormat {
+		fmtBytes, err = format.Source(src)
+	} else {
+		fmtBytes = src
+	}
 	if err != nil {
 		// Unable to auto format the code so let's debug!
 		lines := strings.Split(string(src), "\n")

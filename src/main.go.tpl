@@ -23,17 +23,15 @@
 package {{ .PackageName }}
 
 import (
-
 	"context"
 	"fmt"
 	"os"
 
-	{{ .Packages }}
+{{ .Packages }}
 
 	"github.com/kris-nova/naml"
 	"k8s.io/apimachinery/pkg/runtime"
 	"k8s.io/client-go/kubernetes"
-
 )
 
 // Version is the current release of your application.

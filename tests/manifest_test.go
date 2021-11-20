@@ -63,6 +63,7 @@ func CodifyValues(name string) *naml.CodifyValues {
 		AuthorEmail:   "barnaby@nivenly.com",
 		CopyrightYear: "1999",
 		Description:   "Test Description.",
+		PackageName:   "main",
 	}
 }
 
