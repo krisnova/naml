@@ -50,7 +50,6 @@ Use `make help` for more. Happy coding 🎉.
 
 There is a "repository" of examples to borrow/fork:
 
-- [values](https://github.com/naml-examples/full/blob/main/app.go#L52-L79) example pattern to replace a large `Values.yaml` file.
 - [simple](https://github.com/naml-examples/simple) quick and simple example.
 - [examples](https://github.com/naml-examples) GitHub organization.
 
