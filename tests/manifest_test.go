@@ -55,8 +55,8 @@ func TestManifests(t *testing.T) {
 	t.Logf("Manifest tests complete")
 }
 
-func mainGoValues(name string) *naml.MainGoValues {
-	return &naml.MainGoValues{
+func CodifyValues(name string) *naml.CodifyValues {
+	return &naml.CodifyValues{
 		AppNameLower:  strings.ToLower(name),
 		AppNameTitle:  strings.ToUpper(name),
 		AuthorName:    "Björn Nóva",
@@ -74,7 +74,7 @@ func generateCompileRunYAML(filename string) error {
 	}
 	buffer := bytes.Buffer{}
 	buffer.Write(data)
-	output, err := naml.Codify(&buffer, mainGoValues(filename))
+	output, err := naml.Codify(&buffer, CodifyValues(filename))
 	if err != nil {
 		return fmt.Errorf("unable to codify: %s: %v", filename, err)
 	}
