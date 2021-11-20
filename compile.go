@@ -106,3 +106,10 @@ func Compile(src []byte) (*Program, error) {
 
 	return program, nil
 }
+
+func Src(path string) ([]byte, error) {
+	if path == "." {
+		path = "main.go"
+	}
+	return ioutil.ReadFile(path)
+}
