@@ -420,21 +420,6 @@ func RunCommandLineWithOptions() error {
 					},
 				},
 			},
-
-			// ********************************************************
-			// [ RPC ]
-			// ********************************************************
-
-			{
-				Name:      "rpc",
-				Aliases:   []string{"r"},
-				Usage:     "Run in RPC mode. Only run this if you know what you are doing",
-				UsageText: "naml rpc",
-				Action: func(c *cli.Context) error {
-					logger.Critical("TODO")
-					return nil
-				},
-			},
 		},
 	}
 	return app.Run(os.Args)

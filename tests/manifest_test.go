@@ -37,7 +37,7 @@ import (
 func TestManifests(t *testing.T) {
 	files, err := ioutil.ReadDir("manifests")
 	if err != nil {
-		t.Errorf("unable to list manifest directory: %v", err)
+		t.Errorf("unable to list test_nivenly.yaml directory: %v", err)
 	}
 	wg := sync.WaitGroup{}
 	for _, file := range files {

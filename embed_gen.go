@@ -64,6 +64,9 @@ import (
 var Version string = "{{ .Version }}"
 
 func main() {
+    // Set the naml version to our app version
+	naml.Version = Version
+
 	// Load the application into the NAML registery
 	// Note: naml.Register() can be used multiple times.
 	naml.Register(NewApp("{{ .AppNameTitle }}", "{{ .Description }}"))
