@@ -47,6 +47,7 @@ func TestManifests(t *testing.T) {
 			err := generateCompileRunYAML(filepath.Join("manifests", file.Name()))
 			if err != nil {
 				t.Errorf(err.Error())
+				t.FailNow()
 			}
 		}(file.Name())
 	}
