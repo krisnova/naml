@@ -51,7 +51,7 @@ func (k PodSecurityPolicy) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}PodSecurityPolicy := %s
-	a.objects = append(a.objects, {{ .GoName }}PodSecurityPolicy)
+	x.objects = append(x.objects, {{ .GoName }}PodSecurityPolicy)
 
 	if client != nil {
 		_, err = client.PolicyV1beta1().PodSecurityPolicies().Create(context.TODO(), {{ .GoName }}PodSecurityPolicy, v1.CreateOptions{})

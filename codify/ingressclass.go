@@ -50,7 +50,7 @@ func (k IngressClass) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}IngressClass := %s
-	a.objects = append(a.objects, {{ .GoName }}IngressClass)
+	x.objects = append(x.objects, {{ .GoName }}IngressClass)
 
 	if client != nil {
 		_, err = client.NetworkingV1().IngressClasses().Create(context.TODO(), {{ .GoName }}IngressClass, v1.CreateOptions{})

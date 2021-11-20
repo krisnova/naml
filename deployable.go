@@ -39,12 +39,14 @@ type Deployable interface {
 	// Uninstall will attempt to uninstall in Kubernetes
 	Uninstall(client kubernetes.Interface) error
 
-	// Meta returns the Kubernetes native ObjectMeta which is used to manage applications with naml.
-	Meta() *metav1.ObjectMeta
-
-	// Description returns the application description
-	Description() string
+	// Meta returns a NAML Meta structure which embed Kubernetes *metav1.ObjectMeta
+	Meta() *AppMeta
 
 	// Objects will return the runtime objects defined for each application
 	Objects() []runtime.Object
+}
+
+type AppMeta struct {
+	Description string
+	metav1.ObjectMeta
 }

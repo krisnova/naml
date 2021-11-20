@@ -50,7 +50,7 @@ func (k ClusterRole) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}ClusterRole := %s
-	a.objects = append(a.objects, {{ .GoName }}ClusterRole)
+	x.objects = append(x.objects, {{ .GoName }}ClusterRole)
 	
 	if client != nil {
 		_, err = client.RbacV1().ClusterRoles().Create(context.TODO(), {{ .GoName }}ClusterRole, v1.CreateOptions{})

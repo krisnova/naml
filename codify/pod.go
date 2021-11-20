@@ -51,7 +51,7 @@ func (k Pod) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}Pod := %s
-	a.objects = append(a.objects, {{ .GoName }}Pod)
+	x.objects = append(x.objects, {{ .GoName }}Pod)
 
 	if client != nil {
 		_, err = client.CoreV1().Pods("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Pod, v1.CreateOptions{})

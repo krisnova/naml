@@ -27,7 +27,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
-	"strings"
 	"sync"
 	"testing"
 
@@ -57,8 +56,8 @@ func TestManifests(t *testing.T) {
 
 func CodifyValues(name string) *naml.CodifyValues {
 	return &naml.CodifyValues{
-		AppNameLower:  strings.ToLower(name),
-		AppNameTitle:  strings.ToUpper(name),
+		AppNameLower:  "app",
+		AppNameTitle:  "App",
 		AuthorName:    "Björn Nóva",
 		AuthorEmail:   "barnaby@nivenly.com",
 		CopyrightYear: "1999",

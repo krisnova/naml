@@ -517,7 +517,7 @@ func List() {
 	fmt.Println("")
 	for _, app := range Registry() {
 		fmt.Printf("[%s]\n", app.Meta().Name)
-		fmt.Printf("  description : %s\n", app.Description())
+		fmt.Printf("  description : %s\n", app.Meta().Description)
 		fmt.Printf("  version     : %s\n", app.Meta().ResourceVersion)
 		fmt.Printf("\n")
 	}

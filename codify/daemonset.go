@@ -62,7 +62,7 @@ func (k DaemonSet) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}DaemonSet := %s
-	a.objects = append(a.objects, {{ .GoName }}DaemonSet)
+	x.objects = append(x.objects, {{ .GoName }}DaemonSet)
 
 	if client != nil {
 		_, err = client.AppsV1().DaemonSets("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}DaemonSet, v1.CreateOptions{})

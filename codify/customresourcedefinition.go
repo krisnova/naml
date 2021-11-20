@@ -54,7 +54,7 @@ func (k CustomResourceDefinition) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}CustomResourceDefinition := %s
-	a.objects = append(a.objects, {{ .GoName }}CustomResourceDefinition)
+	x.objects = append(x.objects, {{ .GoName }}CustomResourceDefinition)
 	
 	if client != nil {
 		result := client.ExtensionsV1beta1().RESTClient().Post().Namespace("{{ .KubeObject.Namespace }}").Body({{ .GoName }}CustomResourceDefinition).Do(context.TODO())

@@ -51,7 +51,7 @@ func (k Namespace) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}Namespace := %s
-	a.objects = append(a.objects, {{ .GoName }}Namespace)
+	x.objects = append(x.objects, {{ .GoName }}Namespace)
 	
 	if client != nil {
 		_, err = client.CoreV1().Namespaces().Create(context.TODO(), {{ .GoName }}Namespace, v1.CreateOptions{})

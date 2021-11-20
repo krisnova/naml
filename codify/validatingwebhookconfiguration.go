@@ -51,7 +51,7 @@ func (k ValidatingwebhookConfiguration) Install() (string, []string) {
 	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
 	{{ .GoName }}ValidatingwebhookConfiguration := %s
-	a.objects = append(a.objects, {{ .GoName }}ValidatingwebhookConfiguration)
+	x.objects = append(x.objects, {{ .GoName }}ValidatingwebhookConfiguration)
 
 	if client != nil {
 		_, err = client.AdmissionregistrationV1().ValidatingWebhookConfigurations().Create(context.TODO(), {{ .GoName }}ValidatingwebhookConfiguration, v1.CreateOptions{})
