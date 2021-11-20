@@ -517,8 +517,13 @@ func List() {
 	fmt.Println("")
 	for _, app := range Registry() {
 		fmt.Printf("[%s]\n", app.Meta().Name)
-		fmt.Printf("  description : %s\n", app.Meta().Description)
-		fmt.Printf("  version     : %s\n", app.Meta().ResourceVersion)
+		fmt.Printf("  Description : %s\n", app.Meta().Description)
+		fmt.Printf("  Version     : %s\n", app.Meta().ResourceVersion)
+		app.Install(nil)
+		for _, obj := range app.Objects() {
+			_, kind := obj.GetObjectKind().GroupVersionKind().ToAPIVersionAndKind()
+			fmt.Printf("    > %s\n", kind)
+		}
 		fmt.Printf("\n")
 	}
 }
