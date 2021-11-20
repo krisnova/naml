@@ -57,6 +57,9 @@ release: ## Make the binaries for a GitHub release 📦
 	GOOS="linux" GOARCH="386" go build -ldflags "-X 'github.com/kris-nova/naml.Version=$(version)'" -o release/naml-linux-386 cmd/*.go
 	GOOS="darwin" GOARCH="amd64" go build -ldflags "-X 'github.com/kris-nova/naml.Version=$(version)'" -o release/naml-darwin-amd64 cmd/*.go
 
+aur: ## Publish to AUR using my SSH key
+	@echo "Publishing to AUR using Kris Nóva's key (if exists)..."
+	./release/aur/publish
 
 .PHONY: help
 help:  ## 🤔 Show help messages for make targets
