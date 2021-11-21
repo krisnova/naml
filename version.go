@@ -29,7 +29,7 @@ import (
 )
 
 // Version is this specific version on naml
-var Version string
+var Version string = "1.0.1"
 
 func Banner() {
 	if Version == "" {
