@@ -47,7 +47,12 @@ func NewClusterRoleBinding(obj *rbacv1.ClusterRoleBinding) *ClusterRoleBinding {
 }
 
 func (k ClusterRoleBinding) Install() (string, []string) {
-	l, packages := Literal(k.KubeObject)
+	c, err := Literal(k.KubeObject)
+	if err != nil {
+		logger.Debug(err.Error())
+	}
+	l := c.Source
+	packages := c.Packages
 	install := fmt.Sprintf(`
 	{{ .GoName }}ClusterRoleBinding := %s
 	x.objects = append(x.objects, {{ .GoName }}ClusterRoleBinding)
@@ -64,7 +69,7 @@ func (k ClusterRoleBinding) Install() (string, []string) {
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
 	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
-	err := tpl.Execute(buf, k)
+	err = tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

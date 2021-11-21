@@ -47,7 +47,12 @@ func NewIngress(obj *networkingv1.Ingress) *Ingress {
 }
 
 func (k Ingress) Install() (string, []string) {
-	l, packages := Literal(k.KubeObject)
+	c, err := Literal(k.KubeObject)
+	if err != nil {
+		logger.Debug(err.Error())
+	}
+	l := c.Source
+	packages := c.Packages
 	install := fmt.Sprintf(`
 	{{ .GoName }}Ingress := %s
 	x.objects = append(x.objects, {{ .GoName }}Ingress)
@@ -64,7 +69,7 @@ func (k Ingress) Install() (string, []string) {
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
 	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
-	err := tpl.Execute(buf, k)
+	err = tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}

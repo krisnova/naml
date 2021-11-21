@@ -65,7 +65,13 @@ func (k Deployment) Install() (string, []string) {
 		k.KubeObject.Spec.Template.Spec.Containers[i].Resources = v1.ResourceRequirements{}
 	}
 
-	l, packages := Literal(k.KubeObject)
+	c, err := Literal(k.KubeObject)
+	if err != nil {
+		logger.Critical(err.Error())
+	}
+	l := c.Source
+	packages := c.Packages
+
 	install := fmt.Sprintf(`
 	// Adding a deployment: "{{ .KubeObject.Name }}"
 	{{ .GoName }}Deployment := %s
@@ -78,12 +84,16 @@ func (k Deployment) Install() (string, []string) {
 		}
 	}
 `, l)
+
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
-	tpl.Parse(install)
-	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k)
+	tpl, err = tpl.Parse(install)
 	if err != nil {
-		logger.Debug(err.Error())
+		logger.Critical(err.Error())
+	}
+	buf := &bytes.Buffer{}
+	err = tpl.Execute(buf, k)
+	if err != nil {
+		logger.Critical(err.Error())
 	}
 	return alias(buf.String(), "appsv1"), packages
 }
