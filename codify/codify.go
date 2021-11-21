@@ -199,6 +199,16 @@ func goName(name string) string {
 // This is the function that does the magic.
 func Literal(kubeobject interface{}) (string, []string) {
 	l := valast.String(kubeobject)
+	l = cleanValast20(l)
 	_, packages, _ := valast.ASTWithPackages(reflect.ValueOf(kubeobject), nil)
 	return l, packages
+}
+
+// cleanValast20 is a determinstic string mutation function
+// that will address the bug described in https://github.com/hexops/valast/issues/20
+func cleanValast20(input string) string {
+	var output string
+	output = strings.ReplaceAll(input, "{{", "{\n{")
+	output = strings.ReplaceAll(output, "}}", "},\n}")
+	return output
 }
