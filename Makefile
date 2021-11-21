@@ -59,7 +59,7 @@ release: ## Make the binaries for a GitHub release 📦
 
 aur: ## Publish to AUR using my SSH key
 	@echo "Publishing to AUR using Kris Nóva's key (if exists)..."
-	./aur/publish
+	cd aur && ./publish
 
 .PHONY: help
 help:  ## 🤔 Show help messages for make targets
