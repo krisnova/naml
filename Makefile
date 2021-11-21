@@ -49,6 +49,7 @@ clean: ## Clean your artifacts 🧼
 	rm -rf out/*
 	rm -rf tmp/*
 
+.PHONY: release
 release: ## Make the binaries for a GitHub release 📦
 	mkdir -p release
 	GOOS="linux" GOARCH="amd64" go build -ldflags "-X 'github.com/kris-nova/naml.Version=$(version)'" -o release/naml-linux-amd64 cmd/*.go
@@ -57,6 +58,7 @@ release: ## Make the binaries for a GitHub release 📦
 	GOOS="linux" GOARCH="386" go build -ldflags "-X 'github.com/kris-nova/naml.Version=$(version)'" -o release/naml-linux-386 cmd/*.go
 	GOOS="darwin" GOARCH="amd64" go build -ldflags "-X 'github.com/kris-nova/naml.Version=$(version)'" -o release/naml-darwin-amd64 cmd/*.go
 
+.PHONY: aur
 aur: ## Publish to AUR using my SSH key
 	@echo "Publishing to AUR using Kris Nóva's key (if exists)..."
 	cd aur && ./publish
