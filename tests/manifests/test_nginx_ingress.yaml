@@ -1,0 +1,15 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: mimosa-ingress
+spec:
+  rules:
+    - http:
+        paths:
+          - pathType: Prefix
+            path: "/dashboard"
+            backend:
+              service:
+                name: kubernetes-dashboard
+                port:
+                  number: 8443

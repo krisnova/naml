@@ -196,12 +196,37 @@ func goName(name string) string {
 
 // Literal will convert an abstract kubeobject interface{} to Go code.
 //
-// This is the function that does the magic.
-func Literal(kubeobject interface{}) (string, []string) {
+// The various components relevant to each conversion are returned in a *Codified
+// object.
+func Literal(kubeobject interface{}) (*Codified, error) {
 	l := valast.String(kubeobject)
 	l = cleanValast20(l)
-	_, packages, _ := valast.ASTWithPackages(reflect.ValueOf(kubeobject), nil)
-	return l, packages
+	r, err := valast.AST(reflect.ValueOf(kubeobject), nil)
+	if err != nil {
+		return nil, fmt.Errorf("unable to convert to source code: %v", err)
+	}
+	return &Codified{
+		Source:   l,
+		Packages: r.Packages,
+		R:        r,
+		Object:   kubeobject,
+	}, nil
+}
+
+// Codified is the source code associated with a given Kubernetes object.
+type Codified struct {
+
+	// The unknown original object
+	Object interface{}
+
+	// The packages required to code each object
+	Packages []string
+
+	// The Go code to define each object
+	Source string
+
+	// The full result from valast
+	R valast.Result
 }
 
 // cleanValast20 is a determinstic string mutation function

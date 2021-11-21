@@ -59,7 +59,12 @@ func (k StatefulSet) Install() (string, []string) {
 		k.KubeObject.Spec.Template.Spec.Containers[i].Resources = v1.ResourceRequirements{}
 	}
 
-	l, packages := Literal(k.KubeObject)
+	c, err := Literal(k.KubeObject)
+	if err != nil {
+		logger.Debug(err.Error())
+	}
+	l := c.Source
+	packages := c.Packages
 	install := fmt.Sprintf(`
 	{{ .GoName }}StatefulSet := %s
 	x.objects = append(x.objects, {{ .GoName }}StatefulSet)
@@ -74,7 +79,7 @@ func (k StatefulSet) Install() (string, []string) {
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
-	err := tpl.Execute(buf, k)
+	err = tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
