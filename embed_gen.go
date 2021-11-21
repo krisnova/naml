@@ -63,7 +63,6 @@ import (
 var Version string = "{{ .Version }}"
 
 func main() {
-	naml.Version = Version
 	naml.Register(New{{ .AppNameTitle }}("{{ .AppNameTitle }}Instance", "{{ .Description }}"))
 	err := naml.RunCommandLine()
 	if err != nil {
@@ -184,3 +183,4 @@ func (x *{{ .AppNameTitle }}) Objects() []runtime.Object {
 	return x.objects
 }
 `
+
