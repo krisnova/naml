@@ -91,3 +91,23 @@ func TestPolicyV1Beta1(t *testing.T) {
 		t.Errorf("unexpected result: %s", result)
 	}
 }
+
+func TestCleanValast20open(t *testing.T) {
+	input := `something{{`
+	expected := `something{
+{`
+	actual := cleanValast20(input)
+	if actual != expected {
+		t.Errorf("unexpected cleanValast20 output: %s", actual)
+	}
+}
+
+func TestCleanValast20close(t *testing.T) {
+	input := `}}`
+	expected := `},
+}`
+	actual := cleanValast20(input)
+	if actual != expected {
+		t.Errorf("unexpected cleanValast20 output: %s", actual)
+	}
+}
