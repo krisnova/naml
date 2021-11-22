@@ -1,0 +1,23 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  labels:
+    app: example
+  name: example
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: example
+  template:
+    metadata:
+      labels:
+        app: example
+    spec:
+      containers:
+      - containerPorts:
+        - containerPort: 8080
+          name: http
+          protocol: TCP
+        image: alpinelinux/darkhttpd
+        name: darkhttpd
