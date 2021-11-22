@@ -1,0 +1,40 @@
+apiVersion: v1
+kind: Service
+metadata:
+    labels:
+        app: example
+    name: example
+spec:
+    ports:
+        - port: 80
+          protocol: TCP
+          targetPort: 8080
+    selector:
+        app: example
+    type: LoadBalancer
+
+---
+
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+    labels:
+        app: example
+    name: example
+spec:
+    replicas: 1
+    selector:
+        matchLabels:
+            app: example
+    template:
+        metadata:
+            labels:
+                app: example
+        spec:
+            containers:
+                - containerPorts:
+                      - containerPort: 8080
+                        name: http
+                        protocol: TCP
+                  image: alpinelinux/darkhttpd
+                  name: darkhttpd
