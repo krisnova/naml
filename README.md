@@ -30,11 +30,16 @@ mkdir out
 # Get started quickly with all objects in a namespace
 kubectl get all -n default -o yaml | naml codify > out/main.go
 
-# Pipe multiple .yaml files to a single Application
-cat deployment.yaml service.yaml | naml codify \
+# Overload the template with your information
+cat app.yaml | naml codify \
   --author-name="Charlie" \
   --author-email="<charlie@nivenly.com>" > out/main.go
+  
+# Combine files in one command
+printf "\n\n---\n\n" | cat file1.yaml - file2.yaml - file3.yaml | naml codify > out/main.go
 ```
+
+Then compile and run your application against Kubernetes.
 
 ```bash 
 cd out
