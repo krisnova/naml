@@ -70,6 +70,7 @@ var (
 		"SecretProjection",
 		"ConfigMapKeySelector",
 		"ConfigMapProjection",
+		"ConfigMapEnvSource",
 		"HTTPHeader",
 		"PodAntiAffinity",
 		"PodAffinityTerm",

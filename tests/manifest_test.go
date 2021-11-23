@@ -27,7 +27,6 @@ import (
 	"fmt"
 	"io/ioutil"
 	"path/filepath"
-	"sync"
 	"testing"
 
 	"github.com/kris-nova/naml"
@@ -38,20 +37,14 @@ func TestManifests(t *testing.T) {
 	if err != nil {
 		t.Errorf("unable to list test_nivenly.yaml directory: %v", err)
 	}
-	wg := sync.WaitGroup{}
 	for _, file := range files {
-		wg.Add(1)
-		go func(name string) {
-			defer wg.Done()
-			t.Logf("testing [%s]", name)
-			err := generateCompileRunYAML(filepath.Join("manifests", file.Name()))
-			if err != nil {
-				t.Errorf(err.Error())
-				t.FailNow()
-			}
-		}(file.Name())
+		t.Logf("testing [%s]", file.Name())
+		err := generateCompileRunYAML(filepath.Join("manifests", file.Name()))
+		if err != nil {
+			t.Errorf(err.Error())
+			t.FailNow()
+		}
 	}
-	wg.Wait()
 	t.Logf("Manifest tests complete")
 }
 
@@ -86,7 +79,7 @@ func generateCompileRunYAML(filename string) error {
 	if err != nil {
 		return fmt.Errorf("unable to compile: %s: %v", filename, err)
 	}
-	_, stderr, err := program.Execute([]string{""})
+	_, stderr, err := program.Execute([]string{"list"})
 	if stderr.Len() > 0 {
 		return fmt.Errorf("failed executing binary: %s: %v: %s", filename, err, stderr.String())
 	}
