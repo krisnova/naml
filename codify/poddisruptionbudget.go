@@ -29,63 +29,58 @@ import (
 	"text/template"
 	"time"
 
+	policyv1 "k8s.io/api/policy/v1beta1"
+
 	"github.com/kris-nova/logger"
-	networkingv1 "k8s.io/api/networking/v1"
 )
 
-type Ingress struct {
-	KubeObject *networkingv1.Ingress
+type PodDisruptionBudget struct {
+	KubeObject *policyv1.PodDisruptionBudget
 	GoName     string
 }
 
-func NewIngress(obj *networkingv1.Ingress) *Ingress {
+func NewPodDisruptionBudget(obj *policyv1.PodDisruptionBudget) *PodDisruptionBudget {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
-	return &Ingress{
+	obj.Status = policyv1.PodDisruptionBudgetStatus{}
+	return &PodDisruptionBudget{
 		KubeObject: obj,
 		GoName:     goName(obj.Name),
 	}
 }
 
-func (k Ingress) Install() (string, []string) {
-	c, err := Literal(k.KubeObject)
-	if err != nil {
-		logger.Debug(err.Error())
-	}
-	l := c.Source
-	packages := c.Packages
+func (k PodDisruptionBudget) Install() (string, []string) {
+	l, packages := Literal(k.KubeObject)
 	install := fmt.Sprintf(`
-	{{ .GoName }}Ingress := %s
-	x.objects = append(x.objects, {{ .GoName }}Ingress)
+	{{ .GoName }}PodDisruptionBudget := %s
+	x.objects = append(x.objects, {{ .GoName }}PodDisruptionBudget)
 
 	if client != nil {
-		_, err = client.NetworkingV1().Ingresses("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Ingress, v1.CreateOptions{})
+		_, err = client.PolicyV1beta1().PodDisruptionBudgets("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}PodDisruptionBudget, v1.CreateOptions{})
 		if err != nil {
 			return err
 		}
 	}
 `, l)
-
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(install)
 	buf := &bytes.Buffer{}
 	k.KubeObject.Name = sanitizeK8sObjectName(k.KubeObject.Name)
-	err = tpl.Execute(buf, k)
+	err := tpl.Execute(buf, k)
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return alias(buf.String(), "networkingv1"), packages
+	return alias(buf.String(), "policyv1"), packages
 }
 
-func (k Ingress) Uninstall() string {
+func (k PodDisruptionBudget) Uninstall() string {
 	uninstall := `
 	if client != nil {
-		err = client.NetworkingV1().Ingresses("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		err = client.PolicyV1beta1().PodDisruptionBudgets("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}
 	}
  `
-
 	tpl := template.New(fmt.Sprintf("%s", time.Now().String()))
 	tpl.Parse(uninstall)
 	buf := &bytes.Buffer{}

@@ -370,8 +370,10 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		objects = append(objects, codify.NewPodSecurityPolicy(x))
 	case *admissionregistrationv1.ValidatingWebhookConfiguration:
 		objects = append(objects, codify.NewValidatingwebhookConfiguration(x))
+	case *policyv1.PodDisruptionBudget:
+		objects = append(objects, codify.NewPodDisruptionBudget(x))
 	// CRDs is going to take some special care...
-	//case *apiextensionsv1.CustomResourceDefinition:
+	case *apiextensionsv1.CustomResourceDefinition:
 	// ignore CRDs for now!
 	//objects = append(objects, codify.NewCustomResourceDefinition(x))
 	case *corev1.Namespace:

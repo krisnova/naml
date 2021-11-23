@@ -67,9 +67,11 @@ var (
 
 	CoreV1Types = []string{
 		"Volume",
+		"SecretKeySelector",
 		"SecretProjection",
 		"ConfigMapKeySelector",
 		"ConfigMapProjection",
+		"ConfigMapEnvSource",
 		"HTTPHeader",
 		"PodAntiAffinity",
 		"PodAffinityTerm",

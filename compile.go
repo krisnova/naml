@@ -29,6 +29,7 @@ import (
 	"io/ioutil"
 	"os"
 	"os/exec"
+	"sync"
 )
 
 type Source struct {
@@ -40,9 +41,13 @@ type Program struct {
 	File   *os.File
 }
 
+var mtx sync.Mutex
+
 // Execute will execute a compiled NAML program
 // stdout, stderr, err := program.Execute([]string{""})
 func (p *Program) Execute(flags []string) (*bytes.Buffer, *bytes.Buffer, error) {
+	mtx.Lock()
+	defer mtx.Unlock()
 	cmd := exec.Command(p.File.Name(), flags...)
 	stdout := &bytes.Buffer{}
 	stderr := &bytes.Buffer{}
