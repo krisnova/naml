@@ -3,11 +3,11 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: RELEASE-NAME-jaeger-agent
+  name: naml-jaeger-agent
   labels:
     helm.sh/chart: jaeger-0.51.4
     app.kubernetes.io/name: jaeger
-    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/instance: naml
     app.kubernetes.io/version: "1.28.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: agent
@@ -17,11 +17,11 @@ automountServiceAccountToken: false
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: RELEASE-NAME-jaeger-cassandra-schema
+  name: naml-jaeger-cassandra-schema
   labels:
     helm.sh/chart: jaeger-0.51.4
     app.kubernetes.io/name: jaeger
-    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/instance: naml
     app.kubernetes.io/version: "1.28.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: cassandra-schema
@@ -31,11 +31,11 @@ automountServiceAccountToken: true
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: RELEASE-NAME-jaeger-collector
+  name: naml-jaeger-collector
   labels:
     helm.sh/chart: jaeger-0.51.4
     app.kubernetes.io/name: jaeger
-    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/instance: naml
     app.kubernetes.io/version: "1.28.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: collector
@@ -45,11 +45,11 @@ automountServiceAccountToken: false
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: RELEASE-NAME-jaeger-query
+  name: naml-jaeger-query
   labels:
     helm.sh/chart: jaeger-0.51.4
     app.kubernetes.io/name: jaeger
-    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/instance: naml
     app.kubernetes.io/version: "1.28.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: query
@@ -59,11 +59,11 @@ automountServiceAccountToken: false
 apiVersion: v1
 kind: Secret
 metadata:
-  name: RELEASE-NAME-jaeger-cassandra
+  name: naml-jaeger-cassandra
   labels:
     helm.sh/chart: jaeger-0.51.4
     app.kubernetes.io/name: jaeger
-    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/instance: naml
     app.kubernetes.io/version: "1.28.0"
     app.kubernetes.io/managed-by: Helm
 type: Opaque
@@ -74,11 +74,11 @@ data:
 apiVersion: v1
 kind: Service
 metadata:
-  name: RELEASE-NAME-cassandra
+  name: naml-cassandra
   labels:
     app: cassandra
     chart: cassandra-0.15.3
-    release: RELEASE-NAME
+    release: naml
     heritage: Helm
 spec:
   clusterIP: None
@@ -101,17 +101,17 @@ spec:
     targetPort: 9160
   selector:
     app: cassandra
-    release: RELEASE-NAME
+    release: naml
 ---
 # Source: jaeger/templates/agent-svc.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: RELEASE-NAME-jaeger-agent
+  name: naml-jaeger-agent
   labels:
     helm.sh/chart: jaeger-0.51.4
     app.kubernetes.io/name: jaeger
-    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/instance: naml
     app.kubernetes.io/version: "1.28.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: agent
@@ -140,18 +140,18 @@ spec:
   type: ClusterIP
   selector:
     app.kubernetes.io/name: jaeger
-    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/instance: naml
     app.kubernetes.io/component: agent
 ---
 # Source: jaeger/templates/collector-svc.yaml
 apiVersion: v1
 kind: Service
 metadata:
-  name: RELEASE-NAME-jaeger-collector
+  name: naml-jaeger-collector
   labels:
     helm.sh/chart: jaeger-0.51.4
     app.kubernetes.io/name: jaeger
-    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/instance: naml
     app.kubernetes.io/version: "1.28.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: collector
@@ -170,7 +170,7 @@ spec:
     targetPort: admin
   selector:
     app.kubernetes.io/name: jaeger
-    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/instance: naml
     app.kubernetes.io/component: collector
   type: ClusterIP
 ---
@@ -178,11 +178,11 @@ spec:
 apiVersion: v1
 kind: Service
 metadata:
-  name: RELEASE-NAME-jaeger-query
+  name: naml-jaeger-query
   labels:
     helm.sh/chart: jaeger-0.51.4
     app.kubernetes.io/name: jaeger
-    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/instance: naml
     app.kubernetes.io/version: "1.28.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: query
@@ -198,7 +198,7 @@ spec:
     targetPort: admin
   selector:
     app.kubernetes.io/name: jaeger
-    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/instance: naml
     app.kubernetes.io/component: query
   type: ClusterIP
 ---
@@ -206,11 +206,11 @@ spec:
 apiVersion: apps/v1
 kind: DaemonSet
 metadata:
-  name: RELEASE-NAME-jaeger-agent
+  name: naml-jaeger-agent
   labels:
     helm.sh/chart: jaeger-0.51.4
     app.kubernetes.io/name: jaeger
-    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/instance: naml
     app.kubernetes.io/version: "1.28.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: agent
@@ -218,21 +218,21 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: jaeger
-      app.kubernetes.io/instance: RELEASE-NAME
+      app.kubernetes.io/instance: naml
       app.kubernetes.io/component: agent
   template:
     metadata:
       labels:
         app.kubernetes.io/name: jaeger
-        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/instance: naml
         app.kubernetes.io/component: agent
     spec:
       securityContext:
         {}
       dnsPolicy: ClusterFirst
-      serviceAccountName: RELEASE-NAME-jaeger-agent
+      serviceAccountName: naml-jaeger-agent
       containers:
-      - name: RELEASE-NAME-jaeger-agent
+      - name: naml-jaeger-agent
         securityContext:
           {}
         image: jaegertracing/jaeger-agent:1.28.0
@@ -240,7 +240,7 @@ spec:
         args:
         env:
           - name: REPORTER_GRPC_HOST_PORT
-            value: RELEASE-NAME-jaeger-collector:14250
+            value: naml-jaeger-collector:14250
         ports:
         - name: zipkin-compact
           containerPort: 5775
@@ -274,11 +274,11 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: RELEASE-NAME-jaeger-collector
+  name: naml-jaeger-collector
   labels:
     helm.sh/chart: jaeger-0.51.4
     app.kubernetes.io/name: jaeger
-    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/instance: naml
     app.kubernetes.io/version: "1.28.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: collector
@@ -287,7 +287,7 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: jaeger
-      app.kubernetes.io/instance: RELEASE-NAME
+      app.kubernetes.io/instance: naml
       app.kubernetes.io/component: collector
   template:
     metadata:
@@ -295,14 +295,14 @@ spec:
         checksum/config-env: 75a11da44c802486bc6f65640aa48a730f0f684c5c07a42ba3cd1735eb3fb070
       labels:
         app.kubernetes.io/name: jaeger
-        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/instance: naml
         app.kubernetes.io/component: collector
     spec:
       securityContext:
         {}
-      serviceAccountName: RELEASE-NAME-jaeger-collector
+      serviceAccountName: naml-jaeger-collector
       containers:
-      - name: RELEASE-NAME-jaeger-collector
+      - name: naml-jaeger-collector
         securityContext:
           {}
         image: jaegertracing/jaeger-collector:1.28.0
@@ -313,7 +313,7 @@ spec:
           - name: SPAN_STORAGE_TYPE
             value: cassandra
           - name: CASSANDRA_SERVERS
-            value: RELEASE-NAME-cassandra
+            value: naml-cassandra
           - name: CASSANDRA_PORT
             value: "9042"
           
@@ -324,7 +324,7 @@ spec:
           - name: CASSANDRA_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: RELEASE-NAME-jaeger-cassandra
+                name: naml-jaeger-cassandra
                 key: password
         ports:
         - containerPort: 14250
@@ -355,11 +355,11 @@ spec:
 apiVersion: apps/v1
 kind: Deployment
 metadata:
-  name: RELEASE-NAME-jaeger-query
+  name: naml-jaeger-query
   labels:
     helm.sh/chart: jaeger-0.51.4
     app.kubernetes.io/name: jaeger
-    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/instance: naml
     app.kubernetes.io/version: "1.28.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: query
@@ -368,20 +368,20 @@ spec:
   selector:
     matchLabels:
       app.kubernetes.io/name: jaeger
-      app.kubernetes.io/instance: RELEASE-NAME
+      app.kubernetes.io/instance: naml
       app.kubernetes.io/component: query
   template:
     metadata:
       labels:
         app.kubernetes.io/name: jaeger
-        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/instance: naml
         app.kubernetes.io/component: query
     spec:
       securityContext:
         {}
-      serviceAccountName: RELEASE-NAME-jaeger-query
+      serviceAccountName: naml-jaeger-query
       containers:
-      - name: RELEASE-NAME-jaeger-query
+      - name: naml-jaeger-query
         securityContext:
           {}
         image: jaegertracing/jaeger-query:1.28.0
@@ -392,7 +392,7 @@ spec:
           - name: SPAN_STORAGE_TYPE
             value: cassandra
           - name: CASSANDRA_SERVERS
-            value: RELEASE-NAME-cassandra
+            value: naml-cassandra
           - name: CASSANDRA_PORT
             value: "9042"
           
@@ -403,7 +403,7 @@ spec:
           - name: CASSANDRA_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: RELEASE-NAME-jaeger-cassandra
+                name: naml-jaeger-cassandra
                 key: password
           - name: JAEGER_AGENT_PORT
             value: "6831"
@@ -425,7 +425,7 @@ spec:
           httpGet:
             path: /
             port: admin
-      - name: RELEASE-NAME-jaeger-agent-sidecar
+      - name: naml-jaeger-agent-sidecar
         securityContext:
           {}
         image: jaegertracing/jaeger-agent:1.28.0
@@ -433,7 +433,7 @@ spec:
         args:
         env:
         - name: REPORTER_GRPC_HOST_PORT
-          value: RELEASE-NAME-jaeger-collector:14250
+          value: naml-jaeger-collector:14250
         ports:
         - name: admin
           containerPort: 14271
@@ -457,18 +457,18 @@ spec:
 apiVersion: apps/v1
 kind: StatefulSet
 metadata:
-  name: RELEASE-NAME-cassandra
+  name: naml-cassandra
   labels:
     app: cassandra
     chart: cassandra-0.15.3
-    release: RELEASE-NAME
+    release: naml
     heritage: Helm
 spec:
   selector:
     matchLabels:
       app: cassandra
-      release: RELEASE-NAME
-  serviceName: RELEASE-NAME-cassandra
+      release: naml
+  serviceName: naml-cassandra
   replicas: 3
   podManagementPolicy: OrderedReady
   updateStrategy:
@@ -477,18 +477,18 @@ spec:
     metadata:
       labels:
         app: cassandra
-        release: RELEASE-NAME
+        release: naml
     spec:
       hostNetwork: false
       containers:
-      - name: RELEASE-NAME-cassandra
+      - name: naml-cassandra
         image: "cassandra:3.11.6"
         imagePullPolicy: "IfNotPresent"
         resources:
           {}
         env:
         - name: CASSANDRA_SEEDS
-          value: "RELEASE-NAME-cassandra-0.RELEASE-NAME-cassandra.default.svc.cluster.local"
+          value: "naml-cassandra-0.naml-cassandra.default.svc.cluster.local"
         - name: MAX_HEAP_SIZE
           value: "2048M"
         - name: HEAP_NEWSIZE
@@ -550,11 +550,11 @@ spec:
 apiVersion: batch/v1
 kind: Job
 metadata:
-  name: RELEASE-NAME-jaeger-cassandra-schema
+  name: naml-jaeger-cassandra-schema
   labels:
     helm.sh/chart: jaeger-0.51.4
     app.kubernetes.io/name: jaeger
-    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/instance: naml
     app.kubernetes.io/version: "1.28.0"
     app.kubernetes.io/managed-by: Helm
     app.kubernetes.io/component: cassandra-schema
@@ -562,13 +562,13 @@ spec:
   activeDeadlineSeconds: 300
   template:
     metadata:
-      name: RELEASE-NAME-jaeger-cassandra-schema
+      name: naml-jaeger-cassandra-schema
     spec:
       securityContext:
         {}
-      serviceAccountName: RELEASE-NAME-jaeger-cassandra-schema
+      serviceAccountName: naml-jaeger-cassandra-schema
       containers:
-      - name: RELEASE-NAME-jaeger-cassandra-schema
+      - name: naml-jaeger-cassandra-schema
         image: jaegertracing/jaeger-cassandra-schema:1.28.0
         imagePullPolicy: IfNotPresent
         securityContext:
@@ -576,7 +576,7 @@ spec:
         env:
           
           - name: CASSANDRA_SERVERS
-            value: RELEASE-NAME-cassandra
+            value: naml-cassandra
           - name: CASSANDRA_PORT
             value: "9042"
           
@@ -587,10 +587,10 @@ spec:
           - name: CASSANDRA_PASSWORD
             valueFrom:
               secretKeyRef:
-                name: RELEASE-NAME-jaeger-cassandra
+                name: naml-jaeger-cassandra
                 key: password
           - name: CQLSH_HOST
-            value: RELEASE-NAME-cassandra
+            value: naml-cassandra
           
           - name: DATACENTER
             value: "dc1"

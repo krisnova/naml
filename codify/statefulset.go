@@ -65,7 +65,7 @@ func (k StatefulSet) Install() (string, []string) {
 	x.objects = append(x.objects, {{ .GoName }}StatefulSet)
 
 	if client != nil {
-		_, err = client.AppsV1().StatefulSets("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}Deployment, v1.CreateOptions{})
+		_, err = client.AppsV1().StatefulSets("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}StatefulSet, v1.CreateOptions{})
 		if err != nil {
 			return err
 		}

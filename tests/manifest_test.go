@@ -79,7 +79,8 @@ func generateCompileRunYAML(filename string) error {
 	if err != nil {
 		return fmt.Errorf("unable to compile: %s: %v", filename, err)
 	}
-	_, stderr, err := program.Execute([]string{"list"})
+	//	_, stderr, err := program.Execute([]string{"list"})
+	_, stderr, err := program.Execute([]string{""})
 	if stderr.Len() > 0 {
 		return fmt.Errorf("failed executing binary: %s: %v: %s", filename, err, stderr.String())
 	}

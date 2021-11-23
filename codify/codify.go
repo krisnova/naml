@@ -67,6 +67,7 @@ var (
 
 	CoreV1Types = []string{
 		"Volume",
+		"SecretKeySelector",
 		"SecretProjection",
 		"ConfigMapKeySelector",
 		"ConfigMapProjection",
