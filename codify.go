@@ -56,14 +56,14 @@ const (
 
 	// codifyGoFormat will toggle if Codify() will also "go fmt" the generated code.
 	codifyGoFormat bool = true
-)
 
-// YAMLDelimiter is the official delimiter used to append multiple
-// YAML files together into the same file.
-//
-//	Reference: https://yaml.org/spec/1.2/spec.html
-//
-const YAMLDelimiter string = "\n---\n"
+	// YAMLDelimiter is the official delimiter used to append multiple
+	// YAML files together into the same file.
+	//
+	//	Reference: https://yaml.org/spec/1.2/spec.html
+	//
+	YAMLDelimiter string = "\n---\n"
+)
 
 // We ARE in fact doing a lot of string handling here
 // So we use strings as often as possible.
@@ -127,7 +127,7 @@ func Codify(input io.Reader, v *CodifyValues) ([]byte, error) {
 	}
 
 	// Find the objects
-	objs, err := ReaderToCodifyObjects(input)
+	objs, delta, err := ReaderToCodifyObjects(input)
 	if err != nil {
 		return code, fmt.Errorf("unable to parse objects: %v", err)
 	}
@@ -214,6 +214,9 @@ func Codify(input io.Reader, v *CodifyValues) ([]byte, error) {
 		return code, fmt.Errorf("unable to auto format code: %v", err)
 	}
 
+	if delta > 0 {
+		return fmtBytes, fmt.Errorf("incomplete: unable to Codify (%d) YAML system(s)", delta)
+	}
 	return fmtBytes, nil
 }
 
@@ -229,29 +232,37 @@ func ReaderToBytes(input io.Reader) ([]byte, error) {
 	return ibytes, nil
 }
 
-// ReaderToCodifyObjects will convert an io.Reader to naml compatible Go objects
-func ReaderToCodifyObjects(input io.Reader) ([]CodifyObject, error) {
+// ReaderToCodifyObjects will convert an io.Reader to naml compatible Go objects.
+//
+// This function works by doing the best it can, and will return as many CodifyObjects
+// as possible.
+// The function will return a positive integer for every YAML object it detects, that
+// it is unable to Codify.
+// If the delta is greater than 0, that means we have encountered a loss.
+func ReaderToCodifyObjects(input io.Reader) ([]CodifyObject, int, error) {
 	var objects []CodifyObject
 	ibytes, err := ReaderToBytes(input)
 	if err != nil {
-		return objects, err
+		return objects, -1, err
 	}
 	clean := string(cleanRaw(ibytes))
 	yamls := strings.Split(clean, YAMLDelimiter)
 	// We support more than one "YAML" per the delimiter
 	// So we need to deal in sets.
+	d := len(yamls)
 	for _, yaml := range yamls {
 		raw := []byte(yaml)
 		cObjects, err := toCodify(raw)
 		if err != nil {
-			return objects, fmt.Errorf("unable to codify: %v", err)
+			return objects, -1, fmt.Errorf("unable to codify: %v", err)
 		}
 		// Merge the items
 		for _, c := range cObjects {
 			objects = append(objects, c)
 		}
 	}
-	return objects, nil
+	c := len(objects)
+	return objects, d - c, nil
 }
 
 // cleanRaw will clean raw yaml

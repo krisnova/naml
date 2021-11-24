@@ -1,0 +1,7 @@
+apiVersion: unknownbad.io/v1alpha1
+kind: UnknownBad
+metadata:
+    name: example-obc
+spec:
+    unknownField: example-unknown
+    unknownFieldName: unknown.naml.io

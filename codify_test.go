@@ -67,7 +67,10 @@ spec:
 
 	buf := bytes.Buffer{}
 	buf.Write([]byte(testString))
-	objects, err := ReaderToCodifyObjects(&buf)
+	objects, delta, err := ReaderToCodifyObjects(&buf)
+	if delta != 0 {
+		t.Errorf("Failure parsing YAML systems")
+	}
 	if err != nil {
 		t.Errorf("YAML delimiter check: %v", err)
 	}
@@ -115,7 +118,10 @@ spec:
 
 	buf := bytes.Buffer{}
 	buf.Write([]byte(testString))
-	objects, err := ReaderToCodifyObjects(&buf)
+	objects, delta, err := ReaderToCodifyObjects(&buf)
+	if delta != 0 {
+		t.Errorf("Failure parsing YAML systems")
+	}
 	if err != nil {
 		t.Errorf("YAML delimiter check: %v", err)
 	}
@@ -165,7 +171,10 @@ spec:
 
 	buf := bytes.Buffer{}
 	buf.Write([]byte(testString))
-	objects, err := ReaderToCodifyObjects(&buf)
+	objects, delta, err := ReaderToCodifyObjects(&buf)
+	if delta != 0 {
+		t.Errorf("Failure parsing YAML systems")
+	}
 	if err != nil {
 		t.Errorf("YAML delimiter check: %v", err)
 	}
@@ -213,7 +222,10 @@ spec:
 
 	buf := bytes.Buffer{}
 	buf.Write([]byte(testString))
-	objects, err := ReaderToCodifyObjects(&buf)
+	objects, delta, err := ReaderToCodifyObjects(&buf)
+	if delta != 0 {
+		t.Errorf("Failure parsing YAML systems")
+	}
 	if err != nil {
 		t.Errorf("YAML delimiter check: %v", err)
 	}
@@ -242,7 +254,54 @@ spec:
 
 	buf := bytes.Buffer{}
 	buf.Write([]byte(testString))
-	objects, err := ReaderToCodifyObjects(&buf)
+	objects, delta, err := ReaderToCodifyObjects(&buf)
+	if delta != 0 {
+		t.Errorf("Failure parsing YAML systems")
+	}
+	if err != nil {
+		t.Errorf("inline YAML delimiter check: %v", err)
+	}
+	if len(objects) != 1 {
+		t.Errorf("inline YAML delimiter split: %d", len(objects))
+	}
+}
+
+func TestYAMLDelimiterDeltaMissing(t *testing.T) {
+
+	testString := `apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: example
+    bogus: ---
+  name: example
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: example
+  type: LoadBalancer
+
+---
+
+apiVersion: unknownbad.io/v1alpha1
+kind: UnknownBad
+metadata:
+    name: example-obc
+spec:
+    unknownField: example-unknown
+    unknownFieldName: unknown.naml.io
+
+`
+
+	buf := bytes.Buffer{}
+	buf.Write([]byte(testString))
+	objects, delta, err := ReaderToCodifyObjects(&buf)
+	if delta != 1 {
+		t.Errorf("Expecting 1 failed object")
+	}
 	if err != nil {
 		t.Errorf("inline YAML delimiter check: %v", err)
 	}
