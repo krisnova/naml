@@ -2,7 +2,7 @@
 
 pkgbase=naml
 pkgname=(naml)
-pkgver=v1.0.2
+pkgver=v1.0.3
 pkgrel=1
 pkgdesc="Not Another Markup Language [NAML]"
 arch=(x86_64)
