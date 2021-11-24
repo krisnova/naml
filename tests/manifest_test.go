@@ -69,8 +69,10 @@ func generateCompileRunYAML(filename string) error {
 	buffer := bytes.Buffer{}
 	buffer.Write(data)
 	output, err := naml.Codify(&buffer, CodifyValues(filename))
-	if err != nil {
+	if err != nil && len(output) < 0 {
 		return fmt.Errorf("unable to codify: %s: %v", filename, err)
+	} else if err != nil && len(output) > 0 {
+		// Delta measured! We could only codify some.
 	}
 	program, err := naml.Compile(output)
 	if program != nil {
