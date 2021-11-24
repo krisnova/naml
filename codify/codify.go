@@ -66,6 +66,8 @@ var (
 	}
 
 	CoreV1Types = []string{
+		"WeightedPodAffinityTerm",
+		"TCPSocketAction",
 		"Volume",
 		"SecretEnvSource",
 		"SecretKeySelector",

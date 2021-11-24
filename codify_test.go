@@ -28,6 +28,200 @@ import (
 	"testing"
 )
 
+func TestYAMLDelimiterBottom(t *testing.T) {
+
+	testString := `apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: example
+    bogus: ---
+  name: example
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: example
+  type: LoadBalancer
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: example
+    bogus: ---
+  name: example
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: example
+  type: LoadBalancer
+---
+`
+
+	buf := bytes.Buffer{}
+	buf.Write([]byte(testString))
+	objects, err := ReaderToCodifyObjects(&buf)
+	if err != nil {
+		t.Errorf("YAML delimiter check: %v", err)
+	}
+	if len(objects) != 2 {
+		t.Errorf("YAML delimiter split: %d", len(objects))
+	}
+}
+
+func TestYAMLDelimiterNoSpace(t *testing.T) {
+
+	testString := `
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: example
+    bogus: ---
+  name: example
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: example
+  type: LoadBalancer
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: example
+    bogus: ---
+  name: example
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: example
+  type: LoadBalancer
+`
+
+	buf := bytes.Buffer{}
+	buf.Write([]byte(testString))
+	objects, err := ReaderToCodifyObjects(&buf)
+	if err != nil {
+		t.Errorf("YAML delimiter check: %v", err)
+	}
+	if len(objects) != 2 {
+		t.Errorf("YAML delimiter split: %d", len(objects))
+	}
+}
+
+func TestYAMLDelimiterTopLoad(t *testing.T) {
+
+	testString := `
+---
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: example
+    bogus: ---
+  name: example
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: example
+  type: LoadBalancer
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: example
+    bogus: ---
+  name: example
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: example
+  type: LoadBalancer
+`
+
+	buf := bytes.Buffer{}
+	buf.Write([]byte(testString))
+	objects, err := ReaderToCodifyObjects(&buf)
+	if err != nil {
+		t.Errorf("YAML delimiter check: %v", err)
+	}
+	if len(objects) != 2 {
+		t.Errorf("YAML delimiter split: %d", len(objects))
+	}
+}
+
+func TestYAMLDelimiterHappy(t *testing.T) {
+
+	testString := `apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: example
+    bogus: ---
+  name: example
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: example
+  type: LoadBalancer
+
+---
+
+apiVersion: v1
+kind: Service
+metadata:
+  labels:
+    app: example
+    bogus: ---
+  name: example
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8080
+  selector:
+    app: example
+  type: LoadBalancer
+`
+
+	buf := bytes.Buffer{}
+	buf.Write([]byte(testString))
+	objects, err := ReaderToCodifyObjects(&buf)
+	if err != nil {
+		t.Errorf("YAML delimiter check: %v", err)
+	}
+	if len(objects) != 2 {
+		t.Errorf("YAML delimiter split: %d", len(objects))
+	}
+}
+
 func TestYAMLDelimiterInline(t *testing.T) {
 
 	testString := `apiVersion: v1
@@ -35,7 +229,7 @@ kind: Service
 metadata:
   labels:
     app: example
-	bogus: ---
+    bogus: ---
   name: example
 spec:
   ports:
