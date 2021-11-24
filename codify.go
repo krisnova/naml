@@ -301,7 +301,7 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		// Here we try CRDs
 		decoded, _, err = serializer.Decode([]byte(raw), nil, &apiextensionsv1.CustomResourceDefinition{})
 		if err != nil {
-			return nil, fmt.Errorf("trying CRD: unable to deserialize in codify: %v", err)
+			return nil, fmt.Errorf("trying CRD: unable to deserialize in codify: %v\n\nraw:\n\n%s", err, string(raw))
 		}
 	}
 
