@@ -290,6 +290,7 @@ func RunCommandLineWithOptions() error {
 					},
 				},
 				Action: func(c *cli.Context) error {
+
 					// ----------------------------------
 					err := AllInit(kubeconfig, verbose, with.Value())
 					if err != nil {
@@ -356,6 +357,10 @@ func RunCommandLineWithOptions() error {
 					},
 				},
 				Action: func(c *cli.Context) error {
+					logger.Warning("⚠ naml build alpha feature ⚠")
+					logger.Warning("if this is a feature you plan on using please make your use case known in the issue tracker")
+					logger.Warning("⚠ naml build alpha feature ⚠")
+
 					arguments := c.Args()
 					var src []byte
 					var err error
@@ -408,6 +413,9 @@ func RunCommandLineWithOptions() error {
 				Usage:     "Output embedded applications. (yaml, json)",
 				UsageText: "naml output [name] -o yaml",
 				Action: func(c *cli.Context) error {
+					logger.Warning("⚠ naml output alpha feature ⚠")
+					logger.Warning("if this is a feature you plan on using please make your use case known in the issue tracker")
+					logger.Warning("⚠ naml output alpha feature ⚠")
 					return outputFunc(output, c)
 				},
 				Flags: []cli.Flag{
