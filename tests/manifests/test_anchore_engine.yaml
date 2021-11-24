@@ -1,0 +1,985 @@
+---
+# Source: anchore-engine/charts/postgresql/templates/secrets.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: RELEASE-NAME-postgresql
+  labels:
+    app: postgresql
+    chart: postgresql-1.0.1
+    release: RELEASE-NAME
+    heritage: Helm
+type: Opaque
+data:
+  
+  postgres-password:  "YW5jaG9yZS1wb3N0Z3JlcywxMjM="
+---
+# Source: anchore-engine/templates/anchore_admin_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: RELEASE-NAME-anchore-engine-admin-pass
+  labels:
+    app: RELEASE-NAME-anchore-engine
+    chart: anchore-engine-1.15.1
+    release: RELEASE-NAME
+    heritage: Helm
+type: Opaque
+stringData:
+  ANCHORE_ADMIN_PASSWORD: "40icEgyFut1VAm6cxxP8Hw9jZ2EWMDSH"
+---
+# Source: anchore-engine/templates/engine_secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: RELEASE-NAME-anchore-engine
+  labels:
+    app: RELEASE-NAME-anchore-engine
+    chart: anchore-engine-1.15.1
+    release: RELEASE-NAME
+    heritage: Helm
+type: Opaque
+stringData:
+  ANCHORE_DB_PASSWORD: "anchore-postgres,123"
+---
+# Source: anchore-engine/charts/postgresql/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: RELEASE-NAME-postgresql
+  labels:
+    app: postgresql
+    chart: postgresql-1.0.1
+    release: RELEASE-NAME
+    heritage: Helm
+data:
+---
+# Source: anchore-engine/templates/analyzer_configmap.yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: RELEASE-NAME-anchore-engine-analyzer
+  labels:
+    app: RELEASE-NAME-anchore-engine
+    chart: anchore-engine-1.15.1
+    release: RELEASE-NAME
+    heritage: Helm
+    component: analyzer
+data:
+  analyzer_config.yaml: |
+    retrieve_files:
+      file_list:
+      - /etc/passwd
+    secret_search:
+      match_params:
+      - MAXFILESIZE=10000
+      - STOREONMATCH=n
+      regexp_match:
+      - AWS_ACCESS_KEY=(?i).*aws_access_key_id( *=+ *).*(?<![A-Z0-9])[A-Z0-9]{20}(?![A-Z0-9]).*
+      - AWS_SECRET_KEY=(?i).*aws_secret_access_key( *=+ *).*(?<![A-Za-z0-9/+=])[A-Za-z0-9/+=]{40}(?![A-Za-z0-9/+=]).*
+      - PRIV_KEY=(?i)-+BEGIN(.*)PRIVATE KEY-+
+      - 'DOCKER_AUTH=(?i).*"auth": *".+"'
+      - API_KEY=(?i).*api(-|_)key( *=+ *).*(?<![A-Z0-9])[A-Z0-9]{20,60}(?![A-Z0-9]).*
+---
+# Source: anchore-engine/templates/engine_configmap.yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: RELEASE-NAME-anchore-engine
+  labels:
+    app: RELEASE-NAME-anchore-engine
+    chart: anchore-engine-1.15.1
+    release: RELEASE-NAME
+    heritage: Helm
+data:
+  config.yaml: |
+    # Anchore Service Configuration File from ConfigMap
+    service_dir: /anchore_service
+    tmp_dir: /analysis_scratch
+    log_level: INFO
+    image_analyze_timeout_seconds: 36000
+    allow_awsecr_iam_auto: false
+    host_id: "${ANCHORE_POD_NAME}"
+    internal_ssl_verify: false
+    auto_restart_services: false
+
+    global_client_connect_timeout: 0
+    global_client_read_timeout: 0
+    server_request_timeout_seconds: 60
+
+    metrics:
+      enabled: false
+      auth_disabled: false
+    
+
+    default_admin_password: ${ANCHORE_ADMIN_PASSWORD}
+    default_admin_email: example@email.com
+
+    # Defines a maximum compressed image size (MB) to be added for analysis
+    # Value < 0 disables feature. Disabled by default
+    max_compressed_image_size_mb: -1
+
+    # Locations for keys used for signing and encryption. Only one of 'secret' or 'public_key_path'/'private_key_path' needs to be set. If all are set then the keys take precedence over the secret value
+    # Secret is for a shared secret and if set, all components in anchore should have the exact same value in their configs.
+    keys:
+
+    # Configuring supported user authentication and credential management
+    user_authentication:
+      oauth:
+        enabled: false
+        default_token_expiration_seconds: 3600
+
+      # Set this to True to enable storing user passwords only as secure hashes in the db. This can dramatically increase CPU usage if you
+      # don't also use oauth and tokens for internal communications (which requires keys/secret to be configured as well)
+      # WARNING: you should not change this after a system has been initialized as it may cause a mismatch in existing passwords
+      hashed_passwords: false
+
+    credentials:
+      database:
+        db_connect: "postgresql://${ANCHORE_DB_USER}:${ANCHORE_DB_PASSWORD}@${ANCHORE_DB_HOST}/${ANCHORE_DB_NAME}"
+        db_connect_args:
+          timeout: 120
+          ssl: false
+        db_pool_size: 30
+        db_pool_max_overflow: 100
+    services:
+      apiext:
+        enabled: true
+        require_auth: true
+        endpoint_hostname: RELEASE-NAME-anchore-engine-api
+        max_request_threads: 50
+        listen: 0.0.0.0
+        port: 8228
+      analyzer:
+        enabled: true
+        require_auth: true
+        endpoint_hostname: RELEASE-NAME-anchore-engine-analyzer
+        listen: 0.0.0.0
+        port: 8084
+        max_request_threads: 50
+        cycle_timer_seconds: 1
+        cycle_timers:
+          image_analyzer: 5
+        max_threads: 1
+        analyzer_driver: 'nodocker'
+        layer_cache_enable: false
+        layer_cache_max_gigabytes: 0
+        enable_hints: false
+        enable_owned_package_filtering: true
+      catalog:
+        enabled: true
+        require_auth: true
+        endpoint_hostname: RELEASE-NAME-anchore-engine-catalog
+        listen: 0.0.0.0
+        port: 8082
+        max_request_threads: 50
+        cycle_timer_seconds: 1
+        cycle_timers:
+          # Interval to check for an update to a tag
+          image_watcher: 3600
+          # Interval to run a policy evaluation on images with the policy_eval subscription activated.
+          policy_eval: 3600
+          # Interval to run a vulnerability scan on images with the vuln_update subscription activated.
+          vulnerability_scan: 14400
+          # Interval at which the catalog looks for new work to put on the image analysis queue.
+          analyzer_queue: 1
+          # Interval at which the catalog archival tasks are triggered.
+          archive_tasks: 43200
+          image_gc: 60
+          # Interval notifications will be processed for state changes
+          notifications: 30
+          # Intervals service state updates are polled for the system status
+          service_watcher: 15
+          # Interval between checks to repo for new tags
+          repo_watcher: 60
+          k8s_watcher: 300
+          k8s_image_watcher: 150
+        event_log:
+          notification:
+            enabled: false
+            level:
+            - error
+        analysis_archive:
+          compression:
+            enabled: true
+            min_size_kbytes: 100
+          storage_driver:
+            config: {}
+            name: db
+        object_store:
+          compression:
+            enabled: true
+            min_size_kbytes: 100
+          storage_driver:
+            config: {}
+            name: db
+        runtime_inventory:
+          image_ttl_days: 1
+          kubernetes:
+            report_anchore_cluster:
+              enabled: true
+              anchore_cluster_name: anchore-k8s
+              namespaces:
+                - all
+      simplequeue:
+        enabled: true
+        require_auth: true
+        endpoint_hostname: RELEASE-NAME-anchore-engine-simplequeue
+        listen: 0.0.0.0
+        port: 8083
+        max_request_threads: 50
+      policy_engine:
+        enabled: true
+        require_auth: true
+        max_request_threads: 50
+        endpoint_hostname: RELEASE-NAME-anchore-engine-policy
+        listen: 0.0.0.0
+        port: 8087
+        cycle_timer_seconds: 1
+        cycle_timers:
+          feed_sync: 14400
+          feed_sync_checker: 3600
+          grypedb_sync: 60
+        vulnerabilities:
+          provider: grype
+          sync:
+            enabled: true
+            ssl_verify: false
+            connection_timeout_seconds: 3
+            read_timeout_seconds: 180
+            data:
+              # grypedb feed is synced if the provider is set to grype. All the remaining feeds except for packages are ignored even if they are enabled
+              grypedb:
+                enabled: true
+                url: https://toolbox-data.anchore.io/grype/databases/listing.json
+              # The following feeds are synced if provider is set to legacy
+              # Vulnerabilities feed is the feed for distro cve sources (redhat, debian, ubuntu, oracle, alpine....)
+              vulnerabilities:
+                enabled: true
+                url: https://ancho.re/v1/service/feeds
+              # NVD Data is used for non-distro CVEs (jars, npm, etc) that are not packaged and released by distros as rpms, debs, etc
+              nvdv2:
+                enabled: true
+                url: https://ancho.re/v1/service/feeds
+              github:
+                enabled: true
+                url: https://ancho.re/v1/service/feeds
+              # Warning: enabling the packages and nvd sync causes the service to require much more memory to do process the significant data volume. We recommend at least 4GB available for the container
+              # packages feed is synced if it is enabled regardless of the provider
+              packages:
+                enabled: false
+                url: https://ancho.re/v1/service/feeds
+---
+# Source: anchore-engine/templates/engine_configmap_env.yaml
+kind: ConfigMap
+apiVersion: v1
+metadata:
+  name: RELEASE-NAME-anchore-engine-env
+  labels:
+    app: RELEASE-NAME-anchore-engine
+    chart: anchore-engine-1.15.1
+    release: RELEASE-NAME
+    heritage: Helm
+data:
+  ANCHORE_DB_NAME: "anchore"
+  ANCHORE_DB_USER: "anchoreengine"
+  ANCHORE_DB_HOST: "RELEASE-NAME-postgresql:5432"
+---
+# Source: anchore-engine/charts/postgresql/templates/pvc.yaml
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  name: RELEASE-NAME-postgresql
+  labels:
+    app: postgresql
+    chart: postgresql-1.0.1
+    release: RELEASE-NAME
+    heritage: Helm
+  annotations:
+    "helm.sh/resource-policy": keep
+spec:
+  accessModes:
+    - "ReadWriteOnce"
+  resources:
+    requests:
+      storage: "20Gi"
+---
+# Source: anchore-engine/charts/postgresql/templates/svc.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: RELEASE-NAME-postgresql
+  labels:
+    app: postgresql
+    chart: postgresql-1.0.1
+    release: RELEASE-NAME
+    heritage: Helm
+spec:
+  type: ClusterIP
+  ports:
+  - name: postgresql
+    port: 5432
+    targetPort: postgresql
+  selector:
+    app: postgresql
+    release: RELEASE-NAME
+---
+# Source: anchore-engine/templates/api_deployment.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: RELEASE-NAME-anchore-engine-api
+  labels:
+    app: RELEASE-NAME-anchore-engine
+    chart: anchore-engine-1.15.1
+    release: RELEASE-NAME
+    heritage: Helm
+    component: api
+spec:
+  type: ClusterIP
+  ports:
+    - name: anchore-external-api
+      port: 8228
+      targetPort: 8228
+      protocol: TCP
+  selector:
+    app: RELEASE-NAME-anchore-engine
+    component: api
+---
+# Source: anchore-engine/templates/catalog_deployment.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: RELEASE-NAME-anchore-engine-catalog
+  labels:
+    app: RELEASE-NAME-anchore-engine
+    chart: anchore-engine-1.15.1
+    release: RELEASE-NAME
+    heritage: Helm
+    component: catalog
+spec:
+  type: ClusterIP
+  ports:
+    - name: anchore-catalog-api
+      port: 8082
+      targetPort: 8082
+      protocol: TCP
+  selector:
+    app: RELEASE-NAME-anchore-engine
+    component: catalog
+---
+# Source: anchore-engine/templates/policy_engine_deployment.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: RELEASE-NAME-anchore-engine-policy
+  labels:
+    app: RELEASE-NAME-anchore-engine
+    chart: anchore-engine-1.15.1
+    release: RELEASE-NAME
+    heritage: Helm
+    component: policy
+spec:
+  type: ClusterIP
+  ports:
+    - name: anchore-policy-api
+      port: 8087
+      targetPort: 8087
+      protocol: TCP
+  selector:
+    app: RELEASE-NAME-anchore-engine
+    component: policy
+---
+# Source: anchore-engine/templates/simplequeue_deployment.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: RELEASE-NAME-anchore-engine-simplequeue
+  labels:
+    app: RELEASE-NAME-anchore-engine
+    chart: anchore-engine-1.15.1
+    release: RELEASE-NAME
+    heritage: Helm
+    component: simplequeue
+spec:
+  type: ClusterIP
+  ports:
+    - name: anchore-simplequeue-api
+      port: 8083
+      targetPort: 8083
+      protocol: TCP
+  selector:
+    app: RELEASE-NAME-anchore-engine
+    component: simplequeue
+---
+# Source: anchore-engine/charts/postgresql/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: RELEASE-NAME-postgresql
+  labels:
+    app: postgresql
+    chart: postgresql-1.0.1
+    release: RELEASE-NAME
+    heritage: Helm
+spec:
+  selector:
+    matchLabels:
+      app: postgresql
+      release: RELEASE-NAME
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: postgresql
+        release: RELEASE-NAME
+    spec:
+      containers:
+      - name: RELEASE-NAME-postgresql
+        image: "postgres:9.6.18"
+        imagePullPolicy: ""
+        args:
+        env:
+        - name: POSTGRES_USER
+          value: "anchoreengine"
+          # Required for pg_isready in the health probes.
+        - name: PGUSER
+          value: "anchoreengine"
+        - name: POSTGRES_DB
+          value: "anchore"
+        - name: POSTGRES_INITDB_ARGS
+          value: ""
+        - name: PGDATA
+          value: /var/lib/postgresql/data/pgdata
+        - name: POSTGRES_PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: RELEASE-NAME-postgresql
+              key: postgres-password
+        - name: POD_IP
+          valueFrom: { fieldRef: { fieldPath: status.podIP } }
+        ports:
+        - name: postgresql
+          containerPort: 5432
+        livenessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - exec pg_isready --host $POD_IP
+          initialDelaySeconds: 60
+          timeoutSeconds: 5
+          failureThreshold: 6
+        readinessProbe:
+          exec:
+            command:
+            - sh
+            - -c
+            - exec pg_isready --host $POD_IP
+          initialDelaySeconds: 5
+          timeoutSeconds: 3
+          periodSeconds: 5
+        resources:
+          requests:
+            cpu: 100m
+            memory: 256Mi
+        volumeMounts:
+        - name: data
+          mountPath: /var/lib/postgresql/data/pgdata
+          subPath: postgresql-db
+      volumes:
+      - name: data
+        persistentVolumeClaim:
+          claimName: RELEASE-NAME-postgresql
+---
+# Source: anchore-engine/templates/analyzer_deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: RELEASE-NAME-anchore-engine-analyzer
+  labels:
+    app: RELEASE-NAME-anchore-engine
+    chart: anchore-engine-1.15.1
+    release: RELEASE-NAME
+    heritage: Helm
+    component: analyzer
+spec:
+  selector:
+    matchLabels:
+      app: RELEASE-NAME-anchore-engine
+      component: analyzer
+  replicas: 1
+  strategy:
+    type: Recreate
+    rollingUpdate: null
+  template:
+    metadata:
+      labels:
+        app: RELEASE-NAME-anchore-engine
+        component: analyzer
+      annotations:
+        checksum/secrets: a0ce689a3fd86185e8f6bdb516902eef3a339db9cf7d3d45eb5bd9b8fcf7cc64
+        checksum/env: 6ea26b73fd71aa84b52400ee834522391a203aae234949c57da8f49f9249acf6
+        checksum/engine-config: e7ef04842b5a9ff562e4c6dc61239501f0b7b754c492bbfac4956b72d9eef799
+        checksum/analyzer-config: 247dd04769e51b0b3c5c06bdb80dc94a0fc121954a6ba9a913af47faaf7d8f98
+    spec:
+      securityContext:
+        
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsUser: 1000
+      containers:
+      - name: anchore-engine-analyzer
+        image: docker.io/anchore/anchore-engine:v1.0.1
+        imagePullPolicy: IfNotPresent
+        args: ["anchore-manager", "service", "start", "--no-auto-upgrade", "analyzer"]
+        envFrom:
+        - secretRef:
+            name: RELEASE-NAME-anchore-engine
+        - secretRef:
+            name: RELEASE-NAME-anchore-engine-admin-pass
+        - configMapRef:
+            name: RELEASE-NAME-anchore-engine-env
+        env:
+        - name: ANCHORE_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        ports:
+        - name: analyzer-api
+          containerPort: 8084
+        volumeMounts:
+        - name: analyzer-config-volume
+          mountPath: /anchore_service/analyzer_config.yaml
+          subPath: analyzer_config.yaml
+        - name: config-volume
+          mountPath: /config/config.yaml
+          subPath: config.yaml
+        - name: analyzer-scratch
+          mountPath: /analysis_scratch
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: analyzer-api
+          initialDelaySeconds: 120
+          timeoutSeconds: 10
+          periodSeconds: 10
+          failureThreshold: 6
+          successThreshold: 1
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: analyzer-api
+          timeoutSeconds: 10
+          periodSeconds: 10
+          failureThreshold: 3
+          successThreshold: 1
+        resources:
+          
+          null
+      volumes:
+        - name: config-volume
+          configMap:
+            name: RELEASE-NAME-anchore-engine
+        - name: analyzer-scratch
+          
+          emptyDir: {}
+        - name: analyzer-config-volume
+          configMap:
+            name: RELEASE-NAME-anchore-engine-analyzer
+---
+# Source: anchore-engine/templates/api_deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: RELEASE-NAME-anchore-engine-api
+  labels:
+    app: RELEASE-NAME-anchore-engine
+    component: api
+    chart: anchore-engine-1.15.1
+    release: RELEASE-NAME
+    heritage: Helm
+spec:
+  selector:
+    matchLabels:
+      app: RELEASE-NAME-anchore-engine
+      component: api
+  replicas: 1
+  strategy:
+    type: Recreate
+    rollingUpdate: null
+  template:
+    metadata:
+      labels:
+        app: RELEASE-NAME-anchore-engine
+        component: api
+      annotations:
+        checksum/secrets: a0ce689a3fd86185e8f6bdb516902eef3a339db9cf7d3d45eb5bd9b8fcf7cc64
+        checksum/env: 6ea26b73fd71aa84b52400ee834522391a203aae234949c57da8f49f9249acf6
+        checksum/engine-config: e7ef04842b5a9ff562e4c6dc61239501f0b7b754c492bbfac4956b72d9eef799
+    spec:
+      securityContext:
+        
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsUser: 1000
+      containers:
+      - name: "anchore-engine-api"
+        image: docker.io/anchore/anchore-engine:v1.0.1
+        imagePullPolicy: IfNotPresent
+        args: ["anchore-manager", "service", "start", "--no-auto-upgrade", "apiext"]
+        envFrom:
+        - secretRef:
+            name: RELEASE-NAME-anchore-engine
+        - secretRef:
+            name: RELEASE-NAME-anchore-engine-admin-pass
+        - configMapRef:
+            name: RELEASE-NAME-anchore-engine-env
+        env:
+        - name: ANCHORE_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        - name: ANCHORE_CLI_PASS
+          valueFrom:
+            secretKeyRef:
+              name: RELEASE-NAME-anchore-engine-admin-pass
+              key: ANCHORE_ADMIN_PASSWORD
+        ports:
+        - containerPort: 8228
+          name: external-api
+        volumeMounts:
+        - name: config-volume
+          mountPath: /config/config.yaml
+          subPath: config.yaml
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: external-api
+          initialDelaySeconds: 120
+          timeoutSeconds: 10
+          periodSeconds: 10
+          failureThreshold: 6
+          successThreshold: 1
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: external-api
+          timeoutSeconds: 10
+          periodSeconds: 10
+          failureThreshold: 3
+          successThreshold: 1
+        resources:
+          
+          null
+      volumes:
+        - name: config-volume
+          configMap:
+            name: RELEASE-NAME-anchore-engine
+---
+# Source: anchore-engine/templates/catalog_deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: RELEASE-NAME-anchore-engine-catalog
+  labels:
+    app: RELEASE-NAME-anchore-engine
+    chart: anchore-engine-1.15.1
+    release: RELEASE-NAME
+    heritage: Helm
+    component: catalog
+spec:
+  selector:
+    matchLabels:
+      app: RELEASE-NAME-anchore-engine
+      component: catalog
+  replicas: 1
+  strategy:
+    type: Recreate
+    rollingUpdate: null
+  template:
+    metadata:
+      labels:
+        app: RELEASE-NAME-anchore-engine
+        component: catalog
+      annotations:
+        checksum/secrets: a0ce689a3fd86185e8f6bdb516902eef3a339db9cf7d3d45eb5bd9b8fcf7cc64
+        checksum/env: 6ea26b73fd71aa84b52400ee834522391a203aae234949c57da8f49f9249acf6
+        checksum/engine-config: e7ef04842b5a9ff562e4c6dc61239501f0b7b754c492bbfac4956b72d9eef799
+    spec:
+      securityContext:
+        
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsUser: 1000
+      containers:
+      - name: anchore-engine-catalog
+        image: docker.io/anchore/anchore-engine:v1.0.1
+        imagePullPolicy: IfNotPresent
+        args: ["anchore-manager", "service", "start", "--no-auto-upgrade", "catalog"]
+        envFrom:
+        - secretRef:
+            name: RELEASE-NAME-anchore-engine
+        - secretRef:
+            name: RELEASE-NAME-anchore-engine-admin-pass
+        - configMapRef:
+            name: RELEASE-NAME-anchore-engine-env
+        env:
+        - name: ANCHORE_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        ports:
+        - name: catalog
+          containerPort: 8082
+        volumeMounts:
+        - name: config-volume
+          mountPath: /config/config.yaml
+          subPath: config.yaml
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: catalog
+          initialDelaySeconds: 120
+          timeoutSeconds: 10
+          periodSeconds: 10
+          failureThreshold: 6
+          successThreshold: 1
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: catalog
+          timeoutSeconds: 10
+          periodSeconds: 10
+          failureThreshold: 3
+          successThreshold: 1
+        resources:
+          
+          null
+      volumes:
+        - name: config-volume
+          configMap:
+            name: RELEASE-NAME-anchore-engine
+---
+# Source: anchore-engine/templates/policy_engine_deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: RELEASE-NAME-anchore-engine-policy
+  labels:
+    app: RELEASE-NAME-anchore-engine
+    chart: anchore-engine-1.15.1
+    release: RELEASE-NAME
+    heritage: Helm
+    component: policy
+spec:
+  selector:
+    matchLabels:
+      app: RELEASE-NAME-anchore-engine
+      component: policy
+  replicas: 1
+  strategy:
+    type: Recreate
+    rollingUpdate: null
+  template:
+    metadata:
+      labels:
+        app: RELEASE-NAME-anchore-engine
+        component: policy
+      annotations:
+        checksum/secrets: a0ce689a3fd86185e8f6bdb516902eef3a339db9cf7d3d45eb5bd9b8fcf7cc64
+        checksum/env: 6ea26b73fd71aa84b52400ee834522391a203aae234949c57da8f49f9249acf6
+        checksum/engine-config: e7ef04842b5a9ff562e4c6dc61239501f0b7b754c492bbfac4956b72d9eef799
+    spec:
+      securityContext:
+        
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsUser: 1000
+      containers:
+      - name: anchore-engine-policy
+        image: docker.io/anchore/anchore-engine:v1.0.1
+        imagePullPolicy: IfNotPresent
+        args: ["anchore-manager", "service", "start", "--no-auto-upgrade", "policy_engine"]
+        envFrom:
+        - secretRef:
+            name: RELEASE-NAME-anchore-engine
+        - secretRef:
+            name: RELEASE-NAME-anchore-engine-admin-pass
+        - configMapRef:
+            name: RELEASE-NAME-anchore-engine-env
+        env:
+        - name: ANCHORE_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        ports:
+        - name: policy
+          containerPort: 8087
+        volumeMounts:
+        - name: config-volume
+          mountPath: /config/config.yaml
+          subPath: config.yaml
+        - name: policy-scratch
+          mountPath: /analysis_scratch
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: policy
+          initialDelaySeconds: 120
+          timeoutSeconds: 10
+          periodSeconds: 10
+          failureThreshold: 6
+          successThreshold: 1
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: policy
+          timeoutSeconds: 10
+          periodSeconds: 10
+          failureThreshold: 3
+          successThreshold: 1
+        resources:
+          
+          null
+      volumes:
+        - name: config-volume
+          configMap:
+            name: RELEASE-NAME-anchore-engine
+        - name: policy-scratch
+          
+          emptyDir: {}
+---
+# Source: anchore-engine/templates/simplequeue_deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: RELEASE-NAME-anchore-engine-simplequeue
+  labels:
+    app: RELEASE-NAME-anchore-engine
+    chart: anchore-engine-1.15.1
+    release: RELEASE-NAME
+    heritage: Helm
+    component: simplequeue
+spec:
+  selector:
+    matchLabels:
+      app: RELEASE-NAME-anchore-engine
+      component: simplequeue
+  replicas: 1
+  strategy:
+    type: Recreate
+    rollingUpdate: null
+  template:
+    metadata:
+      labels:
+        app: RELEASE-NAME-anchore-engine
+        component: simplequeue
+      annotations:
+        checksum/secrets: a0ce689a3fd86185e8f6bdb516902eef3a339db9cf7d3d45eb5bd9b8fcf7cc64
+        checksum/env: 6ea26b73fd71aa84b52400ee834522391a203aae234949c57da8f49f9249acf6
+        checksum/engine-config: e7ef04842b5a9ff562e4c6dc61239501f0b7b754c492bbfac4956b72d9eef799
+    spec:
+      securityContext:
+        
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsUser: 1000
+      containers:
+      - name: "anchore-engine-simplequeue"
+        image: docker.io/anchore/anchore-engine:v1.0.1
+        imagePullPolicy: IfNotPresent
+        args: ["anchore-manager", "service", "start", "--no-auto-upgrade", "simplequeue"]
+        envFrom:
+        - secretRef:
+            name: RELEASE-NAME-anchore-engine
+        - secretRef:
+            name: RELEASE-NAME-anchore-engine-admin-pass
+        - configMapRef:
+            name: RELEASE-NAME-anchore-engine-env
+        env:
+        - name: ANCHORE_POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
+        ports:
+        - name: simplequeue
+          containerPort: 8083
+        volumeMounts:
+        - name: config-volume
+          mountPath: /config/config.yaml
+          subPath: config.yaml
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: simplequeue
+          initialDelaySeconds: 120
+          timeoutSeconds: 10
+          periodSeconds: 10
+          failureThreshold: 6
+          successThreshold: 1
+        readinessProbe:
+          httpGet:
+            path: /health
+            port: simplequeue
+          timeoutSeconds: 10
+          periodSeconds: 10
+          failureThreshold: 3
+          successThreshold: 1
+        resources:
+          
+          null
+      volumes:
+        - name: config-volume
+          configMap:
+            name: RELEASE-NAME-anchore-engine
+---
+# Source: anchore-engine/templates/engine_upgrade_job.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "RELEASE-NAME-engine-upgrade"
+  labels:
+    app.kubernetes.io/managed-by: "Helm"
+    app.kubernetes.io/instance: "RELEASE-NAME"
+    app.kubernetes.io/version: 1.0.1
+    helm.sh/chart: "anchore-engine-1.15.1"
+  annotations:
+    "helm.sh/hook": post-upgrade
+    "helm.sh/hook-weight": "-5"
+spec:
+  template:
+    metadata:
+      name: "RELEASE-NAME-engine-upgrade"
+      labels:
+        app.kubernetes.io/managed-by: "Helm"
+        app.kubernetes.io/instance: "RELEASE-NAME"
+        helm.sh/chart: "anchore-engine-1.15.1"
+      annotations:
+    spec:
+      securityContext:
+        
+        fsGroup: 1000
+        runAsGroup: 1000
+        runAsUser: 1000
+      restartPolicy: Never
+      containers:
+      - name: "RELEASE-NAME-engine-upgrade"
+        image: docker.io/anchore/anchore-engine:v1.0.1
+        imagePullPolicy: IfNotPresent
+        command: ["/bin/bash", "-c"]
+        args:
+          - |
+            anchore-manager db --db-connect postgresql://"${ANCHORE_DB_USER}":"${ANCHORE_DB_PASSWORD}"@"${ANCHORE_DB_HOST}"/"${ANCHORE_DB_NAME}" upgrade --dontask;
+        envFrom:
+        - secretRef:
+            name: RELEASE-NAME-anchore-engine
+        - secretRef:
+            name: RELEASE-NAME-anchore-engine-admin-pass
+        - configMapRef:
+            name: RELEASE-NAME-anchore-engine-env
+        env:
+        resources:
+          
+          null

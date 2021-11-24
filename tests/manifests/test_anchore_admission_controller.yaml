@@ -1,0 +1,511 @@
+---
+# Source: anchore-admission-controller/templates/serviceaccount.yaml
+# Service Account with which the controller operates
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  name: RELEASE-NAME-anchore-admission-controller
+  labels:
+    app.kubernetes.io/name: anchore-admission-controller
+    helm.sh/chart: anchore-admission-controller-0.3.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "0.3.0"
+    app.kubernetes.io/managed-by: Helm
+---
+# Source: anchore-admission-controller/templates/secret.yaml
+apiVersion: v1
+kind: Secret
+metadata:
+  name: RELEASE-NAME-anchore-admission-controller
+  labels:
+    app.kubernetes.io/name: anchore-admission-controller
+    helm.sh/chart: anchore-admission-controller-0.3.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "0.3.0"
+    app.kubernetes.io/managed-by: Helm
+type: Opaque
+data:
+  credentials.json: |
+    e30=
+---
+# Source: anchore-admission-controller/templates/configmap.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: RELEASE-NAME-controller-config
+  labels:
+    app.kubernetes.io/name: anchore-admission-controller
+    helm.sh/chart: anchore-admission-controller-0.3.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "0.3.0"
+    app.kubernetes.io/managed-by: Helm
+data:
+  config.json: |-
+    {
+      "validator": {
+        "requestanalysis": true
+      },
+      "AnchoreEndpoint": "",
+      "PolicySelectors": [{"Mode":"breakglass","PolicyReference":{"PolicyBundleId":"2c53a13c-1765-11e8-82ef-23527761d060","Username":"admin"},"Selector":{"ResourceType":"image","SelectorKeyRegex":".*","SelectorValueRegex":".*"}}]
+    }
+---
+# Source: anchore-admission-controller/templates/clusterrole.yaml
+# to let the admission server read the namespace reservations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  labels:
+    app.kubernetes.io/name: anchore-admission-controller
+    helm.sh/chart: anchore-admission-controller-0.3.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "0.3.0"
+    app.kubernetes.io/managed-by: Helm
+  name: RELEASE-NAME-anchore-admission-controller
+rules:
+- apiGroups:
+  - admission.anchore.io
+  resources:
+  - RELEASE-NAME-anchore-admission-controller
+  verbs:
+  - get
+  - list
+  - watch
+  - create
+---
+# Source: anchore-admission-controller/templates/clusterrolebinding.yaml
+# Allow delegate authentication and authorization to the service account
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: auth-delegator-RELEASE-NAME-anchore-admission-controller-default
+  labels:
+    app.kubernetes.io/name: anchore-admission-controller
+    helm.sh/chart: anchore-admission-controller-0.3.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "0.3.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: system:auth-delegator
+subjects:
+- kind: ServiceAccount
+  namespace: default
+  name: RELEASE-NAME-anchore-admission-controller
+---
+# Source: anchore-admission-controller/templates/clusterrolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: auth-delegator-RELEASE-NAME-anchore-admission-controller-admin
+  labels:
+    app.kubernetes.io/name: anchore-admission-controller
+    helm.sh/chart: anchore-admission-controller-0.3.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "0.3.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: cluster-admin
+subjects:
+- kind: ServiceAccount
+  namespace: default
+  name: RELEASE-NAME-anchore-admission-controller
+---
+# Source: anchore-admission-controller/templates/clusterrolebinding.yaml
+# to let the admission server read the namespace reservations
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  name: RELEASE-NAME-anchore-admission-controller-default
+  labels:
+    app.kubernetes.io/name: anchore-admission-controller
+    helm.sh/chart: anchore-admission-controller-0.3.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "0.3.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: RELEASE-NAME-anchore-admission-controller
+subjects:
+- kind: ServiceAccount
+  namespace: default
+  name: RELEASE-NAME-anchore-admission-controller
+---
+# Source: anchore-admission-controller/templates/rolebinding.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  namespace: kube-system
+  name: extension-RELEASE-NAME-anchore-admission-controller-authentication-reader-default
+  labels:
+    app.kubernetes.io/name: anchore-admission-controller
+    helm.sh/chart: anchore-admission-controller-0.3.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "0.3.0"
+    app.kubernetes.io/managed-by: Helm
+roleRef:
+  kind: Role
+  apiGroup: rbac.authorization.k8s.io
+  name: extension-apiserver-authentication-reader
+subjects:
+- kind: ServiceAccount
+  name: RELEASE-NAME-anchore-admission-controller
+  namespace: default
+---
+# Source: anchore-admission-controller/templates/service.yaml
+apiVersion: v1
+kind: Service
+metadata:
+  name: RELEASE-NAME-anchore-admission-controller
+  labels:
+    app.kubernetes.io/name: anchore-admission-controller
+    helm.sh/chart: anchore-admission-controller-0.3.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "0.3.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  type: ClusterIP
+  ports:
+  - port: 443
+    targetPort: 443
+    protocol: TCP
+    name: anchoreadmissioncontroller
+  selector:
+    app.kubernetes.io/name: anchore-admission-controller
+    app.kubernetes.io/instance: RELEASE-NAME
+---
+# Source: anchore-admission-controller/templates/deployment.yaml
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: RELEASE-NAME-anchore-admission-controller
+  labels:
+    app.kubernetes.io/name: anchore-admission-controller
+    helm.sh/chart: anchore-admission-controller-0.3.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "0.3.0"
+    app.kubernetes.io/managed-by: Helm
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: anchore-admission-controller
+      app.kubernetes.io/instance: RELEASE-NAME
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: anchore-admission-controller
+        helm.sh/chart: anchore-admission-controller-0.3.0
+        app.kubernetes.io/instance: RELEASE-NAME
+        app.kubernetes.io/version: "0.3.0"
+        app.kubernetes.io/managed-by: Helm
+    spec:
+      serviceAccountName: RELEASE-NAME-anchore-admission-controller
+      volumes:
+      - name: serving-cert
+        secret:
+          defaultMode: 420
+          secretName: anchore-admission-controller-certs
+      - name: controller-config
+        configMap:
+          name: RELEASE-NAME-controller-config
+      - name: anchore-auth
+        secret:
+          secretName: RELEASE-NAME-anchore-admission-controller
+      containers:
+      - name: anchore-admission-controller
+        image: "anchore/kubernetes-admission-controller:v0.3.0"
+        imagePullPolicy: IfNotPresent
+        command:
+        - "/anchore-kubernetes-admission-controller"
+        - "--audit-log-path=-"
+        - "--tls-cert-file=/var/serving-cert/tls.crt"
+        - "--tls-private-key-file=/var/serving-cert/tls.key"
+        - "--v=3"
+        - "--secure-port=443"
+        ports:
+        - containerPort: 443
+        readinessProbe:
+          httpGet:
+            path: /healthz
+            port: 443
+            scheme: HTTPS
+        volumeMounts:
+        - mountPath: /var/serving-cert
+          name: serving-cert
+          readOnly: true
+        - mountPath: /config
+          name: controller-config
+        - mountPath: /credentials
+          name: anchore-auth
+        env:
+        - name: CONFIG_FILE_PATH
+          value: /config/config.json
+        - name: CREDENTIALS_FILE_PATH
+          value: /credentials/credentials.json
+        resources:
+            {}
+---
+# Source: anchore-admission-controller/templates/webhook.yaml
+apiVersion: admissionregistration.k8s.io/v1
+kind: ValidatingWebhookConfiguration
+metadata:
+  name: anchore-admission-controller-admission.anchore.io
+  labels:
+    app.kubernetes.io/name: anchore-admission-controller
+    helm.sh/chart: anchore-admission-controller-0.3.0
+    app.kubernetes.io/instance: RELEASE-NAME
+    app.kubernetes.io/version: "0.3.0"
+    app.kubernetes.io/managed-by: Helm
+webhooks:
+- name: anchore-admission-controller-admission.anchore.io
+  clientConfig:
+    service:
+      namespace: default
+      name: kubernetes
+      path: /apis/admission.anchore.io/v1beta1/imagechecks
+  rules:
+    - apiGroups:
+      - ""
+      - apps
+      - batch
+      apiVersions:
+      - '*'
+      operations:
+      - CREATE
+      resources:
+      - pods
+      - deployments
+      - replicasets
+      - statefulsets
+      - jobs
+      - cronjobs
+      - daemonsets
+  failurePolicy: Ignore
+  namespaceSelector:
+    matchExpressions:
+    - key: exclude.admission.anchore.io
+      operator: NotIn
+      values:
+      - "true"
+---
+# Source: anchore-admission-controller/templates/init-ca/rbac.yaml
+apiVersion: v1
+kind: ServiceAccount
+metadata:
+  namespace: default
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-6"
+  name: RELEASE-NAME-anchore-admission-controller-init-ca
+---
+# Source: anchore-admission-controller/templates/init-ca/init-ca-script.yaml
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: RELEASE-NAME-init-ca
+  labels:
+    app: RELEASE-NAME-anchore-admission-controller
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-5"
+data:
+  init-ca.sh: |-
+    #!/bin/bash -xe
+    # Adapted from https://github.com/openshift/kubernetes-namespace-reservation/blob/master/hack/install-kube.sh
+    apt-get update && apt-get install -y jq
+
+    curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+    chmod +x ./kubectl
+    mv ./kubectl /usr/bin
+
+    # creates a client CA, args are sudo, dest-dir, ca-id, purpose
+    # purpose is dropped in after "key encipherment", you usually want
+    # '"client auth"'
+    # '"server auth"'
+    # '"client auth","server auth"'
+    function kube::util::create_signing_certkey {
+        local sudo=$1
+        local dest_dir=$2
+        local id=$3
+        local purpose=$4
+        # Create client ca
+        ${sudo} /bin/bash -e <<EOF
+        rm -f "${dest_dir}/${id}-ca.crt" "${dest_dir}/${id}-ca.key"
+        openssl req -x509 -sha256 -new -nodes -days 365 -newkey rsa:2048 -keyout "${dest_dir}/${id}-ca.key" -out "${dest_dir}/${id}-ca.crt" -subj "/C=xx/ST=x/L=x/O=x/OU=x/CN=ca/emailAddress=x/"
+        echo '{"signing":{"default":{"expiry":"43800h","usages":["signing","key encipherment",${purpose}]}}}' > "${dest_dir}/${id}-ca-config.json"
+    EOF
+    }
+
+    # signs a serving certificate: args are sudo, dest-dir, ca, filename (roughly), subject, hosts...
+    function kube::util::create_serving_certkey {
+        local sudo=$1
+        local dest_dir=$2
+        local ca=$3
+        local id=$4
+        local cn=${5:-$4}
+        local hosts=""
+        local SEP=""
+        shift 5
+        while [ -n "${1:-}" ]; do
+            hosts+="${SEP}\"$1\""
+            SEP=","
+            shift 1
+        done
+        ${sudo} /bin/bash -e <<EOF
+        cd ${dest_dir}
+        echo '{"CN":"${cn}","hosts":[${hosts}],"key":{"algo":"rsa","size":2048}}' | cfssl gencert -ca=${ca}.crt -ca-key=${ca}.key -config=${ca}-config.json - | cfssljson -bare serving-${id}
+        mv "serving-${id}-key.pem" "serving-${id}.key"
+        mv "serving-${id}.pem" "serving-${id}.crt"
+        rm -f "serving-${id}.csr"
+    EOF
+    }
+
+    which jq &>/dev/null || { echo "Please install jq (https://stedolan.github.io/jq/)."; exit 1; }
+    which cfssljson &>/dev/null || { echo "Please install cfssljson (https://github.com/cloudflare/cfssl))."; exit 1; }
+
+    # create necessary TLS certificates:
+    # - a local CA key and cert
+    # - a webhook server key and cert signed by the local CA
+    rm -rf ./_output/
+    CERT_DIR=_output/tmp/certs
+    mkdir -p "${CERT_DIR}"
+    kube::util::create_signing_certkey "" "${CERT_DIR}" serving '"server auth"'
+
+    # create webhook server key and cert
+    kube::util::create_serving_certkey "" "${CERT_DIR}" "serving-ca" RELEASE-NAME-anchore-admission-controller.default.svc "RELEASE-NAME-anchore-admission-controller.default.svc" "RELEASE-NAME-anchore-admission-controller.default.svc"
+
+    cat > secret.yaml <<EOF
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: anchore-admission-controller-certs
+    type: kubernetes.io/tls
+    data:
+      tls.crt: TLS_SERVING_CERT
+      tls.key: TLS_SERVING_KEY
+    EOF
+
+    sed "s/TLS_SERVING_CERT/$(base64 ${CERT_DIR}/serving-RELEASE-NAME-anchore-admission-controller.default.svc.crt | tr -d '\n')/g" secret.yaml |
+      sed "s/TLS_SERVING_KEY/$(base64 ${CERT_DIR}/serving-RELEASE-NAME-anchore-admission-controller.default.svc.key | tr -d '\n')/g" | kubectl -n default apply -f -
+
+    cat > api-service.yaml <<EOF
+    apiVersion: apiregistration.k8s.io/v1beta1
+    kind: APIService
+    metadata:
+      name: v1beta1.admission.anchore.io
+    spec:
+      caBundle: SERVICE_SERVING_CERT_CA
+      group: admission.anchore.io
+      groupPriorityMinimum: 1000
+      versionPriority: 15
+      service:
+        name: RELEASE-NAME-anchore-admission-controller
+        namespace: default
+      version: v1beta1
+    EOF
+
+    sed "s/SERVICE_SERVING_CERT_CA/$(base64 ${CERT_DIR}/serving-ca.crt | tr -d '\n')/g" api-service.yaml | kubectl -n default apply -f -
+---
+# Source: anchore-admission-controller/templates/init-ca/rbac.yaml
+kind: ClusterRole
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  name: RELEASE-NAME-anchore-admission-controller-init-ca-cluster
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-6"
+rules:
+- apiGroups: ["admissionregistration.k8s.io"]
+  resources: ["validatingwebhookconfigurations"]
+  verbs: ["get", "watch", "list", "create", "update", "patch"]
+- apiGroups: ["apiregistration.k8s.io"]
+  resources: ["apiservices"]
+  verbs: ["get", "watch", "list", "create", "update", "patch"]
+---
+# Source: anchore-admission-controller/templates/init-ca/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRoleBinding
+metadata:
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-6"
+  name: extension-RELEASE-NAME-anchore-admission-controller-init-ca-cluster
+roleRef:
+  kind: ClusterRole
+  apiGroup: rbac.authorization.k8s.io
+  name: RELEASE-NAME-anchore-admission-controller-init-ca-cluster
+subjects:
+- kind: ServiceAccount
+  namespace: default
+  name: RELEASE-NAME-anchore-admission-controller-init-ca
+---
+# Source: anchore-admission-controller/templates/init-ca/rbac.yaml
+kind: Role
+apiVersion: rbac.authorization.k8s.io/v1
+metadata:
+  namespace: default
+  name: RELEASE-NAME-anchore-admission-controller-init-ca
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-6"
+rules:
+- apiGroups: [""] # "" indicates the core API group
+  resources: ["secrets", "deployments"]
+  verbs: ["get", "patch", "create"]
+---
+# Source: anchore-admission-controller/templates/init-ca/rbac.yaml
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-weight": "-6"
+  namespace: default
+  name: extension-RELEASE-NAME-anchore-admission-controller-init-ca-admin
+roleRef:
+  kind: Role
+  apiGroup: rbac.authorization.k8s.io
+  name: RELEASE-NAME-anchore-admission-controller-init-ca
+subjects:
+- kind: ServiceAccount
+  name: RELEASE-NAME-anchore-admission-controller-init-ca
+---
+# Source: anchore-admission-controller/templates/init-ca/init-ca-hook.yaml
+apiVersion: batch/v1
+kind: Job
+metadata:
+  name: "RELEASE-NAME-init-ca"
+  labels:
+    app: RELEASE-NAME-anchore-admission-controller
+    component: admission-server
+  annotations:
+    "helm.sh/hook": pre-install
+    "helm.sh/hook-delete-policy": hook-succeeded
+spec:
+  template:
+    metadata:
+      labels:
+        app: RELEASE-NAME-anchore-admission-controller
+        component: admission-server
+    spec:
+      serviceAccountName: RELEASE-NAME-anchore-admission-controller-init-ca
+      restartPolicy: OnFailure
+      volumes:
+      - name: init-ca-script
+        configMap:
+          name: RELEASE-NAME-init-ca
+      containers:
+      - name: create-ca
+        image:  "cfssl/cfssl:latest"
+        command:
+        - bash
+        - -xe
+        - /scripts/init-ca.sh
+        volumeMounts:
+        - name: init-ca-script
+          mountPath: /scripts
+        env:

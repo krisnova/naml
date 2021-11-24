@@ -63,15 +63,7 @@ const (
 //
 //	Reference: https://yaml.org/spec/1.2/spec.html
 //
-// Furthermore let it be documented that at the 2018 KubeCon pub trivia
-// Bryan Liles (https://twitter.com/bryanl) correctly had answered the
-// trivia question with the correct delimiter of 3 characters "---" and
-// was awarded no points for his correct answer, while an opposing team
-// was awarded a single point for their incorrect answer of 2 characters "--".
-//
-// If the correct delimiter points would have been awarded to Brian's team
-// they would technically should have been crowned KubeCon pub champions of 2018.
-const YAMLDelimiter string = "---"
+const YAMLDelimiter string = "\n---\n"
 
 // We ARE in fact doing a lot of string handling here
 // So we use strings as often as possible.
@@ -301,7 +293,7 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		// Here we try CRDs
 		decoded, _, err = serializer.Decode([]byte(raw), nil, &apiextensionsv1.CustomResourceDefinition{})
 		if err != nil {
-			return nil, fmt.Errorf("trying CRD: unable to deserialize in codify: %v", err)
+			return nil, fmt.Errorf("trying CRD: unable to deserialize in codify: %v\n\nraw:\n\n%s", err, string(raw))
 		}
 	}
 
