@@ -24,7 +24,7 @@ all: compile
 
 # Global release version.
 # Change this to bump the build version!
-version="1.0.1"
+version="1.0.2"
 
 compile: ## Compile for the local architecture ⚙
 	@echo "Compiling..."

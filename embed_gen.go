@@ -183,4 +183,3 @@ func (x *{{ .AppNameTitle }}) Objects() []runtime.Object {
 	return x.objects
 }
 `
-
