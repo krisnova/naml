@@ -307,6 +307,12 @@ func RunCommandLineWithOptions() error {
 
 					cbytes, err := Codify(os.Stdin, codifyValues)
 					if err != nil {
+						if len(cbytes) > 0 {
+							// We have both
+							fmt.Println(string(cbytes))
+							fmt.Fprintf(os.Stderr, "\nWARNING ⚠\n\nUnable to parse full system: %v\n\nWARNING ⚠\n", err.Error())
+							return nil
+						}
 						// Codify prints to stderr
 						fmt.Fprintf(os.Stderr, "Error during codify: %v", err)
 						return err
