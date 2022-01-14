@@ -37,6 +37,7 @@ import (
 var (
 	KubernetesImportPackageMap = map[string]string{
 		"k8s.io/api/apps/v1":                                       "appsv1",
+		"k8s.io/api/autoscaling/v2beta2":                           "",
 		"k8s.io/api/batch/v1":                                      "batchv1",
 		"k8s.io/api/core/v1":                                       "corev1",
 		"k8s.io/apimachinery/pkg/apis/meta/v1":                     "metav1",
@@ -49,6 +50,10 @@ var (
 
 	PolicyV1Types = []string{
 		"PolicyV1Interface",
+	}
+
+	AutoscalingV1Types = []string{
+		"AutoscalingV1Interface",
 	}
 
 	AppsV1Types = []string{""}
@@ -186,12 +191,26 @@ func alias(generated, defaultalias string) string {
 			fmt.Sprintf("policyv1beta1.%s", t)) // Note this is different from the others!
 
 	}
+	for _, t := range AutoscalingV1Types {
+		if t == "" {
+			continue
+		}
+		aliased = strings.ReplaceAll(aliased,
+			fmt.Sprintf("%s.%s", defaultalias, t),
+			fmt.Sprintf("autoscalingv2beta2.%s", t)) // Note this is different from the others!
+
+	}
 	return aliased
 }
 
 func sanitizeK8sObjectName(name string) string {
 	reg, _ := regexp.Compile("[^a-zA-Z0-9 \\-]+")
 	return reg.ReplaceAllString(name, "")
+}
+
+func escapeTemplate(data string) string {
+	re := regexp.MustCompile(`{{|}}`)
+	return re.ReplaceAllString(data, "\"")
 }
 
 func goName(name string) string {
@@ -234,7 +253,7 @@ type Codified struct {
 	R valast.Result
 }
 
-// cleanValast20 is a determinstic string mutation function
+// cleanValast20 is a deterministic string mutation function
 // that will address the bug described in https://github.com/hexops/valast/issues/20
 func cleanValast20(input string) string {
 	var output string

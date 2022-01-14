@@ -1,5 +1,5 @@
 //
-// Copyright © 2021 Kris Nóva <kris@nivenly.com>
+// Copyright © 2022 Kris Nóva <kris@nivenly.com>
 //
 // Licensed under the Apache License, Version 2.0 (the "License");
 // you may not use this file except in compliance with the License.
@@ -29,27 +29,25 @@ import (
 	"text/template"
 	"time"
 
+	admissionregistrationv1 "k8s.io/api/admissionregistration/v1"
+
 	"github.com/kris-nova/logger"
-	corev1 "k8s.io/api/core/v1"
 )
 
-type ConfigMap struct {
-	KubeObject *corev1.ConfigMap
+type MutatingWebhookConfiguration struct {
+	KubeObject *admissionregistrationv1.MutatingWebhookConfiguration
 	GoName     string
 }
 
-func NewConfigMap(obj *corev1.ConfigMap) *ConfigMap {
+func NewMutatingWebhookConfiguration(obj *admissionregistrationv1.MutatingWebhookConfiguration) *MutatingWebhookConfiguration {
 	obj.ObjectMeta = cleanObjectMeta(obj.ObjectMeta)
-	for k, v := range obj.Data {
-		obj.Data[k] = escapeTemplate(v)
-	}
-	return &ConfigMap{
+	return &MutatingWebhookConfiguration{
 		KubeObject: obj,
 		GoName:     goName(obj.Name),
 	}
 }
 
-func (k ConfigMap) Install() (string, []string) {
+func (k MutatingWebhookConfiguration) Install() (string, []string) {
 	c, err := Literal(k.KubeObject)
 	if err != nil {
 		logger.Debug(err.Error())
@@ -57,11 +55,11 @@ func (k ConfigMap) Install() (string, []string) {
 	l := c.Source
 	packages := c.Packages
 	install := fmt.Sprintf(`
-	{{ .GoName }}ConfigMap := %s
-	x.objects = append(x.objects, {{ .GoName }}ConfigMap)
+	{{ .GoName }}MutatingwebhookConfiguration := %s
+	x.objects = append(x.objects, {{ .GoName }}MutatingwebhookConfiguration)
 
 	if client != nil {
-		_, err = client.CoreV1().ConfigMaps("{{ .KubeObject.Namespace }}").Create(context.TODO(), {{ .GoName }}ConfigMap, v1.CreateOptions{})
+		_, err = client.AdmissionregistrationV1().MutatingWebhookConfigurations().Create(context.TODO(), {{ .GoName }}MutatingwebhookConfiguration, v1.CreateOptions{})
 		if err != nil {
 			return err
 		}
@@ -76,13 +74,13 @@ func (k ConfigMap) Install() (string, []string) {
 	if err != nil {
 		logger.Debug(err.Error())
 	}
-	return alias(buf.String(), "corev1"), packages
+	return alias(buf.String(), "admissionregistrationv1"), packages
 }
 
-func (k ConfigMap) Uninstall() string {
+func (k MutatingWebhookConfiguration) Uninstall() string {
 	uninstall := `
 	if client != nil {
-		err = client.CoreV1().ConfigMaps("{{ .KubeObject.Namespace }}").Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
+		err = client.AdmissionregistrationV1().MutatingWebhookConfigurations().Delete(context.TODO(), "{{ .KubeObject.Name }}", metav1.DeleteOptions{})
 		if err != nil {
 			return err
 		}

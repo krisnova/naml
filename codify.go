@@ -44,6 +44,7 @@ import (
 	"github.com/kris-nova/logger"
 	"github.com/kris-nova/naml/codify"
 	appsv1 "k8s.io/api/apps/v1"
+	autoscalingv1 "k8s.io/api/autoscaling/v2beta2"
 	batchv1 "k8s.io/api/batch/v1"
 	corev1 "k8s.io/api/core/v1"
 	networkingv1 "k8s.io/api/networking/v1"
@@ -123,7 +124,7 @@ func Codify(input io.Reader, v *CodifyValues) ([]byte, error) {
 	}
 	tpl, err := tpl.Parse(templateString)
 	if err != nil {
-		return code, fmt.Errorf("unable to create main go tempalte: %v", err)
+		return code, fmt.Errorf("unable to create main go template: %v", err)
 	}
 
 	// Find the objects
@@ -341,6 +342,8 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		objects = append(objects, codify.NewStatefulSet(x))
 	case *appsv1.DaemonSet:
 		objects = append(objects, codify.NewDaemonSet(x))
+	case *autoscalingv1.HorizontalPodAutoscaler:
+		objects = append(objects, codify.NewHorizontalPodAutoScaler(x))
 	case *corev1.ConfigMap:
 		objects = append(objects, codify.NewConfigMap(x))
 	case *corev1.Service:
@@ -371,6 +374,8 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 		objects = append(objects, codify.NewIngress(x))
 	case *policyv1.PodSecurityPolicy:
 		objects = append(objects, codify.NewPodSecurityPolicy(x))
+	case *admissionregistrationv1.MutatingWebhookConfiguration:
+		objects = append(objects, codify.NewMutatingWebhookConfiguration(x))
 	case *admissionregistrationv1.ValidatingWebhookConfiguration:
 		objects = append(objects, codify.NewValidatingwebhookConfiguration(x))
 	case *policyv1.PodDisruptionBudget:

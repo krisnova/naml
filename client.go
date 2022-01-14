@@ -40,7 +40,7 @@ const (
 	KubeconfigDefaultFile           = "config"
 )
 
-// cachedClient is package level state that will cache the Clienset
+// cachedClient is package level state that will cache the Clientset
 var cachedClient *kubernetes.Clientset
 
 // kubeConfigPathValue is a very flexible string, so we have to handle it
