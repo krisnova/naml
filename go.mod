@@ -7,8 +7,6 @@ require (
 	github.com/hexops/valast v1.4.1
 	github.com/kris-nova/logger v0.2.2
 	github.com/urfave/cli/v2 v2.3.0
-	google.golang.org/grpc v1.38.0 // indirect
-	google.golang.org/protobuf v1.26.0 // indirect
 	k8s.io/api v0.22.0
 	k8s.io/apiextensions-apiserver v0.22.0
 	k8s.io/apimachinery v0.22.0
