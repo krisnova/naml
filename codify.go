@@ -257,9 +257,7 @@ func ReaderToCodifyObjects(input io.Reader) ([]CodifyObject, int, error) {
 			return objects, -1, fmt.Errorf("unable to codify: %v", err)
 		}
 		// Merge the items
-		for _, c := range cObjects {
-			objects = append(objects, c)
-		}
+		objects = append(objects, cObjects...)
 	}
 	c := len(objects)
 	return objects, d - c, nil
@@ -328,9 +326,7 @@ func toCodify(raw []byte) ([]CodifyObject, error) {
 				return objects, err
 			}
 			// Merge the items
-			for _, c := range cObjects {
-				objects = append(objects, c)
-			}
+			objects = append(objects, cObjects...)
 		}
 
 	case *corev1.Pod:
